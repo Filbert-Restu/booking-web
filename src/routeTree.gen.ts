@@ -15,7 +15,13 @@ import { Route as AdminRouteRouteImport } from './routes/admin/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as PeminjamIndexRouteImport } from './routes/peminjam/index'
 import { Route as AdminIndexRouteImport } from './routes/admin/index'
-import { Route as AdminUsersRouteImport } from './routes/admin/users'
+import { Route as AdminPeminjamanRuangRouteImport } from './routes/admin/peminjaman-ruang'
+import { Route as AdminUsersIndexRouteImport } from './routes/admin/users/index'
+import { Route as AdminManajemenRuangIndexRouteImport } from './routes/admin/manajemen-ruang/index'
+import { Route as AdminUsersEditRouteImport } from './routes/admin/users/edit'
+import { Route as AdminUsersAddRouteImport } from './routes/admin/users/add'
+import { Route as AdminManajemenRuangEditRouteImport } from './routes/admin/manajemen-ruang/edit'
+import { Route as AdminManajemenRuangAddRouteImport } from './routes/admin/manajemen-ruang/add'
 
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
@@ -47,9 +53,40 @@ const AdminIndexRoute = AdminIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AdminRouteRoute,
 } as any)
-const AdminUsersRoute = AdminUsersRouteImport.update({
-  id: '/users',
-  path: '/users',
+const AdminPeminjamanRuangRoute = AdminPeminjamanRuangRouteImport.update({
+  id: '/peminjaman-ruang',
+  path: '/peminjaman-ruang',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminUsersIndexRoute = AdminUsersIndexRouteImport.update({
+  id: '/users/',
+  path: '/users/',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminManajemenRuangIndexRoute =
+  AdminManajemenRuangIndexRouteImport.update({
+    id: '/manajemen-ruang/',
+    path: '/manajemen-ruang/',
+    getParentRoute: () => AdminRouteRoute,
+  } as any)
+const AdminUsersEditRoute = AdminUsersEditRouteImport.update({
+  id: '/users/edit',
+  path: '/users/edit',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminUsersAddRoute = AdminUsersAddRouteImport.update({
+  id: '/users/add',
+  path: '/users/add',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminManajemenRuangEditRoute = AdminManajemenRuangEditRouteImport.update({
+  id: '/manajemen-ruang/edit',
+  path: '/manajemen-ruang/edit',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminManajemenRuangAddRoute = AdminManajemenRuangAddRouteImport.update({
+  id: '/manajemen-ruang/add',
+  path: '/manajemen-ruang/add',
   getParentRoute: () => AdminRouteRoute,
 } as any)
 
@@ -58,16 +95,28 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AdminRouteRouteWithChildren
   '/peminjam': typeof PeminjamRouteRouteWithChildren
   '/login': typeof LoginRoute
-  '/admin/users': typeof AdminUsersRoute
+  '/admin/peminjaman-ruang': typeof AdminPeminjamanRuangRoute
   '/admin/': typeof AdminIndexRoute
   '/peminjam/': typeof PeminjamIndexRoute
+  '/admin/manajemen-ruang/add': typeof AdminManajemenRuangAddRoute
+  '/admin/manajemen-ruang/edit': typeof AdminManajemenRuangEditRoute
+  '/admin/users/add': typeof AdminUsersAddRoute
+  '/admin/users/edit': typeof AdminUsersEditRoute
+  '/admin/manajemen-ruang': typeof AdminManajemenRuangIndexRoute
+  '/admin/users': typeof AdminUsersIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
-  '/admin/users': typeof AdminUsersRoute
+  '/admin/peminjaman-ruang': typeof AdminPeminjamanRuangRoute
   '/admin': typeof AdminIndexRoute
   '/peminjam': typeof PeminjamIndexRoute
+  '/admin/manajemen-ruang/add': typeof AdminManajemenRuangAddRoute
+  '/admin/manajemen-ruang/edit': typeof AdminManajemenRuangEditRoute
+  '/admin/users/add': typeof AdminUsersAddRoute
+  '/admin/users/edit': typeof AdminUsersEditRoute
+  '/admin/manajemen-ruang': typeof AdminManajemenRuangIndexRoute
+  '/admin/users': typeof AdminUsersIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -75,9 +124,15 @@ export interface FileRoutesById {
   '/admin': typeof AdminRouteRouteWithChildren
   '/peminjam': typeof PeminjamRouteRouteWithChildren
   '/login': typeof LoginRoute
-  '/admin/users': typeof AdminUsersRoute
+  '/admin/peminjaman-ruang': typeof AdminPeminjamanRuangRoute
   '/admin/': typeof AdminIndexRoute
   '/peminjam/': typeof PeminjamIndexRoute
+  '/admin/manajemen-ruang/add': typeof AdminManajemenRuangAddRoute
+  '/admin/manajemen-ruang/edit': typeof AdminManajemenRuangEditRoute
+  '/admin/users/add': typeof AdminUsersAddRoute
+  '/admin/users/edit': typeof AdminUsersEditRoute
+  '/admin/manajemen-ruang/': typeof AdminManajemenRuangIndexRoute
+  '/admin/users/': typeof AdminUsersIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -86,20 +141,43 @@ export interface FileRouteTypes {
     | '/admin'
     | '/peminjam'
     | '/login'
-    | '/admin/users'
+    | '/admin/peminjaman-ruang'
     | '/admin/'
     | '/peminjam/'
+    | '/admin/manajemen-ruang/add'
+    | '/admin/manajemen-ruang/edit'
+    | '/admin/users/add'
+    | '/admin/users/edit'
+    | '/admin/manajemen-ruang'
+    | '/admin/users'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/login' | '/admin/users' | '/admin' | '/peminjam'
+  to:
+    | '/'
+    | '/login'
+    | '/admin/peminjaman-ruang'
+    | '/admin'
+    | '/peminjam'
+    | '/admin/manajemen-ruang/add'
+    | '/admin/manajemen-ruang/edit'
+    | '/admin/users/add'
+    | '/admin/users/edit'
+    | '/admin/manajemen-ruang'
+    | '/admin/users'
   id:
     | '__root__'
     | '/'
     | '/admin'
     | '/peminjam'
     | '/login'
-    | '/admin/users'
+    | '/admin/peminjaman-ruang'
     | '/admin/'
     | '/peminjam/'
+    | '/admin/manajemen-ruang/add'
+    | '/admin/manajemen-ruang/edit'
+    | '/admin/users/add'
+    | '/admin/users/edit'
+    | '/admin/manajemen-ruang/'
+    | '/admin/users/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -153,24 +231,78 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminIndexRouteImport
       parentRoute: typeof AdminRouteRoute
     }
-    '/admin/users': {
-      id: '/admin/users'
+    '/admin/peminjaman-ruang': {
+      id: '/admin/peminjaman-ruang'
+      path: '/peminjaman-ruang'
+      fullPath: '/admin/peminjaman-ruang'
+      preLoaderRoute: typeof AdminPeminjamanRuangRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/users/': {
+      id: '/admin/users/'
       path: '/users'
       fullPath: '/admin/users'
-      preLoaderRoute: typeof AdminUsersRouteImport
+      preLoaderRoute: typeof AdminUsersIndexRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/manajemen-ruang/': {
+      id: '/admin/manajemen-ruang/'
+      path: '/manajemen-ruang'
+      fullPath: '/admin/manajemen-ruang'
+      preLoaderRoute: typeof AdminManajemenRuangIndexRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/users/edit': {
+      id: '/admin/users/edit'
+      path: '/users/edit'
+      fullPath: '/admin/users/edit'
+      preLoaderRoute: typeof AdminUsersEditRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/users/add': {
+      id: '/admin/users/add'
+      path: '/users/add'
+      fullPath: '/admin/users/add'
+      preLoaderRoute: typeof AdminUsersAddRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/manajemen-ruang/edit': {
+      id: '/admin/manajemen-ruang/edit'
+      path: '/manajemen-ruang/edit'
+      fullPath: '/admin/manajemen-ruang/edit'
+      preLoaderRoute: typeof AdminManajemenRuangEditRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/manajemen-ruang/add': {
+      id: '/admin/manajemen-ruang/add'
+      path: '/manajemen-ruang/add'
+      fullPath: '/admin/manajemen-ruang/add'
+      preLoaderRoute: typeof AdminManajemenRuangAddRouteImport
       parentRoute: typeof AdminRouteRoute
     }
   }
 }
 
 interface AdminRouteRouteChildren {
-  AdminUsersRoute: typeof AdminUsersRoute
+  AdminPeminjamanRuangRoute: typeof AdminPeminjamanRuangRoute
   AdminIndexRoute: typeof AdminIndexRoute
+  AdminManajemenRuangAddRoute: typeof AdminManajemenRuangAddRoute
+  AdminManajemenRuangEditRoute: typeof AdminManajemenRuangEditRoute
+  AdminUsersAddRoute: typeof AdminUsersAddRoute
+  AdminUsersEditRoute: typeof AdminUsersEditRoute
+  AdminManajemenRuangIndexRoute: typeof AdminManajemenRuangIndexRoute
+  AdminUsersIndexRoute: typeof AdminUsersIndexRoute
 }
 
 const AdminRouteRouteChildren: AdminRouteRouteChildren = {
-  AdminUsersRoute: AdminUsersRoute,
+  AdminPeminjamanRuangRoute: AdminPeminjamanRuangRoute,
   AdminIndexRoute: AdminIndexRoute,
+  AdminManajemenRuangAddRoute: AdminManajemenRuangAddRoute,
+  AdminManajemenRuangEditRoute: AdminManajemenRuangEditRoute,
+  AdminUsersAddRoute: AdminUsersAddRoute,
+  AdminUsersEditRoute: AdminUsersEditRoute,
+  AdminManajemenRuangIndexRoute: AdminManajemenRuangIndexRoute,
+  AdminUsersIndexRoute: AdminUsersIndexRoute,
 }
 
 const AdminRouteRouteWithChildren = AdminRouteRoute._addFileChildren(

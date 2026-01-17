@@ -35,7 +35,6 @@ export function UserTable({ users, onDelete, onViewDetail }: UserTableProps) {
             <TableHead className='text-center'>Nama</TableHead>
             <TableHead className='text-center'>Email</TableHead>
             <TableHead className='text-center'>Role</TableHead>
-            <TableHead className='text-center'>Status</TableHead>
             <TableHead className='text-center'>Terdaftar</TableHead>
             <TableHead className='text-center'>Aksi</TableHead>
           </TableRow>
@@ -63,17 +62,6 @@ export function UserTable({ users, onDelete, onViewDetail }: UserTableProps) {
                   }`}
                 >
                   {user.role}
-                </span>
-              </TableCell>
-              <TableCell className='text-center'>
-                <span
-                  className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                    user.status === 'active'
-                      ? 'bg-green-100 text-green-800'
-                      : 'bg-gray-100 text-gray-800'
-                  }`}
-                >
-                  {user.status === 'active' ? 'Aktif' : 'Nonaktif'}
                 </span>
               </TableCell>
               <TableCell className='text-center'>{user.createdAt}</TableCell>
