@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { useState } from 'react';
-import { Button } from '@/components/ui/shadcn/button';
+import { Button } from '@/components/ui/shadcn/button/button';
 import { Input } from '@/components/ui/shadcn/input';
 import { ArrowLeft } from 'lucide-react';
 
