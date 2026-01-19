@@ -12,7 +12,7 @@ import {
 import { CheckCircle2, XCircle, Search } from 'lucide-react';
 import { Input } from '@/components/ui/shadcn/input';
 
-export const Route = createFileRoute('/sumberdaya/approval/')({
+export const Route = createFileRoute('/sumber-daya/approval/')({
   component: RouteComponent,
 });
 
