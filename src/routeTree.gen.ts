@@ -10,12 +10,18 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as SumberdayaRouteRouteImport } from './routes/sumberdaya/route'
 import { Route as PeminjamRouteRouteImport } from './routes/peminjam/route'
+import { Route as KemahasiswaanRouteRouteImport } from './routes/kemahasiswaan/route'
 import { Route as AdminRouteRouteImport } from './routes/admin/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as SumberdayaIndexRouteImport } from './routes/sumberdaya/index'
 import { Route as PeminjamIndexRouteImport } from './routes/peminjam/index'
+import { Route as KemahasiswaanIndexRouteImport } from './routes/kemahasiswaan/index'
 import { Route as AdminIndexRouteImport } from './routes/admin/index'
 import { Route as AdminPeminjamanRuangRouteImport } from './routes/admin/peminjaman-ruang'
+import { Route as SumberdayaApprovalIndexRouteImport } from './routes/sumberdaya/approval/index'
+import { Route as KemahasiswaanApprovalIndexRouteImport } from './routes/kemahasiswaan/approval/index'
 import { Route as AdminUsersIndexRouteImport } from './routes/admin/users/index'
 import { Route as AdminManajemenRuangIndexRouteImport } from './routes/admin/manajemen-ruang/index'
 import { Route as AdminUsersEditRouteImport } from './routes/admin/users/edit'
@@ -28,9 +34,19 @@ const LoginRoute = LoginRouteImport.update({
   path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SumberdayaRouteRoute = SumberdayaRouteRouteImport.update({
+  id: '/sumberdaya',
+  path: '/sumberdaya',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PeminjamRouteRoute = PeminjamRouteRouteImport.update({
   id: '/peminjam',
   path: '/peminjam',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const KemahasiswaanRouteRoute = KemahasiswaanRouteRouteImport.update({
+  id: '/kemahasiswaan',
+  path: '/kemahasiswaan',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminRouteRoute = AdminRouteRouteImport.update({
@@ -43,10 +59,20 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SumberdayaIndexRoute = SumberdayaIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => SumberdayaRouteRoute,
+} as any)
 const PeminjamIndexRoute = PeminjamIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => PeminjamRouteRoute,
+} as any)
+const KemahasiswaanIndexRoute = KemahasiswaanIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => KemahasiswaanRouteRoute,
 } as any)
 const AdminIndexRoute = AdminIndexRouteImport.update({
   id: '/',
@@ -58,6 +84,17 @@ const AdminPeminjamanRuangRoute = AdminPeminjamanRuangRouteImport.update({
   path: '/peminjaman-ruang',
   getParentRoute: () => AdminRouteRoute,
 } as any)
+const SumberdayaApprovalIndexRoute = SumberdayaApprovalIndexRouteImport.update({
+  id: '/approval/',
+  path: '/approval/',
+  getParentRoute: () => SumberdayaRouteRoute,
+} as any)
+const KemahasiswaanApprovalIndexRoute =
+  KemahasiswaanApprovalIndexRouteImport.update({
+    id: '/approval/',
+    path: '/approval/',
+    getParentRoute: () => KemahasiswaanRouteRoute,
+  } as any)
 const AdminUsersIndexRoute = AdminUsersIndexRouteImport.update({
   id: '/users/',
   path: '/users/',
@@ -93,97 +130,131 @@ const AdminManajemenRuangAddRoute = AdminManajemenRuangAddRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRouteRouteWithChildren
+  '/kemahasiswaan': typeof KemahasiswaanRouteRouteWithChildren
   '/peminjam': typeof PeminjamRouteRouteWithChildren
+  '/sumberdaya': typeof SumberdayaRouteRouteWithChildren
   '/login': typeof LoginRoute
   '/admin/peminjaman-ruang': typeof AdminPeminjamanRuangRoute
   '/admin/': typeof AdminIndexRoute
+  '/kemahasiswaan/': typeof KemahasiswaanIndexRoute
   '/peminjam/': typeof PeminjamIndexRoute
+  '/sumberdaya/': typeof SumberdayaIndexRoute
   '/admin/manajemen-ruang/add': typeof AdminManajemenRuangAddRoute
   '/admin/manajemen-ruang/edit': typeof AdminManajemenRuangEditRoute
   '/admin/users/add': typeof AdminUsersAddRoute
   '/admin/users/edit': typeof AdminUsersEditRoute
   '/admin/manajemen-ruang': typeof AdminManajemenRuangIndexRoute
   '/admin/users': typeof AdminUsersIndexRoute
+  '/kemahasiswaan/approval': typeof KemahasiswaanApprovalIndexRoute
+  '/sumberdaya/approval': typeof SumberdayaApprovalIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/admin/peminjaman-ruang': typeof AdminPeminjamanRuangRoute
   '/admin': typeof AdminIndexRoute
+  '/kemahasiswaan': typeof KemahasiswaanIndexRoute
   '/peminjam': typeof PeminjamIndexRoute
+  '/sumberdaya': typeof SumberdayaIndexRoute
   '/admin/manajemen-ruang/add': typeof AdminManajemenRuangAddRoute
   '/admin/manajemen-ruang/edit': typeof AdminManajemenRuangEditRoute
   '/admin/users/add': typeof AdminUsersAddRoute
   '/admin/users/edit': typeof AdminUsersEditRoute
   '/admin/manajemen-ruang': typeof AdminManajemenRuangIndexRoute
   '/admin/users': typeof AdminUsersIndexRoute
+  '/kemahasiswaan/approval': typeof KemahasiswaanApprovalIndexRoute
+  '/sumberdaya/approval': typeof SumberdayaApprovalIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/admin': typeof AdminRouteRouteWithChildren
+  '/kemahasiswaan': typeof KemahasiswaanRouteRouteWithChildren
   '/peminjam': typeof PeminjamRouteRouteWithChildren
+  '/sumberdaya': typeof SumberdayaRouteRouteWithChildren
   '/login': typeof LoginRoute
   '/admin/peminjaman-ruang': typeof AdminPeminjamanRuangRoute
   '/admin/': typeof AdminIndexRoute
+  '/kemahasiswaan/': typeof KemahasiswaanIndexRoute
   '/peminjam/': typeof PeminjamIndexRoute
+  '/sumberdaya/': typeof SumberdayaIndexRoute
   '/admin/manajemen-ruang/add': typeof AdminManajemenRuangAddRoute
   '/admin/manajemen-ruang/edit': typeof AdminManajemenRuangEditRoute
   '/admin/users/add': typeof AdminUsersAddRoute
   '/admin/users/edit': typeof AdminUsersEditRoute
   '/admin/manajemen-ruang/': typeof AdminManajemenRuangIndexRoute
   '/admin/users/': typeof AdminUsersIndexRoute
+  '/kemahasiswaan/approval/': typeof KemahasiswaanApprovalIndexRoute
+  '/sumberdaya/approval/': typeof SumberdayaApprovalIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
     | '/admin'
+    | '/kemahasiswaan'
     | '/peminjam'
+    | '/sumberdaya'
     | '/login'
     | '/admin/peminjaman-ruang'
     | '/admin/'
+    | '/kemahasiswaan/'
     | '/peminjam/'
+    | '/sumberdaya/'
     | '/admin/manajemen-ruang/add'
     | '/admin/manajemen-ruang/edit'
     | '/admin/users/add'
     | '/admin/users/edit'
     | '/admin/manajemen-ruang'
     | '/admin/users'
+    | '/kemahasiswaan/approval'
+    | '/sumberdaya/approval'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/login'
     | '/admin/peminjaman-ruang'
     | '/admin'
+    | '/kemahasiswaan'
     | '/peminjam'
+    | '/sumberdaya'
     | '/admin/manajemen-ruang/add'
     | '/admin/manajemen-ruang/edit'
     | '/admin/users/add'
     | '/admin/users/edit'
     | '/admin/manajemen-ruang'
     | '/admin/users'
+    | '/kemahasiswaan/approval'
+    | '/sumberdaya/approval'
   id:
     | '__root__'
     | '/'
     | '/admin'
+    | '/kemahasiswaan'
     | '/peminjam'
+    | '/sumberdaya'
     | '/login'
     | '/admin/peminjaman-ruang'
     | '/admin/'
+    | '/kemahasiswaan/'
     | '/peminjam/'
+    | '/sumberdaya/'
     | '/admin/manajemen-ruang/add'
     | '/admin/manajemen-ruang/edit'
     | '/admin/users/add'
     | '/admin/users/edit'
     | '/admin/manajemen-ruang/'
     | '/admin/users/'
+    | '/kemahasiswaan/approval/'
+    | '/sumberdaya/approval/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdminRouteRoute: typeof AdminRouteRouteWithChildren
+  KemahasiswaanRouteRoute: typeof KemahasiswaanRouteRouteWithChildren
   PeminjamRouteRoute: typeof PeminjamRouteRouteWithChildren
+  SumberdayaRouteRoute: typeof SumberdayaRouteRouteWithChildren
   LoginRoute: typeof LoginRoute
 }
 
@@ -196,11 +267,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/sumberdaya': {
+      id: '/sumberdaya'
+      path: '/sumberdaya'
+      fullPath: '/sumberdaya'
+      preLoaderRoute: typeof SumberdayaRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/peminjam': {
       id: '/peminjam'
       path: '/peminjam'
       fullPath: '/peminjam'
       preLoaderRoute: typeof PeminjamRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/kemahasiswaan': {
+      id: '/kemahasiswaan'
+      path: '/kemahasiswaan'
+      fullPath: '/kemahasiswaan'
+      preLoaderRoute: typeof KemahasiswaanRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin': {
@@ -217,12 +302,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/sumberdaya/': {
+      id: '/sumberdaya/'
+      path: '/'
+      fullPath: '/sumberdaya/'
+      preLoaderRoute: typeof SumberdayaIndexRouteImport
+      parentRoute: typeof SumberdayaRouteRoute
+    }
     '/peminjam/': {
       id: '/peminjam/'
       path: '/'
       fullPath: '/peminjam/'
       preLoaderRoute: typeof PeminjamIndexRouteImport
       parentRoute: typeof PeminjamRouteRoute
+    }
+    '/kemahasiswaan/': {
+      id: '/kemahasiswaan/'
+      path: '/'
+      fullPath: '/kemahasiswaan/'
+      preLoaderRoute: typeof KemahasiswaanIndexRouteImport
+      parentRoute: typeof KemahasiswaanRouteRoute
     }
     '/admin/': {
       id: '/admin/'
@@ -237,6 +336,20 @@ declare module '@tanstack/react-router' {
       fullPath: '/admin/peminjaman-ruang'
       preLoaderRoute: typeof AdminPeminjamanRuangRouteImport
       parentRoute: typeof AdminRouteRoute
+    }
+    '/sumberdaya/approval/': {
+      id: '/sumberdaya/approval/'
+      path: '/approval'
+      fullPath: '/sumberdaya/approval'
+      preLoaderRoute: typeof SumberdayaApprovalIndexRouteImport
+      parentRoute: typeof SumberdayaRouteRoute
+    }
+    '/kemahasiswaan/approval/': {
+      id: '/kemahasiswaan/approval/'
+      path: '/approval'
+      fullPath: '/kemahasiswaan/approval'
+      preLoaderRoute: typeof KemahasiswaanApprovalIndexRouteImport
+      parentRoute: typeof KemahasiswaanRouteRoute
     }
     '/admin/users/': {
       id: '/admin/users/'
@@ -309,6 +422,19 @@ const AdminRouteRouteWithChildren = AdminRouteRoute._addFileChildren(
   AdminRouteRouteChildren,
 )
 
+interface KemahasiswaanRouteRouteChildren {
+  KemahasiswaanIndexRoute: typeof KemahasiswaanIndexRoute
+  KemahasiswaanApprovalIndexRoute: typeof KemahasiswaanApprovalIndexRoute
+}
+
+const KemahasiswaanRouteRouteChildren: KemahasiswaanRouteRouteChildren = {
+  KemahasiswaanIndexRoute: KemahasiswaanIndexRoute,
+  KemahasiswaanApprovalIndexRoute: KemahasiswaanApprovalIndexRoute,
+}
+
+const KemahasiswaanRouteRouteWithChildren =
+  KemahasiswaanRouteRoute._addFileChildren(KemahasiswaanRouteRouteChildren)
+
 interface PeminjamRouteRouteChildren {
   PeminjamIndexRoute: typeof PeminjamIndexRoute
 }
@@ -321,10 +447,26 @@ const PeminjamRouteRouteWithChildren = PeminjamRouteRoute._addFileChildren(
   PeminjamRouteRouteChildren,
 )
 
+interface SumberdayaRouteRouteChildren {
+  SumberdayaIndexRoute: typeof SumberdayaIndexRoute
+  SumberdayaApprovalIndexRoute: typeof SumberdayaApprovalIndexRoute
+}
+
+const SumberdayaRouteRouteChildren: SumberdayaRouteRouteChildren = {
+  SumberdayaIndexRoute: SumberdayaIndexRoute,
+  SumberdayaApprovalIndexRoute: SumberdayaApprovalIndexRoute,
+}
+
+const SumberdayaRouteRouteWithChildren = SumberdayaRouteRoute._addFileChildren(
+  SumberdayaRouteRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRouteRoute: AdminRouteRouteWithChildren,
+  KemahasiswaanRouteRoute: KemahasiswaanRouteRouteWithChildren,
   PeminjamRouteRoute: PeminjamRouteRouteWithChildren,
+  SumberdayaRouteRoute: SumberdayaRouteRouteWithChildren,
   LoginRoute: LoginRoute,
 }
 export const routeTree = rootRouteImport
