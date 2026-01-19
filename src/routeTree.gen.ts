@@ -9,28 +9,49 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as LoginOptionRouteImport } from './routes/login-option'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as SumberDayaRouteRouteImport } from './routes/sumber-daya/route'
 import { Route as PeminjamRouteRouteImport } from './routes/peminjam/route'
+import { Route as KemahasiswaanRouteRouteImport } from './routes/kemahasiswaan/route'
 import { Route as AdminRouteRouteImport } from './routes/admin/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as PeminjamIndexRouteImport } from './routes/peminjam/index'
 import { Route as AdminIndexRouteImport } from './routes/admin/index'
-import { Route as AdminPeminjamanRuangRouteImport } from './routes/admin/peminjaman-ruang'
+import { Route as PeminjamPeminjamanRuangIndexRouteImport } from './routes/peminjam/peminjaman-ruang/index'
 import { Route as AdminUsersIndexRouteImport } from './routes/admin/users/index'
+import { Route as AdminPeminjamanRuangIndexRouteImport } from './routes/admin/peminjaman-ruang/index'
 import { Route as AdminManajemenRuangIndexRouteImport } from './routes/admin/manajemen-ruang/index'
+import { Route as PeminjamPeminjamanRuangPinjamRouteImport } from './routes/peminjam/peminjaman-ruang/pinjam'
 import { Route as AdminUsersEditRouteImport } from './routes/admin/users/edit'
+import { Route as AdminUsersDetailRouteImport } from './routes/admin/users/detail'
 import { Route as AdminUsersAddRouteImport } from './routes/admin/users/add'
 import { Route as AdminManajemenRuangEditRouteImport } from './routes/admin/manajemen-ruang/edit'
 import { Route as AdminManajemenRuangAddRouteImport } from './routes/admin/manajemen-ruang/add'
 
+const LoginOptionRoute = LoginOptionRouteImport.update({
+  id: '/login-option',
+  path: '/login-option',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SumberDayaRouteRoute = SumberDayaRouteRouteImport.update({
+  id: '/sumber-daya',
+  path: '/sumber-daya',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PeminjamRouteRoute = PeminjamRouteRouteImport.update({
   id: '/peminjam',
   path: '/peminjam',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const KemahasiswaanRouteRoute = KemahasiswaanRouteRouteImport.update({
+  id: '/kemahasiswaan',
+  path: '/kemahasiswaan',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminRouteRoute = AdminRouteRouteImport.update({
@@ -53,25 +74,43 @@ const AdminIndexRoute = AdminIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AdminRouteRoute,
 } as any)
-const AdminPeminjamanRuangRoute = AdminPeminjamanRuangRouteImport.update({
-  id: '/peminjaman-ruang',
-  path: '/peminjaman-ruang',
-  getParentRoute: () => AdminRouteRoute,
-} as any)
+const PeminjamPeminjamanRuangIndexRoute =
+  PeminjamPeminjamanRuangIndexRouteImport.update({
+    id: '/peminjaman-ruang/',
+    path: '/peminjaman-ruang/',
+    getParentRoute: () => PeminjamRouteRoute,
+  } as any)
 const AdminUsersIndexRoute = AdminUsersIndexRouteImport.update({
   id: '/users/',
   path: '/users/',
   getParentRoute: () => AdminRouteRoute,
 } as any)
+const AdminPeminjamanRuangIndexRoute =
+  AdminPeminjamanRuangIndexRouteImport.update({
+    id: '/peminjaman-ruang/',
+    path: '/peminjaman-ruang/',
+    getParentRoute: () => AdminRouteRoute,
+  } as any)
 const AdminManajemenRuangIndexRoute =
   AdminManajemenRuangIndexRouteImport.update({
     id: '/manajemen-ruang/',
     path: '/manajemen-ruang/',
     getParentRoute: () => AdminRouteRoute,
   } as any)
+const PeminjamPeminjamanRuangPinjamRoute =
+  PeminjamPeminjamanRuangPinjamRouteImport.update({
+    id: '/peminjaman-ruang/pinjam',
+    path: '/peminjaman-ruang/pinjam',
+    getParentRoute: () => PeminjamRouteRoute,
+  } as any)
 const AdminUsersEditRoute = AdminUsersEditRouteImport.update({
   id: '/users/edit',
   path: '/users/edit',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminUsersDetailRoute = AdminUsersDetailRouteImport.update({
+  id: '/users/detail',
+  path: '/users/detail',
   getParentRoute: () => AdminRouteRoute,
 } as any)
 const AdminUsersAddRoute = AdminUsersAddRouteImport.update({
@@ -93,102 +132,148 @@ const AdminManajemenRuangAddRoute = AdminManajemenRuangAddRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRouteRouteWithChildren
+  '/kemahasiswaan': typeof KemahasiswaanRouteRoute
   '/peminjam': typeof PeminjamRouteRouteWithChildren
+  '/sumber-daya': typeof SumberDayaRouteRoute
   '/login': typeof LoginRoute
-  '/admin/peminjaman-ruang': typeof AdminPeminjamanRuangRoute
+  '/login-option': typeof LoginOptionRoute
   '/admin/': typeof AdminIndexRoute
   '/peminjam/': typeof PeminjamIndexRoute
   '/admin/manajemen-ruang/add': typeof AdminManajemenRuangAddRoute
   '/admin/manajemen-ruang/edit': typeof AdminManajemenRuangEditRoute
   '/admin/users/add': typeof AdminUsersAddRoute
+  '/admin/users/detail': typeof AdminUsersDetailRoute
   '/admin/users/edit': typeof AdminUsersEditRoute
+  '/peminjam/peminjaman-ruang/pinjam': typeof PeminjamPeminjamanRuangPinjamRoute
   '/admin/manajemen-ruang': typeof AdminManajemenRuangIndexRoute
+  '/admin/peminjaman-ruang': typeof AdminPeminjamanRuangIndexRoute
   '/admin/users': typeof AdminUsersIndexRoute
+  '/peminjam/peminjaman-ruang': typeof PeminjamPeminjamanRuangIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/kemahasiswaan': typeof KemahasiswaanRouteRoute
+  '/sumber-daya': typeof SumberDayaRouteRoute
   '/login': typeof LoginRoute
-  '/admin/peminjaman-ruang': typeof AdminPeminjamanRuangRoute
+  '/login-option': typeof LoginOptionRoute
   '/admin': typeof AdminIndexRoute
   '/peminjam': typeof PeminjamIndexRoute
   '/admin/manajemen-ruang/add': typeof AdminManajemenRuangAddRoute
   '/admin/manajemen-ruang/edit': typeof AdminManajemenRuangEditRoute
   '/admin/users/add': typeof AdminUsersAddRoute
+  '/admin/users/detail': typeof AdminUsersDetailRoute
   '/admin/users/edit': typeof AdminUsersEditRoute
+  '/peminjam/peminjaman-ruang/pinjam': typeof PeminjamPeminjamanRuangPinjamRoute
   '/admin/manajemen-ruang': typeof AdminManajemenRuangIndexRoute
+  '/admin/peminjaman-ruang': typeof AdminPeminjamanRuangIndexRoute
   '/admin/users': typeof AdminUsersIndexRoute
+  '/peminjam/peminjaman-ruang': typeof PeminjamPeminjamanRuangIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/admin': typeof AdminRouteRouteWithChildren
+  '/kemahasiswaan': typeof KemahasiswaanRouteRoute
   '/peminjam': typeof PeminjamRouteRouteWithChildren
+  '/sumber-daya': typeof SumberDayaRouteRoute
   '/login': typeof LoginRoute
-  '/admin/peminjaman-ruang': typeof AdminPeminjamanRuangRoute
+  '/login-option': typeof LoginOptionRoute
   '/admin/': typeof AdminIndexRoute
   '/peminjam/': typeof PeminjamIndexRoute
   '/admin/manajemen-ruang/add': typeof AdminManajemenRuangAddRoute
   '/admin/manajemen-ruang/edit': typeof AdminManajemenRuangEditRoute
   '/admin/users/add': typeof AdminUsersAddRoute
+  '/admin/users/detail': typeof AdminUsersDetailRoute
   '/admin/users/edit': typeof AdminUsersEditRoute
+  '/peminjam/peminjaman-ruang/pinjam': typeof PeminjamPeminjamanRuangPinjamRoute
   '/admin/manajemen-ruang/': typeof AdminManajemenRuangIndexRoute
+  '/admin/peminjaman-ruang/': typeof AdminPeminjamanRuangIndexRoute
   '/admin/users/': typeof AdminUsersIndexRoute
+  '/peminjam/peminjaman-ruang/': typeof PeminjamPeminjamanRuangIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
     | '/admin'
+    | '/kemahasiswaan'
     | '/peminjam'
+    | '/sumber-daya'
     | '/login'
-    | '/admin/peminjaman-ruang'
+    | '/login-option'
     | '/admin/'
     | '/peminjam/'
     | '/admin/manajemen-ruang/add'
     | '/admin/manajemen-ruang/edit'
     | '/admin/users/add'
+    | '/admin/users/detail'
     | '/admin/users/edit'
+    | '/peminjam/peminjaman-ruang/pinjam'
     | '/admin/manajemen-ruang'
+    | '/admin/peminjaman-ruang'
     | '/admin/users'
+    | '/peminjam/peminjaman-ruang'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/kemahasiswaan'
+    | '/sumber-daya'
     | '/login'
-    | '/admin/peminjaman-ruang'
+    | '/login-option'
     | '/admin'
     | '/peminjam'
     | '/admin/manajemen-ruang/add'
     | '/admin/manajemen-ruang/edit'
     | '/admin/users/add'
+    | '/admin/users/detail'
     | '/admin/users/edit'
+    | '/peminjam/peminjaman-ruang/pinjam'
     | '/admin/manajemen-ruang'
+    | '/admin/peminjaman-ruang'
     | '/admin/users'
+    | '/peminjam/peminjaman-ruang'
   id:
     | '__root__'
     | '/'
     | '/admin'
+    | '/kemahasiswaan'
     | '/peminjam'
+    | '/sumber-daya'
     | '/login'
-    | '/admin/peminjaman-ruang'
+    | '/login-option'
     | '/admin/'
     | '/peminjam/'
     | '/admin/manajemen-ruang/add'
     | '/admin/manajemen-ruang/edit'
     | '/admin/users/add'
+    | '/admin/users/detail'
     | '/admin/users/edit'
+    | '/peminjam/peminjaman-ruang/pinjam'
     | '/admin/manajemen-ruang/'
+    | '/admin/peminjaman-ruang/'
     | '/admin/users/'
+    | '/peminjam/peminjaman-ruang/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdminRouteRoute: typeof AdminRouteRouteWithChildren
+  KemahasiswaanRouteRoute: typeof KemahasiswaanRouteRoute
   PeminjamRouteRoute: typeof PeminjamRouteRouteWithChildren
+  SumberDayaRouteRoute: typeof SumberDayaRouteRoute
   LoginRoute: typeof LoginRoute
+  LoginOptionRoute: typeof LoginOptionRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/login-option': {
+      id: '/login-option'
+      path: '/login-option'
+      fullPath: '/login-option'
+      preLoaderRoute: typeof LoginOptionRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/login': {
       id: '/login'
       path: '/login'
@@ -196,11 +281,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/sumber-daya': {
+      id: '/sumber-daya'
+      path: '/sumber-daya'
+      fullPath: '/sumber-daya'
+      preLoaderRoute: typeof SumberDayaRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/peminjam': {
       id: '/peminjam'
       path: '/peminjam'
       fullPath: '/peminjam'
       preLoaderRoute: typeof PeminjamRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/kemahasiswaan': {
+      id: '/kemahasiswaan'
+      path: '/kemahasiswaan'
+      fullPath: '/kemahasiswaan'
+      preLoaderRoute: typeof KemahasiswaanRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin': {
@@ -231,18 +330,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminIndexRouteImport
       parentRoute: typeof AdminRouteRoute
     }
-    '/admin/peminjaman-ruang': {
-      id: '/admin/peminjaman-ruang'
+    '/peminjam/peminjaman-ruang/': {
+      id: '/peminjam/peminjaman-ruang/'
       path: '/peminjaman-ruang'
-      fullPath: '/admin/peminjaman-ruang'
-      preLoaderRoute: typeof AdminPeminjamanRuangRouteImport
-      parentRoute: typeof AdminRouteRoute
+      fullPath: '/peminjam/peminjaman-ruang'
+      preLoaderRoute: typeof PeminjamPeminjamanRuangIndexRouteImport
+      parentRoute: typeof PeminjamRouteRoute
     }
     '/admin/users/': {
       id: '/admin/users/'
       path: '/users'
       fullPath: '/admin/users'
       preLoaderRoute: typeof AdminUsersIndexRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/peminjaman-ruang/': {
+      id: '/admin/peminjaman-ruang/'
+      path: '/peminjaman-ruang'
+      fullPath: '/admin/peminjaman-ruang'
+      preLoaderRoute: typeof AdminPeminjamanRuangIndexRouteImport
       parentRoute: typeof AdminRouteRoute
     }
     '/admin/manajemen-ruang/': {
@@ -252,11 +358,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminManajemenRuangIndexRouteImport
       parentRoute: typeof AdminRouteRoute
     }
+    '/peminjam/peminjaman-ruang/pinjam': {
+      id: '/peminjam/peminjaman-ruang/pinjam'
+      path: '/peminjaman-ruang/pinjam'
+      fullPath: '/peminjam/peminjaman-ruang/pinjam'
+      preLoaderRoute: typeof PeminjamPeminjamanRuangPinjamRouteImport
+      parentRoute: typeof PeminjamRouteRoute
+    }
     '/admin/users/edit': {
       id: '/admin/users/edit'
       path: '/users/edit'
       fullPath: '/admin/users/edit'
       preLoaderRoute: typeof AdminUsersEditRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/users/detail': {
+      id: '/admin/users/detail'
+      path: '/users/detail'
+      fullPath: '/admin/users/detail'
+      preLoaderRoute: typeof AdminUsersDetailRouteImport
       parentRoute: typeof AdminRouteRoute
     }
     '/admin/users/add': {
@@ -284,24 +404,26 @@ declare module '@tanstack/react-router' {
 }
 
 interface AdminRouteRouteChildren {
-  AdminPeminjamanRuangRoute: typeof AdminPeminjamanRuangRoute
   AdminIndexRoute: typeof AdminIndexRoute
   AdminManajemenRuangAddRoute: typeof AdminManajemenRuangAddRoute
   AdminManajemenRuangEditRoute: typeof AdminManajemenRuangEditRoute
   AdminUsersAddRoute: typeof AdminUsersAddRoute
+  AdminUsersDetailRoute: typeof AdminUsersDetailRoute
   AdminUsersEditRoute: typeof AdminUsersEditRoute
   AdminManajemenRuangIndexRoute: typeof AdminManajemenRuangIndexRoute
+  AdminPeminjamanRuangIndexRoute: typeof AdminPeminjamanRuangIndexRoute
   AdminUsersIndexRoute: typeof AdminUsersIndexRoute
 }
 
 const AdminRouteRouteChildren: AdminRouteRouteChildren = {
-  AdminPeminjamanRuangRoute: AdminPeminjamanRuangRoute,
   AdminIndexRoute: AdminIndexRoute,
   AdminManajemenRuangAddRoute: AdminManajemenRuangAddRoute,
   AdminManajemenRuangEditRoute: AdminManajemenRuangEditRoute,
   AdminUsersAddRoute: AdminUsersAddRoute,
+  AdminUsersDetailRoute: AdminUsersDetailRoute,
   AdminUsersEditRoute: AdminUsersEditRoute,
   AdminManajemenRuangIndexRoute: AdminManajemenRuangIndexRoute,
+  AdminPeminjamanRuangIndexRoute: AdminPeminjamanRuangIndexRoute,
   AdminUsersIndexRoute: AdminUsersIndexRoute,
 }
 
@@ -311,10 +433,14 @@ const AdminRouteRouteWithChildren = AdminRouteRoute._addFileChildren(
 
 interface PeminjamRouteRouteChildren {
   PeminjamIndexRoute: typeof PeminjamIndexRoute
+  PeminjamPeminjamanRuangPinjamRoute: typeof PeminjamPeminjamanRuangPinjamRoute
+  PeminjamPeminjamanRuangIndexRoute: typeof PeminjamPeminjamanRuangIndexRoute
 }
 
 const PeminjamRouteRouteChildren: PeminjamRouteRouteChildren = {
   PeminjamIndexRoute: PeminjamIndexRoute,
+  PeminjamPeminjamanRuangPinjamRoute: PeminjamPeminjamanRuangPinjamRoute,
+  PeminjamPeminjamanRuangIndexRoute: PeminjamPeminjamanRuangIndexRoute,
 }
 
 const PeminjamRouteRouteWithChildren = PeminjamRouteRoute._addFileChildren(
@@ -324,8 +450,11 @@ const PeminjamRouteRouteWithChildren = PeminjamRouteRoute._addFileChildren(
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRouteRoute: AdminRouteRouteWithChildren,
+  KemahasiswaanRouteRoute: KemahasiswaanRouteRoute,
   PeminjamRouteRoute: PeminjamRouteRouteWithChildren,
+  SumberDayaRouteRoute: SumberDayaRouteRoute,
   LoginRoute: LoginRoute,
+  LoginOptionRoute: LoginOptionRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

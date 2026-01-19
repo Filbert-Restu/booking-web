@@ -2,6 +2,7 @@ import { createFileRoute } from '@tanstack/react-router';
 import { Button } from '@/components/ui/shadcn/button/button';
 import { UserPlus, Search } from 'lucide-react';
 import { UserTable } from '@/components/UserTable';
+import { UserDetailModal } from '@/components/UserDetailModal';
 import { useState } from 'react';
 import {
   Select,
@@ -64,6 +65,8 @@ const usersData: User[] = [
 function RouteComponent() {
   const [selectedRole, setSelectedRole] = useState<string>('Semua');
   const [searchName, setSearchName] = useState<string>('');
+  const [detailUser, setDetailUser] = useState<User | null>(null);
+  const [openDetail, setOpenDetail] = useState(false);
 
   const handleDelete = (id: number) => {
     if (confirm('Apakah Anda yakin ingin menghapus Peminjam ini?')) {
@@ -73,9 +76,8 @@ function RouteComponent() {
   };
 
   const handleViewDetail = (user: User) => {
-    alert(
-      `Detail User:\n\nNama: ${user.name}\nEmail: ${user.email}\nRole: ${user.role}\nStatus: ${user.status}\nTerdaftar: ${user.createdAt}`
-    );
+    setDetailUser(user);
+    setOpenDetail(true);
   };
 
   const handleAddUser = () => {
@@ -86,7 +88,7 @@ function RouteComponent() {
   const handleToggleStatus = (id: number, newStatus: 'active' | 'inactive') => {
     if (
       confirm(
-        `Apakah Anda yakin ingin ${newStatus === `active` ? `mengaktifkan` : `menonaktifkan`} user ini?`
+        `Apakah Anda yakin ingin ${newStatus === `active` ? `mengaktifkan` : `menonaktifkan`} user ini?`,
       )
     ) {
       // TODO: Implement toggle status API call
@@ -166,6 +168,11 @@ function RouteComponent() {
         onDelete={handleDelete}
         onViewDetail={handleViewDetail}
         onToggleStatus={handleToggleStatus}
+      />
+      <UserDetailModal
+        open={openDetail}
+        onOpenChange={setOpenDetail}
+        user={detailUser}
       />
     </div>
   );

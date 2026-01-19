@@ -18,7 +18,7 @@ export default function TopBar() {
       </div>
       {/* Notifikasi, Nama User, Avatar */}
       <Link
-        to='/login'
+        to='/login-option'
         // Gabungkan class container (flex items-center gap-4)
         // dengan class button (bg-white text-[#0586c6]...)
         className='flex items-center gap-4 bg-white text-[#0586c6] px-4 py-2 rounded-xl font-semibold hover:bg-gray-200 transition'
