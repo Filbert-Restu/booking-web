@@ -1,10 +1,10 @@
-import { KemahasiswaanSidebar } from '@/components/layouts/kemahasiswaan/KemahasiswaanSidebar';
-import KemahasiswaanTopbar from '@/components/layouts/kemahasiswaan/KemahasiswaanTopbar';
+import { SumberdayaSidebar } from '@/components/layouts/sumberdaya/SumberdayaSidebar';
+import SumberdayaTopbar from '@/components/layouts/sumberdaya/SumberdayaTopbar';
 import { SidebarProvider } from '@/components/ui/shadcn/sidebar';
 import { createFileRoute, Outlet } from '@tanstack/react-router';
 import React from 'react';
 
-export const Route = createFileRoute('/kemahasiswaan')({
+export const Route = createFileRoute('/sumberdaya')({
   component: RouteComponent,
 });
 
@@ -13,9 +13,9 @@ function RouteComponent() {
 
   return (
     <SidebarProvider open={open} onOpenChange={setOpen} className='gap-0'>
-      <KemahasiswaanSidebar />
+      <SumberdayaSidebar />
       <main className='flex-1 flex flex-col w-full min-w-0'>
-        <KemahasiswaanTopbar />
+        <SumberdayaTopbar />
         <div className='flex-1 p-6 space-y-6'>
           <Outlet />
         </div>
