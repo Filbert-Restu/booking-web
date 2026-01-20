@@ -19,7 +19,7 @@ const menuSections = [
 		items: [
 			{
 				title: 'Dashboard',
-				url: '/sumberdaya',
+				url: '/sumber-daya',
 				icon: LayoutDashboard,
 			},
 		],
@@ -29,7 +29,7 @@ const menuSections = [
 		items: [
 			{
 				title: 'Approve Sumber Daya',
-				url: '/sumberdaya/approval/',
+				url: '/sumber-daya/approval',
 				icon: FileCheck,
 			},
 		],
