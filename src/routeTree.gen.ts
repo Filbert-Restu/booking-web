@@ -16,8 +16,12 @@ import { Route as PeminjamRouteRouteImport } from './routes/peminjam/route'
 import { Route as KemahasiswaanRouteRouteImport } from './routes/kemahasiswaan/route'
 import { Route as AdminRouteRouteImport } from './routes/admin/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as Wadek1IndexRouteImport } from './routes/wadek1/index'
 import { Route as SumberDayaIndexRouteImport } from './routes/sumber-daya/index'
+import { Route as SenatIndexRouteImport } from './routes/senat/index'
 import { Route as PeminjamIndexRouteImport } from './routes/peminjam/index'
+import { Route as KetuaOrmawaIndexRouteImport } from './routes/ketua-ormawa/index'
+import { Route as KetuaDepartemenIndexRouteImport } from './routes/ketua-departemen/index'
 import { Route as KemahasiswaanIndexRouteImport } from './routes/kemahasiswaan/index'
 import { Route as AdminIndexRouteImport } from './routes/admin/index'
 import { Route as SumberDayaApprovalIndexRouteImport } from './routes/sumber-daya/approval/index'
@@ -69,15 +73,35 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const Wadek1IndexRoute = Wadek1IndexRouteImport.update({
+  id: '/wadek1/',
+  path: '/wadek1/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SumberDayaIndexRoute = SumberDayaIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => SumberDayaRouteRoute,
 } as any)
+const SenatIndexRoute = SenatIndexRouteImport.update({
+  id: '/senat/',
+  path: '/senat/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PeminjamIndexRoute = PeminjamIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => PeminjamRouteRoute,
+} as any)
+const KetuaOrmawaIndexRoute = KetuaOrmawaIndexRouteImport.update({
+  id: '/ketua-ormawa/',
+  path: '/ketua-ormawa/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const KetuaDepartemenIndexRoute = KetuaDepartemenIndexRouteImport.update({
+  id: '/ketua-departemen/',
+  path: '/ketua-departemen/',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const KemahasiswaanIndexRoute = KemahasiswaanIndexRouteImport.update({
   id: '/',
@@ -168,8 +192,12 @@ export interface FileRoutesByFullPath {
   '/login-option': typeof LoginOptionRoute
   '/admin/': typeof AdminIndexRoute
   '/kemahasiswaan/': typeof KemahasiswaanIndexRoute
+  '/ketua-departemen': typeof KetuaDepartemenIndexRoute
+  '/ketua-ormawa': typeof KetuaOrmawaIndexRoute
   '/peminjam/': typeof PeminjamIndexRoute
+  '/senat': typeof SenatIndexRoute
   '/sumber-daya/': typeof SumberDayaIndexRoute
+  '/wadek1': typeof Wadek1IndexRoute
   '/admin/manajemen-ruang/add': typeof AdminManajemenRuangAddRoute
   '/admin/manajemen-ruang/edit': typeof AdminManajemenRuangEditRoute
   '/admin/users/add': typeof AdminUsersAddRoute
@@ -190,8 +218,12 @@ export interface FileRoutesByTo {
   '/login-option': typeof LoginOptionRoute
   '/admin': typeof AdminIndexRoute
   '/kemahasiswaan': typeof KemahasiswaanIndexRoute
+  '/ketua-departemen': typeof KetuaDepartemenIndexRoute
+  '/ketua-ormawa': typeof KetuaOrmawaIndexRoute
   '/peminjam': typeof PeminjamIndexRoute
+  '/senat': typeof SenatIndexRoute
   '/sumber-daya': typeof SumberDayaIndexRoute
+  '/wadek1': typeof Wadek1IndexRoute
   '/admin/manajemen-ruang/add': typeof AdminManajemenRuangAddRoute
   '/admin/manajemen-ruang/edit': typeof AdminManajemenRuangEditRoute
   '/admin/users/add': typeof AdminUsersAddRoute
@@ -217,8 +249,12 @@ export interface FileRoutesById {
   '/login-option': typeof LoginOptionRoute
   '/admin/': typeof AdminIndexRoute
   '/kemahasiswaan/': typeof KemahasiswaanIndexRoute
+  '/ketua-departemen/': typeof KetuaDepartemenIndexRoute
+  '/ketua-ormawa/': typeof KetuaOrmawaIndexRoute
   '/peminjam/': typeof PeminjamIndexRoute
+  '/senat/': typeof SenatIndexRoute
   '/sumber-daya/': typeof SumberDayaIndexRoute
+  '/wadek1/': typeof Wadek1IndexRoute
   '/admin/manajemen-ruang/add': typeof AdminManajemenRuangAddRoute
   '/admin/manajemen-ruang/edit': typeof AdminManajemenRuangEditRoute
   '/admin/users/add': typeof AdminUsersAddRoute
@@ -245,8 +281,12 @@ export interface FileRouteTypes {
     | '/login-option'
     | '/admin/'
     | '/kemahasiswaan/'
+    | '/ketua-departemen'
+    | '/ketua-ormawa'
     | '/peminjam/'
+    | '/senat'
     | '/sumber-daya/'
+    | '/wadek1'
     | '/admin/manajemen-ruang/add'
     | '/admin/manajemen-ruang/edit'
     | '/admin/users/add'
@@ -267,8 +307,12 @@ export interface FileRouteTypes {
     | '/login-option'
     | '/admin'
     | '/kemahasiswaan'
+    | '/ketua-departemen'
+    | '/ketua-ormawa'
     | '/peminjam'
+    | '/senat'
     | '/sumber-daya'
+    | '/wadek1'
     | '/admin/manajemen-ruang/add'
     | '/admin/manajemen-ruang/edit'
     | '/admin/users/add'
@@ -293,8 +337,12 @@ export interface FileRouteTypes {
     | '/login-option'
     | '/admin/'
     | '/kemahasiswaan/'
+    | '/ketua-departemen/'
+    | '/ketua-ormawa/'
     | '/peminjam/'
+    | '/senat/'
     | '/sumber-daya/'
+    | '/wadek1/'
     | '/admin/manajemen-ruang/add'
     | '/admin/manajemen-ruang/edit'
     | '/admin/users/add'
@@ -318,6 +366,10 @@ export interface RootRouteChildren {
   SumberDayaRouteRoute: typeof SumberDayaRouteRouteWithChildren
   LoginRoute: typeof LoginRoute
   LoginOptionRoute: typeof LoginOptionRoute
+  KetuaDepartemenIndexRoute: typeof KetuaDepartemenIndexRoute
+  KetuaOrmawaIndexRoute: typeof KetuaOrmawaIndexRoute
+  SenatIndexRoute: typeof SenatIndexRoute
+  Wadek1IndexRoute: typeof Wadek1IndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -371,6 +423,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/wadek1/': {
+      id: '/wadek1/'
+      path: '/wadek1'
+      fullPath: '/wadek1'
+      preLoaderRoute: typeof Wadek1IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/sumber-daya/': {
       id: '/sumber-daya/'
       path: '/'
@@ -378,12 +437,33 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SumberDayaIndexRouteImport
       parentRoute: typeof SumberDayaRouteRoute
     }
+    '/senat/': {
+      id: '/senat/'
+      path: '/senat'
+      fullPath: '/senat'
+      preLoaderRoute: typeof SenatIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/peminjam/': {
       id: '/peminjam/'
       path: '/'
       fullPath: '/peminjam/'
       preLoaderRoute: typeof PeminjamIndexRouteImport
       parentRoute: typeof PeminjamRouteRoute
+    }
+    '/ketua-ormawa/': {
+      id: '/ketua-ormawa/'
+      path: '/ketua-ormawa'
+      fullPath: '/ketua-ormawa'
+      preLoaderRoute: typeof KetuaOrmawaIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/ketua-departemen/': {
+      id: '/ketua-departemen/'
+      path: '/ketua-departemen'
+      fullPath: '/ketua-departemen'
+      preLoaderRoute: typeof KetuaDepartemenIndexRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/kemahasiswaan/': {
       id: '/kemahasiswaan/'
@@ -574,6 +654,10 @@ const rootRouteChildren: RootRouteChildren = {
   SumberDayaRouteRoute: SumberDayaRouteRouteWithChildren,
   LoginRoute: LoginRoute,
   LoginOptionRoute: LoginOptionRoute,
+  KetuaDepartemenIndexRoute: KetuaDepartemenIndexRoute,
+  KetuaOrmawaIndexRoute: KetuaOrmawaIndexRoute,
+  SenatIndexRoute: SenatIndexRoute,
+  Wadek1IndexRoute: Wadek1IndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
