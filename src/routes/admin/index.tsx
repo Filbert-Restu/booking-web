@@ -1,6 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { Clock, DoorOpen, Users } from 'lucide-react';
 import { StatCard } from '@/components/StatCard';
+import BookingCalendar from '@/components/BookingCalendar';
 
 export const Route = createFileRoute('/admin/')({
   component: RouteComponent,
@@ -40,7 +41,7 @@ function RouteComponent() {
         </p>
       </div>
 
-      <div className='grid grid-cols-1 md:grid-cols-3 gap-4'>
+      <div className='grid grid-cols-3 md:grid-cols-3 gap-4'>
         {stats.map((stat, index) => (
           <StatCard
             key={index}
@@ -52,6 +53,7 @@ function RouteComponent() {
           />
         ))}
       </div>
+      <BookingCalendar />
     </>
   );
 }

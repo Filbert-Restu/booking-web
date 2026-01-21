@@ -16,16 +16,18 @@ export function StatCard({
   bgLight,
 }: StatCardProps) {
   return (
-    <div className='bg-white rounded-lg shadow-sm border border-gray-200 p-4 hover:shadow-md transition-shadow'>
+    <div className='bg-white rounded-lg shadow-sm border border-gray-200 p-3 md:p-4 hover:shadow-md transition-shadow'>
       <div className='flex items-center justify-between'>
         <div className='flex-1'>
           <p className='text-xs font-medium text-gray-600 mb-1'>{title}</p>
-          <h3 className='text-2xl font-bold text-gray-900'>{value}</h3>
+          <h3 className='text-xl md:text-2xl font-bold text-gray-900'>
+            {value}
+          </h3>
         </div>
         <div
-          className={`${bgLight} p-2 rounded-lg flex items-center justify-center`}
+          className={`${bgLight} p-1 md:p-2 rounded-lg flex items-center justify-center`}
         >
-          <Icon className={`${textColor} w-5 h-5`} />
+          <Icon className={`${textColor} w-4 h-4 md:w-5 md:h-5`} />
         </div>
       </div>
     </div>

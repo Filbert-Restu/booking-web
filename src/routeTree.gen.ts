@@ -21,12 +21,13 @@ import { Route as PeminjamIndexRouteImport } from './routes/peminjam/index'
 import { Route as KemahasiswaanIndexRouteImport } from './routes/kemahasiswaan/index'
 import { Route as AdminIndexRouteImport } from './routes/admin/index'
 import { Route as SumberDayaApprovalIndexRouteImport } from './routes/sumber-daya/approval/index'
-import { Route as PeminjamPeminjamanRuangIndexRouteImport } from './routes/peminjam/peminjaman-ruang/index'
+import { Route as PeminjamPinjamIndexRouteImport } from './routes/peminjam/pinjam/index'
 import { Route as KemahasiswaanApprovalIndexRouteImport } from './routes/kemahasiswaan/approval/index'
 import { Route as AdminUsersIndexRouteImport } from './routes/admin/users/index'
 import { Route as AdminPeminjamanRuangIndexRouteImport } from './routes/admin/peminjaman-ruang/index'
 import { Route as AdminManajemenRuangIndexRouteImport } from './routes/admin/manajemen-ruang/index'
-import { Route as PeminjamPeminjamanRuangPinjamRouteImport } from './routes/peminjam/peminjaman-ruang/pinjam'
+import { Route as PeminjamPinjamEditRouteImport } from './routes/peminjam/pinjam/edit'
+import { Route as PeminjamPinjamDetailRouteImport } from './routes/peminjam/pinjam/detail'
 import { Route as AdminUsersEditRouteImport } from './routes/admin/users/edit'
 import { Route as AdminUsersDetailRouteImport } from './routes/admin/users/detail'
 import { Route as AdminUsersAddRouteImport } from './routes/admin/users/add'
@@ -93,12 +94,11 @@ const SumberDayaApprovalIndexRoute = SumberDayaApprovalIndexRouteImport.update({
   path: '/approval/',
   getParentRoute: () => SumberDayaRouteRoute,
 } as any)
-const PeminjamPeminjamanRuangIndexRoute =
-  PeminjamPeminjamanRuangIndexRouteImport.update({
-    id: '/peminjaman-ruang/',
-    path: '/peminjaman-ruang/',
-    getParentRoute: () => PeminjamRouteRoute,
-  } as any)
+const PeminjamPinjamIndexRoute = PeminjamPinjamIndexRouteImport.update({
+  id: '/pinjam/',
+  path: '/pinjam/',
+  getParentRoute: () => PeminjamRouteRoute,
+} as any)
 const KemahasiswaanApprovalIndexRoute =
   KemahasiswaanApprovalIndexRouteImport.update({
     id: '/approval/',
@@ -122,12 +122,16 @@ const AdminManajemenRuangIndexRoute =
     path: '/manajemen-ruang/',
     getParentRoute: () => AdminRouteRoute,
   } as any)
-const PeminjamPeminjamanRuangPinjamRoute =
-  PeminjamPeminjamanRuangPinjamRouteImport.update({
-    id: '/peminjaman-ruang/pinjam',
-    path: '/peminjaman-ruang/pinjam',
-    getParentRoute: () => PeminjamRouteRoute,
-  } as any)
+const PeminjamPinjamEditRoute = PeminjamPinjamEditRouteImport.update({
+  id: '/pinjam/edit',
+  path: '/pinjam/edit',
+  getParentRoute: () => PeminjamRouteRoute,
+} as any)
+const PeminjamPinjamDetailRoute = PeminjamPinjamDetailRouteImport.update({
+  id: '/pinjam/detail',
+  path: '/pinjam/detail',
+  getParentRoute: () => PeminjamRouteRoute,
+} as any)
 const AdminUsersEditRoute = AdminUsersEditRouteImport.update({
   id: '/users/edit',
   path: '/users/edit',
@@ -171,12 +175,13 @@ export interface FileRoutesByFullPath {
   '/admin/users/add': typeof AdminUsersAddRoute
   '/admin/users/detail': typeof AdminUsersDetailRoute
   '/admin/users/edit': typeof AdminUsersEditRoute
-  '/peminjam/peminjaman-ruang/pinjam': typeof PeminjamPeminjamanRuangPinjamRoute
+  '/peminjam/pinjam/detail': typeof PeminjamPinjamDetailRoute
+  '/peminjam/pinjam/edit': typeof PeminjamPinjamEditRoute
   '/admin/manajemen-ruang': typeof AdminManajemenRuangIndexRoute
   '/admin/peminjaman-ruang': typeof AdminPeminjamanRuangIndexRoute
   '/admin/users': typeof AdminUsersIndexRoute
   '/kemahasiswaan/approval': typeof KemahasiswaanApprovalIndexRoute
-  '/peminjam/peminjaman-ruang': typeof PeminjamPeminjamanRuangIndexRoute
+  '/peminjam/pinjam': typeof PeminjamPinjamIndexRoute
   '/sumber-daya/approval': typeof SumberDayaApprovalIndexRoute
 }
 export interface FileRoutesByTo {
@@ -192,12 +197,13 @@ export interface FileRoutesByTo {
   '/admin/users/add': typeof AdminUsersAddRoute
   '/admin/users/detail': typeof AdminUsersDetailRoute
   '/admin/users/edit': typeof AdminUsersEditRoute
-  '/peminjam/peminjaman-ruang/pinjam': typeof PeminjamPeminjamanRuangPinjamRoute
+  '/peminjam/pinjam/detail': typeof PeminjamPinjamDetailRoute
+  '/peminjam/pinjam/edit': typeof PeminjamPinjamEditRoute
   '/admin/manajemen-ruang': typeof AdminManajemenRuangIndexRoute
   '/admin/peminjaman-ruang': typeof AdminPeminjamanRuangIndexRoute
   '/admin/users': typeof AdminUsersIndexRoute
   '/kemahasiswaan/approval': typeof KemahasiswaanApprovalIndexRoute
-  '/peminjam/peminjaman-ruang': typeof PeminjamPeminjamanRuangIndexRoute
+  '/peminjam/pinjam': typeof PeminjamPinjamIndexRoute
   '/sumber-daya/approval': typeof SumberDayaApprovalIndexRoute
 }
 export interface FileRoutesById {
@@ -218,12 +224,13 @@ export interface FileRoutesById {
   '/admin/users/add': typeof AdminUsersAddRoute
   '/admin/users/detail': typeof AdminUsersDetailRoute
   '/admin/users/edit': typeof AdminUsersEditRoute
-  '/peminjam/peminjaman-ruang/pinjam': typeof PeminjamPeminjamanRuangPinjamRoute
+  '/peminjam/pinjam/detail': typeof PeminjamPinjamDetailRoute
+  '/peminjam/pinjam/edit': typeof PeminjamPinjamEditRoute
   '/admin/manajemen-ruang/': typeof AdminManajemenRuangIndexRoute
   '/admin/peminjaman-ruang/': typeof AdminPeminjamanRuangIndexRoute
   '/admin/users/': typeof AdminUsersIndexRoute
   '/kemahasiswaan/approval/': typeof KemahasiswaanApprovalIndexRoute
-  '/peminjam/peminjaman-ruang/': typeof PeminjamPeminjamanRuangIndexRoute
+  '/peminjam/pinjam/': typeof PeminjamPinjamIndexRoute
   '/sumber-daya/approval/': typeof SumberDayaApprovalIndexRoute
 }
 export interface FileRouteTypes {
@@ -245,12 +252,13 @@ export interface FileRouteTypes {
     | '/admin/users/add'
     | '/admin/users/detail'
     | '/admin/users/edit'
-    | '/peminjam/peminjaman-ruang/pinjam'
+    | '/peminjam/pinjam/detail'
+    | '/peminjam/pinjam/edit'
     | '/admin/manajemen-ruang'
     | '/admin/peminjaman-ruang'
     | '/admin/users'
     | '/kemahasiswaan/approval'
-    | '/peminjam/peminjaman-ruang'
+    | '/peminjam/pinjam'
     | '/sumber-daya/approval'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -266,12 +274,13 @@ export interface FileRouteTypes {
     | '/admin/users/add'
     | '/admin/users/detail'
     | '/admin/users/edit'
-    | '/peminjam/peminjaman-ruang/pinjam'
+    | '/peminjam/pinjam/detail'
+    | '/peminjam/pinjam/edit'
     | '/admin/manajemen-ruang'
     | '/admin/peminjaman-ruang'
     | '/admin/users'
     | '/kemahasiswaan/approval'
-    | '/peminjam/peminjaman-ruang'
+    | '/peminjam/pinjam'
     | '/sumber-daya/approval'
   id:
     | '__root__'
@@ -291,12 +300,13 @@ export interface FileRouteTypes {
     | '/admin/users/add'
     | '/admin/users/detail'
     | '/admin/users/edit'
-    | '/peminjam/peminjaman-ruang/pinjam'
+    | '/peminjam/pinjam/detail'
+    | '/peminjam/pinjam/edit'
     | '/admin/manajemen-ruang/'
     | '/admin/peminjaman-ruang/'
     | '/admin/users/'
     | '/kemahasiswaan/approval/'
-    | '/peminjam/peminjaman-ruang/'
+    | '/peminjam/pinjam/'
     | '/sumber-daya/approval/'
   fileRoutesById: FileRoutesById
 }
@@ -396,11 +406,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SumberDayaApprovalIndexRouteImport
       parentRoute: typeof SumberDayaRouteRoute
     }
-    '/peminjam/peminjaman-ruang/': {
-      id: '/peminjam/peminjaman-ruang/'
-      path: '/peminjaman-ruang'
-      fullPath: '/peminjam/peminjaman-ruang'
-      preLoaderRoute: typeof PeminjamPeminjamanRuangIndexRouteImport
+    '/peminjam/pinjam/': {
+      id: '/peminjam/pinjam/'
+      path: '/pinjam'
+      fullPath: '/peminjam/pinjam'
+      preLoaderRoute: typeof PeminjamPinjamIndexRouteImport
       parentRoute: typeof PeminjamRouteRoute
     }
     '/kemahasiswaan/approval/': {
@@ -431,11 +441,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminManajemenRuangIndexRouteImport
       parentRoute: typeof AdminRouteRoute
     }
-    '/peminjam/peminjaman-ruang/pinjam': {
-      id: '/peminjam/peminjaman-ruang/pinjam'
-      path: '/peminjaman-ruang/pinjam'
-      fullPath: '/peminjam/peminjaman-ruang/pinjam'
-      preLoaderRoute: typeof PeminjamPeminjamanRuangPinjamRouteImport
+    '/peminjam/pinjam/edit': {
+      id: '/peminjam/pinjam/edit'
+      path: '/pinjam/edit'
+      fullPath: '/peminjam/pinjam/edit'
+      preLoaderRoute: typeof PeminjamPinjamEditRouteImport
+      parentRoute: typeof PeminjamRouteRoute
+    }
+    '/peminjam/pinjam/detail': {
+      id: '/peminjam/pinjam/detail'
+      path: '/pinjam/detail'
+      fullPath: '/peminjam/pinjam/detail'
+      preLoaderRoute: typeof PeminjamPinjamDetailRouteImport
       parentRoute: typeof PeminjamRouteRoute
     }
     '/admin/users/edit': {
@@ -519,14 +536,16 @@ const KemahasiswaanRouteRouteWithChildren =
 
 interface PeminjamRouteRouteChildren {
   PeminjamIndexRoute: typeof PeminjamIndexRoute
-  PeminjamPeminjamanRuangPinjamRoute: typeof PeminjamPeminjamanRuangPinjamRoute
-  PeminjamPeminjamanRuangIndexRoute: typeof PeminjamPeminjamanRuangIndexRoute
+  PeminjamPinjamDetailRoute: typeof PeminjamPinjamDetailRoute
+  PeminjamPinjamEditRoute: typeof PeminjamPinjamEditRoute
+  PeminjamPinjamIndexRoute: typeof PeminjamPinjamIndexRoute
 }
 
 const PeminjamRouteRouteChildren: PeminjamRouteRouteChildren = {
   PeminjamIndexRoute: PeminjamIndexRoute,
-  PeminjamPeminjamanRuangPinjamRoute: PeminjamPeminjamanRuangPinjamRoute,
-  PeminjamPeminjamanRuangIndexRoute: PeminjamPeminjamanRuangIndexRoute,
+  PeminjamPinjamDetailRoute: PeminjamPinjamDetailRoute,
+  PeminjamPinjamEditRoute: PeminjamPinjamEditRoute,
+  PeminjamPinjamIndexRoute: PeminjamPinjamIndexRoute,
 }
 
 const PeminjamRouteRouteWithChildren = PeminjamRouteRoute._addFileChildren(
