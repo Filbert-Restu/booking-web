@@ -30,6 +30,11 @@ const menuSections: MenuSection[] = [
         url: '/peminjam/pinjam',
         icon: Calendar,
       },
+      {
+        title: 'Reservasi',
+        url: '/peminjam/reservasi',
+        icon: BookOpen,
+      },
     ],
   },
 ];
