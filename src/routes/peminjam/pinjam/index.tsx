@@ -5,5 +5,5 @@ export const Route = createFileRoute('/peminjam/pinjam/')({
 })
 
 function RouteComponent() {
-  return <div>Hello "/peminjam/pinjam/"!</div>
+  return <div>Hello "/pinjam-ruang/"!</div>
 }

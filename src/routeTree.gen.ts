@@ -30,8 +30,6 @@ import { Route as KemahasiswaanApprovalIndexRouteImport } from './routes/kemahas
 import { Route as AdminUsersIndexRouteImport } from './routes/admin/users/index'
 import { Route as AdminPeminjamanRuangIndexRouteImport } from './routes/admin/peminjaman-ruang/index'
 import { Route as AdminManajemenRuangIndexRouteImport } from './routes/admin/manajemen-ruang/index'
-import { Route as PeminjamPinjamEditRouteImport } from './routes/peminjam/pinjam/edit'
-import { Route as PeminjamPinjamDetailRouteImport } from './routes/peminjam/pinjam/detail'
 import { Route as AdminUsersEditRouteImport } from './routes/admin/users/edit'
 import { Route as AdminUsersDetailRouteImport } from './routes/admin/users/detail'
 import { Route as AdminUsersAddRouteImport } from './routes/admin/users/add'
@@ -146,16 +144,6 @@ const AdminManajemenRuangIndexRoute =
     path: '/manajemen-ruang/',
     getParentRoute: () => AdminRouteRoute,
   } as any)
-const PeminjamPinjamEditRoute = PeminjamPinjamEditRouteImport.update({
-  id: '/pinjam/edit',
-  path: '/pinjam/edit',
-  getParentRoute: () => PeminjamRouteRoute,
-} as any)
-const PeminjamPinjamDetailRoute = PeminjamPinjamDetailRouteImport.update({
-  id: '/pinjam/detail',
-  path: '/pinjam/detail',
-  getParentRoute: () => PeminjamRouteRoute,
-} as any)
 const AdminUsersEditRoute = AdminUsersEditRouteImport.update({
   id: '/users/edit',
   path: '/users/edit',
@@ -203,8 +191,6 @@ export interface FileRoutesByFullPath {
   '/admin/users/add': typeof AdminUsersAddRoute
   '/admin/users/detail': typeof AdminUsersDetailRoute
   '/admin/users/edit': typeof AdminUsersEditRoute
-  '/peminjam/pinjam/detail': typeof PeminjamPinjamDetailRoute
-  '/peminjam/pinjam/edit': typeof PeminjamPinjamEditRoute
   '/admin/manajemen-ruang': typeof AdminManajemenRuangIndexRoute
   '/admin/peminjaman-ruang': typeof AdminPeminjamanRuangIndexRoute
   '/admin/users': typeof AdminUsersIndexRoute
@@ -229,8 +215,6 @@ export interface FileRoutesByTo {
   '/admin/users/add': typeof AdminUsersAddRoute
   '/admin/users/detail': typeof AdminUsersDetailRoute
   '/admin/users/edit': typeof AdminUsersEditRoute
-  '/peminjam/pinjam/detail': typeof PeminjamPinjamDetailRoute
-  '/peminjam/pinjam/edit': typeof PeminjamPinjamEditRoute
   '/admin/manajemen-ruang': typeof AdminManajemenRuangIndexRoute
   '/admin/peminjaman-ruang': typeof AdminPeminjamanRuangIndexRoute
   '/admin/users': typeof AdminUsersIndexRoute
@@ -260,8 +244,6 @@ export interface FileRoutesById {
   '/admin/users/add': typeof AdminUsersAddRoute
   '/admin/users/detail': typeof AdminUsersDetailRoute
   '/admin/users/edit': typeof AdminUsersEditRoute
-  '/peminjam/pinjam/detail': typeof PeminjamPinjamDetailRoute
-  '/peminjam/pinjam/edit': typeof PeminjamPinjamEditRoute
   '/admin/manajemen-ruang/': typeof AdminManajemenRuangIndexRoute
   '/admin/peminjaman-ruang/': typeof AdminPeminjamanRuangIndexRoute
   '/admin/users/': typeof AdminUsersIndexRoute
@@ -292,8 +274,6 @@ export interface FileRouteTypes {
     | '/admin/users/add'
     | '/admin/users/detail'
     | '/admin/users/edit'
-    | '/peminjam/pinjam/detail'
-    | '/peminjam/pinjam/edit'
     | '/admin/manajemen-ruang'
     | '/admin/peminjaman-ruang'
     | '/admin/users'
@@ -318,8 +298,6 @@ export interface FileRouteTypes {
     | '/admin/users/add'
     | '/admin/users/detail'
     | '/admin/users/edit'
-    | '/peminjam/pinjam/detail'
-    | '/peminjam/pinjam/edit'
     | '/admin/manajemen-ruang'
     | '/admin/peminjaman-ruang'
     | '/admin/users'
@@ -348,8 +326,6 @@ export interface FileRouteTypes {
     | '/admin/users/add'
     | '/admin/users/detail'
     | '/admin/users/edit'
-    | '/peminjam/pinjam/detail'
-    | '/peminjam/pinjam/edit'
     | '/admin/manajemen-ruang/'
     | '/admin/peminjaman-ruang/'
     | '/admin/users/'
@@ -521,20 +497,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminManajemenRuangIndexRouteImport
       parentRoute: typeof AdminRouteRoute
     }
-    '/peminjam/pinjam/edit': {
-      id: '/peminjam/pinjam/edit'
-      path: '/pinjam/edit'
-      fullPath: '/peminjam/pinjam/edit'
-      preLoaderRoute: typeof PeminjamPinjamEditRouteImport
-      parentRoute: typeof PeminjamRouteRoute
-    }
-    '/peminjam/pinjam/detail': {
-      id: '/peminjam/pinjam/detail'
-      path: '/pinjam/detail'
-      fullPath: '/peminjam/pinjam/detail'
-      preLoaderRoute: typeof PeminjamPinjamDetailRouteImport
-      parentRoute: typeof PeminjamRouteRoute
-    }
     '/admin/users/edit': {
       id: '/admin/users/edit'
       path: '/users/edit'
@@ -616,15 +578,11 @@ const KemahasiswaanRouteRouteWithChildren =
 
 interface PeminjamRouteRouteChildren {
   PeminjamIndexRoute: typeof PeminjamIndexRoute
-  PeminjamPinjamDetailRoute: typeof PeminjamPinjamDetailRoute
-  PeminjamPinjamEditRoute: typeof PeminjamPinjamEditRoute
   PeminjamPinjamIndexRoute: typeof PeminjamPinjamIndexRoute
 }
 
 const PeminjamRouteRouteChildren: PeminjamRouteRouteChildren = {
   PeminjamIndexRoute: PeminjamIndexRoute,
-  PeminjamPinjamDetailRoute: PeminjamPinjamDetailRoute,
-  PeminjamPinjamEditRoute: PeminjamPinjamEditRoute,
   PeminjamPinjamIndexRoute: PeminjamPinjamIndexRoute,
 }
 

@@ -1,29 +1,36 @@
+import { SidebarTrigger } from '@/components/ui/shadcn/sidebar/sidebar';
 import { Link } from '@tanstack/react-router';
 
-export default function TopBar() {
+type TopBarProps = {
+  /**
+   * URL tujuan tombol kanan (misal login / logout)
+   */
+  actionHref?: string;
+  /**
+   * Label tombol kanan
+   */
+  actionLabel?: string;
+};
+
+export default function TopBar({
+  actionHref = '/login',
+  actionLabel = 'Login Cuy!',
+}: TopBarProps) {
   return (
-    <header className='w-full flex items-center justify-between bg-[#0586c6] px-6 py-10 h-16'>
-      {/* Logo dan Nama Fakultas */}
+    <header className='w-full flex items-center justify-between bg-primary px-6 py-10 h-16'>
       <div className='flex items-center gap-3'>
-        {/* <img
-          src='/template/logo-fsm.png' // Pastikan file logo ada di public/
-          alt='Logo Undip'
-          width={235}
-          height={55}
-        /> */}
+        {/* Trigger sidebar untuk layout dengan sidebar (admin, role, dll) */}
+        <SidebarTrigger className='md:hidden text-white' />
         <h3 className='text-white text-sm font-bold'>
           Sistem Peminjaman Ruang <br />
           Fakultas Sains dan Matematika
         </h3>
       </div>
-      {/* Notifikasi, Nama User, Avatar */}
       <Link
-        to='/login-option'
-        // Gabungkan class container (flex items-center gap-4)
-        // dengan class button (bg-white text-[#0586c6]...)
-        className='flex items-center gap-4 bg-white text-[#0586c6] px-4 py-2 rounded-xl font-semibold hover:bg-gray-200 transition'
+        to={actionHref}
+        className='flex items-center gap-4 bg-white text-primary px-4 py-2 rounded-xl font-semibold hover:bg-gray-200 transition'
       >
-        Login Cuy!
+        {actionLabel}
       </Link>
     </header>
   );

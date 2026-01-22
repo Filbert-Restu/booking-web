@@ -1,14 +1,4 @@
-import {
-  LayoutDashboard,
-  Users,
-  Calendar,
-  Building2,
-  ClipboardList,
-  UserCheck,
-  FileCheck,
-  BookOpen,
-} from 'lucide-react';
-
+import type { LucideIcon } from 'lucide-react';
 import {
   Sidebar,
   SidebarContent,
@@ -23,30 +13,29 @@ import {
 } from '@/components/ui/shadcn/sidebar/sidebar';
 import { Link, useRouterState } from '@tanstack/react-router';
 
-const menuSections = [
-  {
-    label: 'Dashboard',
-    items: [
-      {
-        title: 'Dashboard',
-        url: '/peminjam',
-        icon: LayoutDashboard,
-      },
-    ],
-  },
-  {
-    label: 'Ruang',
-    items: [
-      {
-        title: 'Peminjaman Ruang',
-        url: '/peminjam/peminjaman-ruang',
-        icon: Calendar,
-      },
-    ],
-  },
-];
+export type MenuItem = {
+  title: string;
+  url: string;
+  icon: LucideIcon;
+};
 
-export function PeminjamSidebar() {
+export type MenuSection = {
+  label: string;
+  items: MenuItem[];
+};
+
+export type SidebarFooterLink = {
+  label: string;
+  url: string;
+  icon: LucideIcon;
+};
+
+type SideBarProps = {
+  menuSections: MenuSection[];
+  footerLink?: SidebarFooterLink;
+};
+
+export function SideBar({ menuSections, footerLink }: SideBarProps) {
   const router = useRouterState();
   const currentPath = router.location.pathname;
 
@@ -86,7 +75,9 @@ export function PeminjamSidebar() {
                       <Link to={item.url}>
                         <item.icon
                           className={
-                            isActive ? 'text-primary' : 'text-muted-foreground'
+                            isActive
+                              ? 'text-primary'
+                              : 'text-muted-foreground'
                           }
                         />
                         <span
@@ -108,21 +99,23 @@ export function PeminjamSidebar() {
         ))}
       </SidebarContent>
 
-      <SidebarFooter>
-        <SidebarMenu>
-          <SidebarMenuItem>
-            <SidebarMenuButton
-              asChild
-              className='bg-primary text-primary-foreground hover:bg-primary/90'
-            >
-              <Link to='/admin/documentation'>
-                <BookOpen />
-                <span>Documentation</span>
-              </Link>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        </SidebarMenu>
-      </SidebarFooter>
+      {footerLink && (
+        <SidebarFooter>
+          <SidebarMenu>
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                asChild
+                className='bg-primary text-primary-foreground hover:bg-primary/90'
+              >
+                <Link to={footerLink.url}>
+                  <footerLink.icon />
+                  <span>{footerLink.label}</span>
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          </SidebarMenu>
+        </SidebarFooter>
+      )}
     </Sidebar>
   );
 }
