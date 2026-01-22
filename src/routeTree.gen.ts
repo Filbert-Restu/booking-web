@@ -33,6 +33,7 @@ import { Route as AdminPeminjamanRuangIndexRouteImport } from './routes/admin/pe
 import { Route as AdminManajemenRuangIndexRouteImport } from './routes/admin/manajemen-ruang/index'
 import { Route as PeminjamPinjamTandaTanganRouteImport } from './routes/peminjam/pinjam/tanda-tangan'
 import { Route as PeminjamPinjamProposalRouteImport } from './routes/peminjam/pinjam/proposal'
+import { Route as PeminjamPinjamEditDokumenRouteImport } from './routes/peminjam/pinjam/edit-dokumen'
 import { Route as PeminjamPinjamDetailTempatRouteImport } from './routes/peminjam/pinjam/detail-tempat'
 import { Route as AdminUsersEditRouteImport } from './routes/admin/users/edit'
 import { Route as AdminUsersDetailRouteImport } from './routes/admin/users/detail'
@@ -164,6 +165,12 @@ const PeminjamPinjamProposalRoute = PeminjamPinjamProposalRouteImport.update({
   path: '/pinjam/proposal',
   getParentRoute: () => PeminjamRouteRoute,
 } as any)
+const PeminjamPinjamEditDokumenRoute =
+  PeminjamPinjamEditDokumenRouteImport.update({
+    id: '/pinjam/edit-dokumen',
+    path: '/pinjam/edit-dokumen',
+    getParentRoute: () => PeminjamRouteRoute,
+  } as any)
 const PeminjamPinjamDetailTempatRoute =
   PeminjamPinjamDetailTempatRouteImport.update({
     id: '/pinjam/detail-tempat',
@@ -219,6 +226,7 @@ export interface FileRoutesByFullPath {
   '/admin/users/detail': typeof AdminUsersDetailRoute
   '/admin/users/edit': typeof AdminUsersEditRoute
   '/peminjam/pinjam/detail-tempat': typeof PeminjamPinjamDetailTempatRoute
+  '/peminjam/pinjam/edit-dokumen': typeof PeminjamPinjamEditDokumenRoute
   '/peminjam/pinjam/proposal': typeof PeminjamPinjamProposalRoute
   '/peminjam/pinjam/tanda-tangan': typeof PeminjamPinjamTandaTanganRoute
   '/admin/manajemen-ruang': typeof AdminManajemenRuangIndexRoute
@@ -247,6 +255,7 @@ export interface FileRoutesByTo {
   '/admin/users/detail': typeof AdminUsersDetailRoute
   '/admin/users/edit': typeof AdminUsersEditRoute
   '/peminjam/pinjam/detail-tempat': typeof PeminjamPinjamDetailTempatRoute
+  '/peminjam/pinjam/edit-dokumen': typeof PeminjamPinjamEditDokumenRoute
   '/peminjam/pinjam/proposal': typeof PeminjamPinjamProposalRoute
   '/peminjam/pinjam/tanda-tangan': typeof PeminjamPinjamTandaTanganRoute
   '/admin/manajemen-ruang': typeof AdminManajemenRuangIndexRoute
@@ -280,6 +289,7 @@ export interface FileRoutesById {
   '/admin/users/detail': typeof AdminUsersDetailRoute
   '/admin/users/edit': typeof AdminUsersEditRoute
   '/peminjam/pinjam/detail-tempat': typeof PeminjamPinjamDetailTempatRoute
+  '/peminjam/pinjam/edit-dokumen': typeof PeminjamPinjamEditDokumenRoute
   '/peminjam/pinjam/proposal': typeof PeminjamPinjamProposalRoute
   '/peminjam/pinjam/tanda-tangan': typeof PeminjamPinjamTandaTanganRoute
   '/admin/manajemen-ruang/': typeof AdminManajemenRuangIndexRoute
@@ -314,6 +324,7 @@ export interface FileRouteTypes {
     | '/admin/users/detail'
     | '/admin/users/edit'
     | '/peminjam/pinjam/detail-tempat'
+    | '/peminjam/pinjam/edit-dokumen'
     | '/peminjam/pinjam/proposal'
     | '/peminjam/pinjam/tanda-tangan'
     | '/admin/manajemen-ruang'
@@ -342,6 +353,7 @@ export interface FileRouteTypes {
     | '/admin/users/detail'
     | '/admin/users/edit'
     | '/peminjam/pinjam/detail-tempat'
+    | '/peminjam/pinjam/edit-dokumen'
     | '/peminjam/pinjam/proposal'
     | '/peminjam/pinjam/tanda-tangan'
     | '/admin/manajemen-ruang'
@@ -374,6 +386,7 @@ export interface FileRouteTypes {
     | '/admin/users/detail'
     | '/admin/users/edit'
     | '/peminjam/pinjam/detail-tempat'
+    | '/peminjam/pinjam/edit-dokumen'
     | '/peminjam/pinjam/proposal'
     | '/peminjam/pinjam/tanda-tangan'
     | '/admin/manajemen-ruang/'
@@ -568,6 +581,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PeminjamPinjamProposalRouteImport
       parentRoute: typeof PeminjamRouteRoute
     }
+    '/peminjam/pinjam/edit-dokumen': {
+      id: '/peminjam/pinjam/edit-dokumen'
+      path: '/pinjam/edit-dokumen'
+      fullPath: '/peminjam/pinjam/edit-dokumen'
+      preLoaderRoute: typeof PeminjamPinjamEditDokumenRouteImport
+      parentRoute: typeof PeminjamRouteRoute
+    }
     '/peminjam/pinjam/detail-tempat': {
       id: '/peminjam/pinjam/detail-tempat'
       path: '/pinjam/detail-tempat'
@@ -658,6 +678,7 @@ interface PeminjamRouteRouteChildren {
   PeminjamReservasiRoute: typeof PeminjamReservasiRoute
   PeminjamIndexRoute: typeof PeminjamIndexRoute
   PeminjamPinjamDetailTempatRoute: typeof PeminjamPinjamDetailTempatRoute
+  PeminjamPinjamEditDokumenRoute: typeof PeminjamPinjamEditDokumenRoute
   PeminjamPinjamProposalRoute: typeof PeminjamPinjamProposalRoute
   PeminjamPinjamTandaTanganRoute: typeof PeminjamPinjamTandaTanganRoute
   PeminjamPinjamIndexRoute: typeof PeminjamPinjamIndexRoute
@@ -667,6 +688,7 @@ const PeminjamRouteRouteChildren: PeminjamRouteRouteChildren = {
   PeminjamReservasiRoute: PeminjamReservasiRoute,
   PeminjamIndexRoute: PeminjamIndexRoute,
   PeminjamPinjamDetailTempatRoute: PeminjamPinjamDetailTempatRoute,
+  PeminjamPinjamEditDokumenRoute: PeminjamPinjamEditDokumenRoute,
   PeminjamPinjamProposalRoute: PeminjamPinjamProposalRoute,
   PeminjamPinjamTandaTanganRoute: PeminjamPinjamTandaTanganRoute,
   PeminjamPinjamIndexRoute: PeminjamPinjamIndexRoute,
