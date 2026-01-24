@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
-import { Button } from '@/components/ui/shadcn/button/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/shadcn/card';
+import { Button } from '@/shared/components/ui/button/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui/card';
 import { ArrowLeft } from 'lucide-react';
 
 export const Route = createFileRoute('/peminjam/pinjam/edit-dokumen')({

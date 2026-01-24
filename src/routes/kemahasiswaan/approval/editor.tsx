@@ -1,11 +1,11 @@
-import { createFileRoute } from '@tanstack/react-router'
-import { WordEditorPlaceholder } from '@/components/WordEditorPlaceholder'
+import { createFileRoute } from '@tanstack/react-router';
+import { EditorPage } from '../../_shared/components/EditorPage';
 import {
   APPROVAL_DOC_OPTIONS,
   APPROVAL_MODE_OPTIONS,
   type ApprovalDocType,
   type ApprovalModeType,
-} from '../../_shared/approval-mock'
+} from '../../_shared/approval-mock';
 
 export const Route = createFileRoute('/kemahasiswaan/approval/editor')({
   validateSearch: (search: Record<string, unknown>) => ({
@@ -18,26 +18,9 @@ export const Route = createFileRoute('/kemahasiswaan/approval/editor')({
       : undefined,
   }),
   component: RouteComponent,
-})
+});
 
 function RouteComponent() {
-  const { mode, doc, bookingId } = Route.useSearch()
-
-  if (!mode || !doc || !bookingId) {
-    return (
-      <div className="container mx-auto py-6">
-        <h1 className="text-2xl font-bold">Editor Dokumen</h1>
-        <p className="text-muted-foreground">Parameter editor tidak lengkap.</p>
-      </div>
-    )
-  }
-
-  return (
-    <WordEditorPlaceholder
-      bookingId={bookingId}
-      docType={doc}
-      mode={mode}
-      roleName="Kemahasiswaan"
-    />
-  )
+  const { mode, doc, bookingId } = Route.useSearch();
+  return <EditorPage roleName='Kemahasiswaan' doc={doc} mode={mode} bookingId={bookingId} />;
 }

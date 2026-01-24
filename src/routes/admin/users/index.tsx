@@ -1,8 +1,8 @@
 import { createFileRoute } from '@tanstack/react-router';
-import { Button } from '@/components/ui/shadcn/button/button';
+import { Button } from '@/shared/components/ui/button/button';
 import { UserPlus, Search } from 'lucide-react';
-import { UserTable } from '@/components/UserTable';
-import { UserDetailModal } from '@/components/UserDetailModal';
+import { UserTable } from '@/shared/components/common/UserTable';
+import { UserDetailModal } from '@/shared/components/common/UserDetailModal';
 import { useState } from 'react';
 import {
   Select,
@@ -10,8 +10,8 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/shadcn/select';
-import { Input } from '@/components/ui/shadcn/input';
+} from '@/shared/components/ui/select';
+import { Input } from '@/shared/components/ui/input';
 
 export const Route = createFileRoute('/admin/users/')({
   component: RouteComponent,

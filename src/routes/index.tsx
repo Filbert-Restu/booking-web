@@ -2,7 +2,7 @@ import { createFileRoute } from '@tanstack/react-router';
 
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid'; // a plugin!
-import TopBar from '@/components/layouts/TopBar';
+import TopBar from '@/shared/layouts/TopBar';
 
 export const Route = createFileRoute('/')({
   component: RouteComponent,

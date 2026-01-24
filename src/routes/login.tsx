@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { useState } from 'react';
-import { Button } from '@/components/ui/shadcn/button/button';
-import { Input } from '@/components/ui/shadcn/input';
+import { Button } from '@/shared/components/ui/button/button';
+import { Input } from '@/shared/components/ui/input';
 import { ArrowLeft } from 'lucide-react';
 
 export const Route = createFileRoute('/login')({

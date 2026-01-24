@@ -1,61 +1,17 @@
-import { createFileRoute, useNavigate } from '@tanstack/react-router'
-import { Approval } from '@/components/Approval'
-import type { ActorRole } from '@/components/Approval'
-import { useMemo, useState } from 'react'
-import { Route as ApprovalEditorRoute } from './editor.tsx'
-import {
-  getMockBookings,
-  mapBookingsToApprovalItems,
-  type ApprovalDocType,
-  type ApprovalModeType,
-} from '../../_shared/approval-mock'
+import { createFileRoute } from '@tanstack/react-router';
+import { ApprovalPage } from '../../_shared/components/ApprovalPage';
 
 export const Route = createFileRoute('/kemahasiswaan/approval/')({
   component: RouteComponent,
-})
-
-const role: ActorRole = 'kemahasiswaan'
+});
 
 function RouteComponent() {
-  const [bookings] = useState(() => getMockBookings())
-  const mappedBookings = useMemo(() => mapBookingsToApprovalItems(bookings), [bookings])
-  const navigate = useNavigate()
-
-  const handleApprove = (id: number) => {
-    console.log('Kemahasiswaan approve booking:', id)
-    alert(`Booking ${id} disetujui oleh Kemahasiswaan`)
-  }
-
-  const handleRevise = (id: number) => {
-    console.log('Kemahasiswaan revise booking:', id)
-    alert(`Booking ${id} perlu revisi oleh Kemahasiswaan`)
-  }
-
-  const handleOpenDoc = (payload: { doc: ApprovalDocType; mode: ApprovalModeType; booking: { id: number } }) => {
-    navigate({
-      to: ApprovalEditorRoute.to,
-      search: {
-        doc: payload.doc,
-        mode: payload.mode,
-        bookingId: String(payload.booking.id),
-      },
-    })
-  }
-
   return (
-    <div className="container mx-auto py-6">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold">Approval Peminjaman - Kemahasiswaan</h1>
-        <p className="text-muted-foreground">Kelola persetujuan awal peminjaman oleh pihak Kemahasiswaan.</p>
-      </div>
-
-      <Approval
-        bookings={mappedBookings}
-        onApprove={handleApprove}
-        onRevise={handleRevise}
-        actorRole={role}
-        onOpenDoc={({ doc, mode, booking }) => handleOpenDoc({ doc, mode, booking })}
-      />
-    </div>
-  )
+    <ApprovalPage
+      role='kemahasiswaan'
+      title='Approval Peminjaman - Kemahasiswaan'
+      description='Kelola persetujuan awal peminjaman oleh pihak Kemahasiswaan.'
+      editorRoutePath='/kemahasiswaan/approval/editor'
+    />
+  );
 }

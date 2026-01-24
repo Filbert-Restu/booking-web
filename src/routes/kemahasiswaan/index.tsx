@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router';
-import { StatCard } from '@/components/StatCard';
+import { StatCard } from '@/shared/components/common/StatCard';
 import { Clock, DoorOpen, Users } from 'lucide-react';
 
 export const Route = createFileRoute('/kemahasiswaan/')({

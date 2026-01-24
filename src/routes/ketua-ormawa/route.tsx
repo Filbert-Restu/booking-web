@@ -1,8 +1,7 @@
 import { createFileRoute, Outlet } from '@tanstack/react-router';
 import React from 'react';
-import { SidebarProvider } from '@/components/ui/shadcn/sidebar';
-import KetuaOrmawaTopbar from '@/components/layouts/ketua-ormawa/KetuaOrmawaTopbar';
-import { KetuaOrmawaSidebar } from '@/components/layouts/ketua-ormawa/KetuaOrmawaSidebar';
+import { SidebarProvider } from '@/shared/components/ui/sidebar';
+import { SideBar, TopBar, getMenuConfig } from '@/shared/layouts';
 
 export const Route = createFileRoute('/ketua-ormawa')({
   component: RouteComponent,
@@ -10,11 +9,13 @@ export const Route = createFileRoute('/ketua-ormawa')({
 
 function RouteComponent() {
   const [open, setOpen] = React.useState(false);
+  const menuConfig = getMenuConfig('ketua-ormawa');
+  
   return (
     <SidebarProvider open={open} onOpenChange={setOpen} className="gap-0">
-      <KetuaOrmawaSidebar />
+      <SideBar menuSections={menuConfig.menuSections} footerLink={menuConfig.footerLink} />
       <main className="flex-1 flex flex-col w-full min-w-0">
-        <KetuaOrmawaTopbar />
+        <TopBar title="Ketua Ormawa" />
         <div className="flex-1 p-6 space-y-6">
           <Outlet />
         </div>

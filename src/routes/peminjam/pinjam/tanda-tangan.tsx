@@ -1,8 +1,8 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { useState } from 'react';
-import { Stepper } from '@/components/Stepper';
-import { Button } from '@/components/ui/shadcn/button/button';
-import { Checkbox } from '@/components/ui/shadcn/checkbox';
+import { Stepper } from '@/shared/components/common/Stepper';
+import { Button } from '@/shared/components/ui/button/button';
+import { Checkbox } from '@/shared/components/ui/checkbox';
 import { FileText, Edit } from 'lucide-react';
 
 export const Route = createFileRoute('/peminjam/pinjam/tanda-tangan')({

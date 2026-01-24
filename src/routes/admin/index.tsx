@@ -1,7 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { Clock, DoorOpen, Users } from 'lucide-react';
-import { StatCard } from '@/components/StatCard';
-import BookingCalendar from '@/components/BookingCalendar';
+import { StatCard } from '@/shared/components/common/StatCard';
+import BookingCalendar from '@/features/bookings/BookingCalendar';
 
 export const Route = createFileRoute('/admin/')({
   component: RouteComponent,

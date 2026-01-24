@@ -1,14 +1,14 @@
 import { createFileRoute } from '@tanstack/react-router';
 import React, { useState } from 'react';
-import { Button } from '@/components/ui/shadcn/button/button';
-import { Input } from '@/components/ui/shadcn/input';
+import { Button } from '@/shared/components/ui/button/button';
+import { Input } from '@/shared/components/ui/input';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/shadcn/select';
+} from '@/shared/components/ui/select';
 
 export const Route = createFileRoute('/admin/users/add')({
   component: RouteComponent,

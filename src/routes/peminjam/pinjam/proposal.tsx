@@ -1,9 +1,9 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { useState } from 'react';
-import { Stepper } from '@/components/Stepper';
-import { Input } from '@/components/ui/shadcn/input';
-import { Textarea } from '@/components/ui/shadcn/textarea';
-import { Button } from '@/components/ui/shadcn/button/button';
+import { Stepper } from '@/shared/components/common/Stepper';
+import { Input } from '@/shared/components/ui/input';
+import { Textarea } from '@/shared/components/ui/textarea';
+import { Button } from '@/shared/components/ui/button/button';
 
 export const Route = createFileRoute('/peminjam/pinjam/proposal')({
 	component: RouteComponent,

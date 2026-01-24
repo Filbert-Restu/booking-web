@@ -8,10 +8,10 @@ import {
 	SelectItem,
 	SelectTrigger,
 	SelectValue,
-} from '@/components/ui/shadcn/select';
-import { Input } from '@/components/ui/shadcn/input';
-import { Textarea } from '@/components/ui/shadcn/textarea';
-import { Button } from '@/components/ui/shadcn/button/button';
+} from '@/shared/components/ui/select';
+import { Input } from '@/shared/components/ui/input';
+import { Textarea } from '@/shared/components/ui/textarea';
+import { Button } from '@/shared/components/ui/button/button';
 import {
 	Table,
 	TableBody,
@@ -19,7 +19,7 @@ import {
 	TableHead,
 	TableHeader,
 	TableRow,
-} from '@/components/ui/shadcn/table';
+} from '@/shared/components/ui/table';
 
 type ReservationStatus = {
 	id: number;

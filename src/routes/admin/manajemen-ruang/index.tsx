@@ -1,15 +1,15 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { useState } from 'react';
 import type { ChangeEvent, FormEvent } from 'react';
-import { Button } from '@/components/ui/shadcn/button/button';
-import { Input } from '@/components/ui/shadcn/input';
+import { Button } from '@/shared/components/ui/button/button';
+import { Input } from '@/shared/components/ui/input';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/shadcn/select';
+} from '@/shared/components/ui/select';
 import { PlusCircle, Pencil, Search, ToggleRight, ToggleLeft } from 'lucide-react';
 import {
   Table,
@@ -18,7 +18,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/shadcn/table';
+} from '@/shared/components/ui/table';
 
 export const Route = createFileRoute('/admin/manajemen-ruang/')({
   component: RouteComponent,

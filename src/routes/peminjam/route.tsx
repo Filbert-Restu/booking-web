@@ -1,8 +1,7 @@
 import { createFileRoute, Outlet } from '@tanstack/react-router';
 import React from 'react';
-import { SidebarProvider } from '@/components/ui/shadcn/sidebar';
-import TopBar from '@/components/layouts/TopBar';
-import { PeminjamSidebar } from '@/components/layouts/peminjam/PeminjamSidebar';
+import { SidebarProvider } from '@/shared/components/ui/sidebar';
+import { SideBar, TopBar, getMenuConfig } from '@/shared/layouts';
 
 export const Route = createFileRoute('/peminjam')({
   component: RouteComponent,
@@ -10,11 +9,13 @@ export const Route = createFileRoute('/peminjam')({
 
 function RouteComponent() {
   const [open, setOpen] = React.useState(false);
+  const menuConfig = getMenuConfig('peminjam');
+  
   return (
     <SidebarProvider open={open} onOpenChange={setOpen} className='gap-0'>
-      <PeminjamSidebar />
+      <SideBar menuSections={menuConfig.menuSections} footerLink={menuConfig.footerLink} />
       <main className='flex-1 flex flex-col w-full min-w-0'>
-        <TopBar actionHref='/login' actionLabel='Login Cuy!' />
+        <TopBar title="Peminjam" actionHref='/login' actionLabel='Login' />
         <div className='flex-1 p-6 space-y-6'>
           <Outlet />
         </div>

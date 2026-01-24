@@ -1,8 +1,8 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { useState } from 'react';
 import type { ChangeEvent, FormEvent } from 'react';
-import { Button } from '@/components/ui/shadcn/button/button';
-import { Input } from '@/components/ui/shadcn/input';
+import { Button } from '@/shared/components/ui/button/button';
+import { Input } from '@/shared/components/ui/input';
 
 export const Route = createFileRoute('/admin/manajemen-ruang/add')({
   component: RouteComponent,

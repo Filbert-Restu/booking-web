@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
-import { Button } from '@/components/ui/shadcn/button/button';
+import { Button } from '@/shared/components/ui/button/button';
 import {
 	Table,
 	TableBody,
@@ -7,7 +7,7 @@ import {
 	TableHead,
 	TableHeader,
 	TableRow,
-} from '@/components/ui/shadcn/table';
+} from '@/shared/components/ui/table';
 
 export const Route = createFileRoute('/peminjam/pinjam/')({
 	component: RouteComponent,

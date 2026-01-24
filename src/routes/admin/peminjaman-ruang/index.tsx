@@ -6,13 +6,13 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/shadcn/table';
+} from '@/shared/components/ui/table';
 import React, { useState, useMemo } from 'react';
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
-import { BookingDetailModal } from '@/components/BookingDetailModal';
+import { BookingDetailModal } from '@/features/bookings/BookingDetailModal';
 
 export const Route = createFileRoute('/admin/peminjaman-ruang/')({
   component: RouteComponent,

@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router';
-import { Button } from '@/components/ui/shadcn/button/button';
+import { Button } from '@/shared/components/ui/button/button';
 
 export const Route = createFileRoute('/login-option')({
   component: RouteComponent,

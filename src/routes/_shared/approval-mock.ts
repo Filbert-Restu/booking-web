@@ -1,4 +1,4 @@
-import type { ApprovalItem } from '@/components/Approval';
+import type { ApprovalItem } from '@/features/approvals';
 
 interface BaseBooking {
 	id: number;
