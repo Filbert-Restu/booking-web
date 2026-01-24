@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
+import { useMemo, useState } from 'react'
 import { Approval } from '@/components/Approval'
 import type { ActorRole } from '@/components/Approval'
-import { useMemo, useState } from 'react'
 import { Route as ApprovalEditorRoute } from './editor.tsx'
 import {
   getMockBookings,
@@ -10,11 +10,11 @@ import {
   type ApprovalModeType,
 } from '../../_shared/approval-mock'
 
-export const Route = createFileRoute('/kemahasiswaan/approval/')({
+export const Route = createFileRoute('/dosen-pendamping/approval/')({
   component: RouteComponent,
 })
 
-const role: ActorRole = 'kemahasiswaan'
+const role: ActorRole = 'dosen-pendamping'
 
 function RouteComponent() {
   const [bookings] = useState(() => getMockBookings())
@@ -22,13 +22,13 @@ function RouteComponent() {
   const navigate = useNavigate()
 
   const handleApprove = (id: number) => {
-    console.log('Kemahasiswaan approve booking:', id)
-    alert(`Booking ${id} disetujui oleh Kemahasiswaan`)
+    console.log('Dosen Pendamping approve booking:', id)
+    alert(`Booking ${id} disetujui oleh Dosen Pendamping`)
   }
 
   const handleRevise = (id: number) => {
-    console.log('Kemahasiswaan revise booking:', id)
-    alert(`Booking ${id} perlu revisi oleh Kemahasiswaan`)
+    console.log('Dosen Pendamping revises booking:', id)
+    alert(`Booking ${id} direvisi oleh Dosen Pendamping`)
   }
 
   const handleOpenDoc = (payload: { doc: ApprovalDocType; mode: ApprovalModeType; booking: { id: number } }) => {
@@ -45,15 +45,15 @@ function RouteComponent() {
   return (
     <div className="container mx-auto py-6">
       <div className="mb-6">
-        <h1 className="text-2xl font-bold">Approval Peminjaman - Kemahasiswaan</h1>
-        <p className="text-muted-foreground">Kelola persetujuan awal peminjaman oleh pihak Kemahasiswaan.</p>
+        <h1 className="text-2xl font-bold">Approval Peminjaman - Dosen Pendamping</h1>
+        <p className="text-muted-foreground">Validasi proposal dan catat masukan sebelum diteruskan.</p>
       </div>
 
       <Approval
         bookings={mappedBookings}
+        actorRole={role}
         onApprove={handleApprove}
         onRevise={handleRevise}
-        actorRole={role}
         onOpenDoc={({ doc, mode, booking }) => handleOpenDoc({ doc, mode, booking })}
       />
     </div>

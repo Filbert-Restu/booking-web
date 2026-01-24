@@ -13,6 +13,7 @@ import { Route as LoginOptionRouteImport } from './routes/login-option'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as SumberDayaRouteRouteImport } from './routes/sumber-daya/route'
 import { Route as PeminjamRouteRouteImport } from './routes/peminjam/route'
+import { Route as KetuaOrmawaRouteRouteImport } from './routes/ketua-ormawa/route'
 import { Route as KemahasiswaanRouteRouteImport } from './routes/kemahasiswaan/route'
 import { Route as AdminRouteRouteImport } from './routes/admin/route'
 import { Route as IndexRouteImport } from './routes/index'
@@ -23,18 +24,30 @@ import { Route as PeminjamIndexRouteImport } from './routes/peminjam/index'
 import { Route as KetuaOrmawaIndexRouteImport } from './routes/ketua-ormawa/index'
 import { Route as KetuaDepartemenIndexRouteImport } from './routes/ketua-departemen/index'
 import { Route as KemahasiswaanIndexRouteImport } from './routes/kemahasiswaan/index'
+import { Route as DosenPendampingIndexRouteImport } from './routes/dosen-pendamping/index'
 import { Route as AdminIndexRouteImport } from './routes/admin/index'
 import { Route as PeminjamReservasiRouteImport } from './routes/peminjam/reservasi'
+import { Route as Wadek1ApprovalIndexRouteImport } from './routes/wadek1/approval/index'
 import { Route as SumberDayaApprovalIndexRouteImport } from './routes/sumber-daya/approval/index'
+import { Route as SenatApprovalIndexRouteImport } from './routes/senat/approval/index'
 import { Route as PeminjamPinjamIndexRouteImport } from './routes/peminjam/pinjam/index'
+import { Route as KetuaOrmawaApprovalIndexRouteImport } from './routes/ketua-ormawa/approval/index'
+import { Route as KetuaDepartemenApprovalIndexRouteImport } from './routes/ketua-departemen/approval/index'
 import { Route as KemahasiswaanApprovalIndexRouteImport } from './routes/kemahasiswaan/approval/index'
+import { Route as DosenPendampingApprovalIndexRouteImport } from './routes/dosen-pendamping/approval/index'
 import { Route as AdminUsersIndexRouteImport } from './routes/admin/users/index'
 import { Route as AdminPeminjamanRuangIndexRouteImport } from './routes/admin/peminjaman-ruang/index'
 import { Route as AdminManajemenRuangIndexRouteImport } from './routes/admin/manajemen-ruang/index'
+import { Route as Wadek1ApprovalEditorRouteImport } from './routes/wadek1/approval/editor'
+import { Route as SenatApprovalEditorRouteImport } from './routes/senat/approval/editor'
 import { Route as PeminjamPinjamTandaTanganRouteImport } from './routes/peminjam/pinjam/tanda-tangan'
 import { Route as PeminjamPinjamProposalRouteImport } from './routes/peminjam/pinjam/proposal'
 import { Route as PeminjamPinjamEditDokumenRouteImport } from './routes/peminjam/pinjam/edit-dokumen'
 import { Route as PeminjamPinjamDetailTempatRouteImport } from './routes/peminjam/pinjam/detail-tempat'
+import { Route as KetuaOrmawaApprovalEditorRouteImport } from './routes/ketua-ormawa/approval/editor'
+import { Route as KetuaDepartemenApprovalEditorRouteImport } from './routes/ketua-departemen/approval/editor'
+import { Route as KemahasiswaanApprovalEditorRouteImport } from './routes/kemahasiswaan/approval/editor'
+import { Route as DosenPendampingApprovalEditorRouteImport } from './routes/dosen-pendamping/approval/editor'
 import { Route as AdminUsersEditRouteImport } from './routes/admin/users/edit'
 import { Route as AdminUsersDetailRouteImport } from './routes/admin/users/detail'
 import { Route as AdminUsersAddRouteImport } from './routes/admin/users/add'
@@ -59,6 +72,11 @@ const SumberDayaRouteRoute = SumberDayaRouteRouteImport.update({
 const PeminjamRouteRoute = PeminjamRouteRouteImport.update({
   id: '/peminjam',
   path: '/peminjam',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const KetuaOrmawaRouteRoute = KetuaOrmawaRouteRouteImport.update({
+  id: '/ketua-ormawa',
+  path: '/ketua-ormawa',
   getParentRoute: () => rootRouteImport,
 } as any)
 const KemahasiswaanRouteRoute = KemahasiswaanRouteRouteImport.update({
@@ -97,9 +115,9 @@ const PeminjamIndexRoute = PeminjamIndexRouteImport.update({
   getParentRoute: () => PeminjamRouteRoute,
 } as any)
 const KetuaOrmawaIndexRoute = KetuaOrmawaIndexRouteImport.update({
-  id: '/ketua-ormawa/',
-  path: '/ketua-ormawa/',
-  getParentRoute: () => rootRouteImport,
+  id: '/',
+  path: '/',
+  getParentRoute: () => KetuaOrmawaRouteRoute,
 } as any)
 const KetuaDepartemenIndexRoute = KetuaDepartemenIndexRouteImport.update({
   id: '/ketua-departemen/',
@@ -111,6 +129,11 @@ const KemahasiswaanIndexRoute = KemahasiswaanIndexRouteImport.update({
   path: '/',
   getParentRoute: () => KemahasiswaanRouteRoute,
 } as any)
+const DosenPendampingIndexRoute = DosenPendampingIndexRouteImport.update({
+  id: '/dosen-pendamping/',
+  path: '/dosen-pendamping/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminIndexRoute = AdminIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -121,21 +144,49 @@ const PeminjamReservasiRoute = PeminjamReservasiRouteImport.update({
   path: '/reservasi',
   getParentRoute: () => PeminjamRouteRoute,
 } as any)
+const Wadek1ApprovalIndexRoute = Wadek1ApprovalIndexRouteImport.update({
+  id: '/wadek1/approval/',
+  path: '/wadek1/approval/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SumberDayaApprovalIndexRoute = SumberDayaApprovalIndexRouteImport.update({
   id: '/approval/',
   path: '/approval/',
   getParentRoute: () => SumberDayaRouteRoute,
+} as any)
+const SenatApprovalIndexRoute = SenatApprovalIndexRouteImport.update({
+  id: '/senat/approval/',
+  path: '/senat/approval/',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const PeminjamPinjamIndexRoute = PeminjamPinjamIndexRouteImport.update({
   id: '/pinjam/',
   path: '/pinjam/',
   getParentRoute: () => PeminjamRouteRoute,
 } as any)
+const KetuaOrmawaApprovalIndexRoute =
+  KetuaOrmawaApprovalIndexRouteImport.update({
+    id: '/approval/',
+    path: '/approval/',
+    getParentRoute: () => KetuaOrmawaRouteRoute,
+  } as any)
+const KetuaDepartemenApprovalIndexRoute =
+  KetuaDepartemenApprovalIndexRouteImport.update({
+    id: '/ketua-departemen/approval/',
+    path: '/ketua-departemen/approval/',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const KemahasiswaanApprovalIndexRoute =
   KemahasiswaanApprovalIndexRouteImport.update({
     id: '/approval/',
     path: '/approval/',
     getParentRoute: () => KemahasiswaanRouteRoute,
+  } as any)
+const DosenPendampingApprovalIndexRoute =
+  DosenPendampingApprovalIndexRouteImport.update({
+    id: '/dosen-pendamping/approval/',
+    path: '/dosen-pendamping/approval/',
+    getParentRoute: () => rootRouteImport,
   } as any)
 const AdminUsersIndexRoute = AdminUsersIndexRouteImport.update({
   id: '/users/',
@@ -154,6 +205,16 @@ const AdminManajemenRuangIndexRoute =
     path: '/manajemen-ruang/',
     getParentRoute: () => AdminRouteRoute,
   } as any)
+const Wadek1ApprovalEditorRoute = Wadek1ApprovalEditorRouteImport.update({
+  id: '/wadek1/approval/editor',
+  path: '/wadek1/approval/editor',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SenatApprovalEditorRoute = SenatApprovalEditorRouteImport.update({
+  id: '/senat/approval/editor',
+  path: '/senat/approval/editor',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PeminjamPinjamTandaTanganRoute =
   PeminjamPinjamTandaTanganRouteImport.update({
     id: '/pinjam/tanda-tangan',
@@ -176,6 +237,30 @@ const PeminjamPinjamDetailTempatRoute =
     id: '/pinjam/detail-tempat',
     path: '/pinjam/detail-tempat',
     getParentRoute: () => PeminjamRouteRoute,
+  } as any)
+const KetuaOrmawaApprovalEditorRoute =
+  KetuaOrmawaApprovalEditorRouteImport.update({
+    id: '/approval/editor',
+    path: '/approval/editor',
+    getParentRoute: () => KetuaOrmawaRouteRoute,
+  } as any)
+const KetuaDepartemenApprovalEditorRoute =
+  KetuaDepartemenApprovalEditorRouteImport.update({
+    id: '/ketua-departemen/approval/editor',
+    path: '/ketua-departemen/approval/editor',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const KemahasiswaanApprovalEditorRoute =
+  KemahasiswaanApprovalEditorRouteImport.update({
+    id: '/approval/editor',
+    path: '/approval/editor',
+    getParentRoute: () => KemahasiswaanRouteRoute,
+  } as any)
+const DosenPendampingApprovalEditorRoute =
+  DosenPendampingApprovalEditorRouteImport.update({
+    id: '/dosen-pendamping/approval/editor',
+    path: '/dosen-pendamping/approval/editor',
+    getParentRoute: () => rootRouteImport,
   } as any)
 const AdminUsersEditRoute = AdminUsersEditRouteImport.update({
   id: '/users/edit',
@@ -207,15 +292,17 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRouteRouteWithChildren
   '/kemahasiswaan': typeof KemahasiswaanRouteRouteWithChildren
+  '/ketua-ormawa': typeof KetuaOrmawaRouteRouteWithChildren
   '/peminjam': typeof PeminjamRouteRouteWithChildren
   '/sumber-daya': typeof SumberDayaRouteRouteWithChildren
   '/login': typeof LoginRoute
   '/login-option': typeof LoginOptionRoute
   '/peminjam/reservasi': typeof PeminjamReservasiRoute
   '/admin/': typeof AdminIndexRoute
+  '/dosen-pendamping': typeof DosenPendampingIndexRoute
   '/kemahasiswaan/': typeof KemahasiswaanIndexRoute
   '/ketua-departemen': typeof KetuaDepartemenIndexRoute
-  '/ketua-ormawa': typeof KetuaOrmawaIndexRoute
+  '/ketua-ormawa/': typeof KetuaOrmawaIndexRoute
   '/peminjam/': typeof PeminjamIndexRoute
   '/senat': typeof SenatIndexRoute
   '/sumber-daya/': typeof SumberDayaIndexRoute
@@ -225,16 +312,27 @@ export interface FileRoutesByFullPath {
   '/admin/users/add': typeof AdminUsersAddRoute
   '/admin/users/detail': typeof AdminUsersDetailRoute
   '/admin/users/edit': typeof AdminUsersEditRoute
+  '/dosen-pendamping/approval/editor': typeof DosenPendampingApprovalEditorRoute
+  '/kemahasiswaan/approval/editor': typeof KemahasiswaanApprovalEditorRoute
+  '/ketua-departemen/approval/editor': typeof KetuaDepartemenApprovalEditorRoute
+  '/ketua-ormawa/approval/editor': typeof KetuaOrmawaApprovalEditorRoute
   '/peminjam/pinjam/detail-tempat': typeof PeminjamPinjamDetailTempatRoute
   '/peminjam/pinjam/edit-dokumen': typeof PeminjamPinjamEditDokumenRoute
   '/peminjam/pinjam/proposal': typeof PeminjamPinjamProposalRoute
   '/peminjam/pinjam/tanda-tangan': typeof PeminjamPinjamTandaTanganRoute
+  '/senat/approval/editor': typeof SenatApprovalEditorRoute
+  '/wadek1/approval/editor': typeof Wadek1ApprovalEditorRoute
   '/admin/manajemen-ruang': typeof AdminManajemenRuangIndexRoute
   '/admin/peminjaman-ruang': typeof AdminPeminjamanRuangIndexRoute
   '/admin/users': typeof AdminUsersIndexRoute
+  '/dosen-pendamping/approval': typeof DosenPendampingApprovalIndexRoute
   '/kemahasiswaan/approval': typeof KemahasiswaanApprovalIndexRoute
+  '/ketua-departemen/approval': typeof KetuaDepartemenApprovalIndexRoute
+  '/ketua-ormawa/approval': typeof KetuaOrmawaApprovalIndexRoute
   '/peminjam/pinjam': typeof PeminjamPinjamIndexRoute
+  '/senat/approval': typeof SenatApprovalIndexRoute
   '/sumber-daya/approval': typeof SumberDayaApprovalIndexRoute
+  '/wadek1/approval': typeof Wadek1ApprovalIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -242,6 +340,7 @@ export interface FileRoutesByTo {
   '/login-option': typeof LoginOptionRoute
   '/peminjam/reservasi': typeof PeminjamReservasiRoute
   '/admin': typeof AdminIndexRoute
+  '/dosen-pendamping': typeof DosenPendampingIndexRoute
   '/kemahasiswaan': typeof KemahasiswaanIndexRoute
   '/ketua-departemen': typeof KetuaDepartemenIndexRoute
   '/ketua-ormawa': typeof KetuaOrmawaIndexRoute
@@ -254,28 +353,41 @@ export interface FileRoutesByTo {
   '/admin/users/add': typeof AdminUsersAddRoute
   '/admin/users/detail': typeof AdminUsersDetailRoute
   '/admin/users/edit': typeof AdminUsersEditRoute
+  '/dosen-pendamping/approval/editor': typeof DosenPendampingApprovalEditorRoute
+  '/kemahasiswaan/approval/editor': typeof KemahasiswaanApprovalEditorRoute
+  '/ketua-departemen/approval/editor': typeof KetuaDepartemenApprovalEditorRoute
+  '/ketua-ormawa/approval/editor': typeof KetuaOrmawaApprovalEditorRoute
   '/peminjam/pinjam/detail-tempat': typeof PeminjamPinjamDetailTempatRoute
   '/peminjam/pinjam/edit-dokumen': typeof PeminjamPinjamEditDokumenRoute
   '/peminjam/pinjam/proposal': typeof PeminjamPinjamProposalRoute
   '/peminjam/pinjam/tanda-tangan': typeof PeminjamPinjamTandaTanganRoute
+  '/senat/approval/editor': typeof SenatApprovalEditorRoute
+  '/wadek1/approval/editor': typeof Wadek1ApprovalEditorRoute
   '/admin/manajemen-ruang': typeof AdminManajemenRuangIndexRoute
   '/admin/peminjaman-ruang': typeof AdminPeminjamanRuangIndexRoute
   '/admin/users': typeof AdminUsersIndexRoute
+  '/dosen-pendamping/approval': typeof DosenPendampingApprovalIndexRoute
   '/kemahasiswaan/approval': typeof KemahasiswaanApprovalIndexRoute
+  '/ketua-departemen/approval': typeof KetuaDepartemenApprovalIndexRoute
+  '/ketua-ormawa/approval': typeof KetuaOrmawaApprovalIndexRoute
   '/peminjam/pinjam': typeof PeminjamPinjamIndexRoute
+  '/senat/approval': typeof SenatApprovalIndexRoute
   '/sumber-daya/approval': typeof SumberDayaApprovalIndexRoute
+  '/wadek1/approval': typeof Wadek1ApprovalIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/admin': typeof AdminRouteRouteWithChildren
   '/kemahasiswaan': typeof KemahasiswaanRouteRouteWithChildren
+  '/ketua-ormawa': typeof KetuaOrmawaRouteRouteWithChildren
   '/peminjam': typeof PeminjamRouteRouteWithChildren
   '/sumber-daya': typeof SumberDayaRouteRouteWithChildren
   '/login': typeof LoginRoute
   '/login-option': typeof LoginOptionRoute
   '/peminjam/reservasi': typeof PeminjamReservasiRoute
   '/admin/': typeof AdminIndexRoute
+  '/dosen-pendamping/': typeof DosenPendampingIndexRoute
   '/kemahasiswaan/': typeof KemahasiswaanIndexRoute
   '/ketua-departemen/': typeof KetuaDepartemenIndexRoute
   '/ketua-ormawa/': typeof KetuaOrmawaIndexRoute
@@ -288,16 +400,27 @@ export interface FileRoutesById {
   '/admin/users/add': typeof AdminUsersAddRoute
   '/admin/users/detail': typeof AdminUsersDetailRoute
   '/admin/users/edit': typeof AdminUsersEditRoute
+  '/dosen-pendamping/approval/editor': typeof DosenPendampingApprovalEditorRoute
+  '/kemahasiswaan/approval/editor': typeof KemahasiswaanApprovalEditorRoute
+  '/ketua-departemen/approval/editor': typeof KetuaDepartemenApprovalEditorRoute
+  '/ketua-ormawa/approval/editor': typeof KetuaOrmawaApprovalEditorRoute
   '/peminjam/pinjam/detail-tempat': typeof PeminjamPinjamDetailTempatRoute
   '/peminjam/pinjam/edit-dokumen': typeof PeminjamPinjamEditDokumenRoute
   '/peminjam/pinjam/proposal': typeof PeminjamPinjamProposalRoute
   '/peminjam/pinjam/tanda-tangan': typeof PeminjamPinjamTandaTanganRoute
+  '/senat/approval/editor': typeof SenatApprovalEditorRoute
+  '/wadek1/approval/editor': typeof Wadek1ApprovalEditorRoute
   '/admin/manajemen-ruang/': typeof AdminManajemenRuangIndexRoute
   '/admin/peminjaman-ruang/': typeof AdminPeminjamanRuangIndexRoute
   '/admin/users/': typeof AdminUsersIndexRoute
+  '/dosen-pendamping/approval/': typeof DosenPendampingApprovalIndexRoute
   '/kemahasiswaan/approval/': typeof KemahasiswaanApprovalIndexRoute
+  '/ketua-departemen/approval/': typeof KetuaDepartemenApprovalIndexRoute
+  '/ketua-ormawa/approval/': typeof KetuaOrmawaApprovalIndexRoute
   '/peminjam/pinjam/': typeof PeminjamPinjamIndexRoute
+  '/senat/approval/': typeof SenatApprovalIndexRoute
   '/sumber-daya/approval/': typeof SumberDayaApprovalIndexRoute
+  '/wadek1/approval/': typeof Wadek1ApprovalIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -305,15 +428,17 @@ export interface FileRouteTypes {
     | '/'
     | '/admin'
     | '/kemahasiswaan'
+    | '/ketua-ormawa'
     | '/peminjam'
     | '/sumber-daya'
     | '/login'
     | '/login-option'
     | '/peminjam/reservasi'
     | '/admin/'
+    | '/dosen-pendamping'
     | '/kemahasiswaan/'
     | '/ketua-departemen'
-    | '/ketua-ormawa'
+    | '/ketua-ormawa/'
     | '/peminjam/'
     | '/senat'
     | '/sumber-daya/'
@@ -323,16 +448,27 @@ export interface FileRouteTypes {
     | '/admin/users/add'
     | '/admin/users/detail'
     | '/admin/users/edit'
+    | '/dosen-pendamping/approval/editor'
+    | '/kemahasiswaan/approval/editor'
+    | '/ketua-departemen/approval/editor'
+    | '/ketua-ormawa/approval/editor'
     | '/peminjam/pinjam/detail-tempat'
     | '/peminjam/pinjam/edit-dokumen'
     | '/peminjam/pinjam/proposal'
     | '/peminjam/pinjam/tanda-tangan'
+    | '/senat/approval/editor'
+    | '/wadek1/approval/editor'
     | '/admin/manajemen-ruang'
     | '/admin/peminjaman-ruang'
     | '/admin/users'
+    | '/dosen-pendamping/approval'
     | '/kemahasiswaan/approval'
+    | '/ketua-departemen/approval'
+    | '/ketua-ormawa/approval'
     | '/peminjam/pinjam'
+    | '/senat/approval'
     | '/sumber-daya/approval'
+    | '/wadek1/approval'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -340,6 +476,7 @@ export interface FileRouteTypes {
     | '/login-option'
     | '/peminjam/reservasi'
     | '/admin'
+    | '/dosen-pendamping'
     | '/kemahasiswaan'
     | '/ketua-departemen'
     | '/ketua-ormawa'
@@ -352,27 +489,40 @@ export interface FileRouteTypes {
     | '/admin/users/add'
     | '/admin/users/detail'
     | '/admin/users/edit'
+    | '/dosen-pendamping/approval/editor'
+    | '/kemahasiswaan/approval/editor'
+    | '/ketua-departemen/approval/editor'
+    | '/ketua-ormawa/approval/editor'
     | '/peminjam/pinjam/detail-tempat'
     | '/peminjam/pinjam/edit-dokumen'
     | '/peminjam/pinjam/proposal'
     | '/peminjam/pinjam/tanda-tangan'
+    | '/senat/approval/editor'
+    | '/wadek1/approval/editor'
     | '/admin/manajemen-ruang'
     | '/admin/peminjaman-ruang'
     | '/admin/users'
+    | '/dosen-pendamping/approval'
     | '/kemahasiswaan/approval'
+    | '/ketua-departemen/approval'
+    | '/ketua-ormawa/approval'
     | '/peminjam/pinjam'
+    | '/senat/approval'
     | '/sumber-daya/approval'
+    | '/wadek1/approval'
   id:
     | '__root__'
     | '/'
     | '/admin'
     | '/kemahasiswaan'
+    | '/ketua-ormawa'
     | '/peminjam'
     | '/sumber-daya'
     | '/login'
     | '/login-option'
     | '/peminjam/reservasi'
     | '/admin/'
+    | '/dosen-pendamping/'
     | '/kemahasiswaan/'
     | '/ketua-departemen/'
     | '/ketua-ormawa/'
@@ -385,30 +535,50 @@ export interface FileRouteTypes {
     | '/admin/users/add'
     | '/admin/users/detail'
     | '/admin/users/edit'
+    | '/dosen-pendamping/approval/editor'
+    | '/kemahasiswaan/approval/editor'
+    | '/ketua-departemen/approval/editor'
+    | '/ketua-ormawa/approval/editor'
     | '/peminjam/pinjam/detail-tempat'
     | '/peminjam/pinjam/edit-dokumen'
     | '/peminjam/pinjam/proposal'
     | '/peminjam/pinjam/tanda-tangan'
+    | '/senat/approval/editor'
+    | '/wadek1/approval/editor'
     | '/admin/manajemen-ruang/'
     | '/admin/peminjaman-ruang/'
     | '/admin/users/'
+    | '/dosen-pendamping/approval/'
     | '/kemahasiswaan/approval/'
+    | '/ketua-departemen/approval/'
+    | '/ketua-ormawa/approval/'
     | '/peminjam/pinjam/'
+    | '/senat/approval/'
     | '/sumber-daya/approval/'
+    | '/wadek1/approval/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdminRouteRoute: typeof AdminRouteRouteWithChildren
   KemahasiswaanRouteRoute: typeof KemahasiswaanRouteRouteWithChildren
+  KetuaOrmawaRouteRoute: typeof KetuaOrmawaRouteRouteWithChildren
   PeminjamRouteRoute: typeof PeminjamRouteRouteWithChildren
   SumberDayaRouteRoute: typeof SumberDayaRouteRouteWithChildren
   LoginRoute: typeof LoginRoute
   LoginOptionRoute: typeof LoginOptionRoute
+  DosenPendampingIndexRoute: typeof DosenPendampingIndexRoute
   KetuaDepartemenIndexRoute: typeof KetuaDepartemenIndexRoute
-  KetuaOrmawaIndexRoute: typeof KetuaOrmawaIndexRoute
   SenatIndexRoute: typeof SenatIndexRoute
   Wadek1IndexRoute: typeof Wadek1IndexRoute
+  DosenPendampingApprovalEditorRoute: typeof DosenPendampingApprovalEditorRoute
+  KetuaDepartemenApprovalEditorRoute: typeof KetuaDepartemenApprovalEditorRoute
+  SenatApprovalEditorRoute: typeof SenatApprovalEditorRoute
+  Wadek1ApprovalEditorRoute: typeof Wadek1ApprovalEditorRoute
+  DosenPendampingApprovalIndexRoute: typeof DosenPendampingApprovalIndexRoute
+  KetuaDepartemenApprovalIndexRoute: typeof KetuaDepartemenApprovalIndexRoute
+  SenatApprovalIndexRoute: typeof SenatApprovalIndexRoute
+  Wadek1ApprovalIndexRoute: typeof Wadek1ApprovalIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -439,6 +609,13 @@ declare module '@tanstack/react-router' {
       path: '/peminjam'
       fullPath: '/peminjam'
       preLoaderRoute: typeof PeminjamRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/ketua-ormawa': {
+      id: '/ketua-ormawa'
+      path: '/ketua-ormawa'
+      fullPath: '/ketua-ormawa'
+      preLoaderRoute: typeof KetuaOrmawaRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/kemahasiswaan': {
@@ -492,10 +669,10 @@ declare module '@tanstack/react-router' {
     }
     '/ketua-ormawa/': {
       id: '/ketua-ormawa/'
-      path: '/ketua-ormawa'
-      fullPath: '/ketua-ormawa'
+      path: '/'
+      fullPath: '/ketua-ormawa/'
       preLoaderRoute: typeof KetuaOrmawaIndexRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof KetuaOrmawaRouteRoute
     }
     '/ketua-departemen/': {
       id: '/ketua-departemen/'
@@ -511,6 +688,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof KemahasiswaanIndexRouteImport
       parentRoute: typeof KemahasiswaanRouteRoute
     }
+    '/dosen-pendamping/': {
+      id: '/dosen-pendamping/'
+      path: '/dosen-pendamping'
+      fullPath: '/dosen-pendamping'
+      preLoaderRoute: typeof DosenPendampingIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin/': {
       id: '/admin/'
       path: '/'
@@ -525,12 +709,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PeminjamReservasiRouteImport
       parentRoute: typeof PeminjamRouteRoute
     }
+    '/wadek1/approval/': {
+      id: '/wadek1/approval/'
+      path: '/wadek1/approval'
+      fullPath: '/wadek1/approval'
+      preLoaderRoute: typeof Wadek1ApprovalIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/sumber-daya/approval/': {
       id: '/sumber-daya/approval/'
       path: '/approval'
       fullPath: '/sumber-daya/approval'
       preLoaderRoute: typeof SumberDayaApprovalIndexRouteImport
       parentRoute: typeof SumberDayaRouteRoute
+    }
+    '/senat/approval/': {
+      id: '/senat/approval/'
+      path: '/senat/approval'
+      fullPath: '/senat/approval'
+      preLoaderRoute: typeof SenatApprovalIndexRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/peminjam/pinjam/': {
       id: '/peminjam/pinjam/'
@@ -539,12 +737,33 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PeminjamPinjamIndexRouteImport
       parentRoute: typeof PeminjamRouteRoute
     }
+    '/ketua-ormawa/approval/': {
+      id: '/ketua-ormawa/approval/'
+      path: '/approval'
+      fullPath: '/ketua-ormawa/approval'
+      preLoaderRoute: typeof KetuaOrmawaApprovalIndexRouteImport
+      parentRoute: typeof KetuaOrmawaRouteRoute
+    }
+    '/ketua-departemen/approval/': {
+      id: '/ketua-departemen/approval/'
+      path: '/ketua-departemen/approval'
+      fullPath: '/ketua-departemen/approval'
+      preLoaderRoute: typeof KetuaDepartemenApprovalIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/kemahasiswaan/approval/': {
       id: '/kemahasiswaan/approval/'
       path: '/approval'
       fullPath: '/kemahasiswaan/approval'
       preLoaderRoute: typeof KemahasiswaanApprovalIndexRouteImport
       parentRoute: typeof KemahasiswaanRouteRoute
+    }
+    '/dosen-pendamping/approval/': {
+      id: '/dosen-pendamping/approval/'
+      path: '/dosen-pendamping/approval'
+      fullPath: '/dosen-pendamping/approval'
+      preLoaderRoute: typeof DosenPendampingApprovalIndexRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/admin/users/': {
       id: '/admin/users/'
@@ -566,6 +785,20 @@ declare module '@tanstack/react-router' {
       fullPath: '/admin/manajemen-ruang'
       preLoaderRoute: typeof AdminManajemenRuangIndexRouteImport
       parentRoute: typeof AdminRouteRoute
+    }
+    '/wadek1/approval/editor': {
+      id: '/wadek1/approval/editor'
+      path: '/wadek1/approval/editor'
+      fullPath: '/wadek1/approval/editor'
+      preLoaderRoute: typeof Wadek1ApprovalEditorRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/senat/approval/editor': {
+      id: '/senat/approval/editor'
+      path: '/senat/approval/editor'
+      fullPath: '/senat/approval/editor'
+      preLoaderRoute: typeof SenatApprovalEditorRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/peminjam/pinjam/tanda-tangan': {
       id: '/peminjam/pinjam/tanda-tangan'
@@ -594,6 +827,34 @@ declare module '@tanstack/react-router' {
       fullPath: '/peminjam/pinjam/detail-tempat'
       preLoaderRoute: typeof PeminjamPinjamDetailTempatRouteImport
       parentRoute: typeof PeminjamRouteRoute
+    }
+    '/ketua-ormawa/approval/editor': {
+      id: '/ketua-ormawa/approval/editor'
+      path: '/approval/editor'
+      fullPath: '/ketua-ormawa/approval/editor'
+      preLoaderRoute: typeof KetuaOrmawaApprovalEditorRouteImport
+      parentRoute: typeof KetuaOrmawaRouteRoute
+    }
+    '/ketua-departemen/approval/editor': {
+      id: '/ketua-departemen/approval/editor'
+      path: '/ketua-departemen/approval/editor'
+      fullPath: '/ketua-departemen/approval/editor'
+      preLoaderRoute: typeof KetuaDepartemenApprovalEditorRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/kemahasiswaan/approval/editor': {
+      id: '/kemahasiswaan/approval/editor'
+      path: '/approval/editor'
+      fullPath: '/kemahasiswaan/approval/editor'
+      preLoaderRoute: typeof KemahasiswaanApprovalEditorRouteImport
+      parentRoute: typeof KemahasiswaanRouteRoute
+    }
+    '/dosen-pendamping/approval/editor': {
+      id: '/dosen-pendamping/approval/editor'
+      path: '/dosen-pendamping/approval/editor'
+      fullPath: '/dosen-pendamping/approval/editor'
+      preLoaderRoute: typeof DosenPendampingApprovalEditorRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/admin/users/edit': {
       id: '/admin/users/edit'
@@ -663,16 +924,33 @@ const AdminRouteRouteWithChildren = AdminRouteRoute._addFileChildren(
 
 interface KemahasiswaanRouteRouteChildren {
   KemahasiswaanIndexRoute: typeof KemahasiswaanIndexRoute
+  KemahasiswaanApprovalEditorRoute: typeof KemahasiswaanApprovalEditorRoute
   KemahasiswaanApprovalIndexRoute: typeof KemahasiswaanApprovalIndexRoute
 }
 
 const KemahasiswaanRouteRouteChildren: KemahasiswaanRouteRouteChildren = {
   KemahasiswaanIndexRoute: KemahasiswaanIndexRoute,
+  KemahasiswaanApprovalEditorRoute: KemahasiswaanApprovalEditorRoute,
   KemahasiswaanApprovalIndexRoute: KemahasiswaanApprovalIndexRoute,
 }
 
 const KemahasiswaanRouteRouteWithChildren =
   KemahasiswaanRouteRoute._addFileChildren(KemahasiswaanRouteRouteChildren)
+
+interface KetuaOrmawaRouteRouteChildren {
+  KetuaOrmawaIndexRoute: typeof KetuaOrmawaIndexRoute
+  KetuaOrmawaApprovalEditorRoute: typeof KetuaOrmawaApprovalEditorRoute
+  KetuaOrmawaApprovalIndexRoute: typeof KetuaOrmawaApprovalIndexRoute
+}
+
+const KetuaOrmawaRouteRouteChildren: KetuaOrmawaRouteRouteChildren = {
+  KetuaOrmawaIndexRoute: KetuaOrmawaIndexRoute,
+  KetuaOrmawaApprovalEditorRoute: KetuaOrmawaApprovalEditorRoute,
+  KetuaOrmawaApprovalIndexRoute: KetuaOrmawaApprovalIndexRoute,
+}
+
+const KetuaOrmawaRouteRouteWithChildren =
+  KetuaOrmawaRouteRoute._addFileChildren(KetuaOrmawaRouteRouteChildren)
 
 interface PeminjamRouteRouteChildren {
   PeminjamReservasiRoute: typeof PeminjamReservasiRoute
@@ -716,14 +994,23 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRouteRoute: AdminRouteRouteWithChildren,
   KemahasiswaanRouteRoute: KemahasiswaanRouteRouteWithChildren,
+  KetuaOrmawaRouteRoute: KetuaOrmawaRouteRouteWithChildren,
   PeminjamRouteRoute: PeminjamRouteRouteWithChildren,
   SumberDayaRouteRoute: SumberDayaRouteRouteWithChildren,
   LoginRoute: LoginRoute,
   LoginOptionRoute: LoginOptionRoute,
+  DosenPendampingIndexRoute: DosenPendampingIndexRoute,
   KetuaDepartemenIndexRoute: KetuaDepartemenIndexRoute,
-  KetuaOrmawaIndexRoute: KetuaOrmawaIndexRoute,
   SenatIndexRoute: SenatIndexRoute,
   Wadek1IndexRoute: Wadek1IndexRoute,
+  DosenPendampingApprovalEditorRoute: DosenPendampingApprovalEditorRoute,
+  KetuaDepartemenApprovalEditorRoute: KetuaDepartemenApprovalEditorRoute,
+  SenatApprovalEditorRoute: SenatApprovalEditorRoute,
+  Wadek1ApprovalEditorRoute: Wadek1ApprovalEditorRoute,
+  DosenPendampingApprovalIndexRoute: DosenPendampingApprovalIndexRoute,
+  KetuaDepartemenApprovalIndexRoute: KetuaDepartemenApprovalIndexRoute,
+  SenatApprovalIndexRoute: SenatApprovalIndexRoute,
+  Wadek1ApprovalIndexRoute: Wadek1ApprovalIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
