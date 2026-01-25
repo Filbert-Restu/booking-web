@@ -17,7 +17,7 @@ type TopBarProps = {
   actionLabel?: string;
 };
 
-export default function TopBar({
+export function TopBar({
   title,
   actionHref = '/login',
   actionLabel = 'Login',

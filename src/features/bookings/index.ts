@@ -1,2 +1,2 @@
-export { BookingCalendar } from './BookingCalendar';
+export { default as BookingCalendar } from './BookingCalendar';
 export { BookingDetailModal } from './BookingDetailModal';

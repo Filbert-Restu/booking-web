@@ -28,8 +28,8 @@ const submissionHistory = [
 		namaKegiatan: 'Workshop AI & Machine Learning',
 		tanggal: '2026-02-10',
 		ruang: 'Lab Komputer 1',
-		status: 'diproses' as const,
-		keterangan: 'Dosen Pendamping',
+		status: 'revisi' as const,
+		revisiNotes: 'Mohon lengkapi proposal dengan detail anggaran dan susunan acara',
 	},
 	{
 		id: 3,
@@ -62,7 +62,12 @@ function RouteComponent() {
 		navigate({ to: '/peminjam/pinjam/detail-tempat' });
 	};
 
-	const getStatusBadge = (status: 'diproses' | 'selesai' | 'ditolak') => {
+	const handleAjukanKembali = (id: number) => {
+		// Navigate to stepper with existing data
+		navigate({ to: '/peminjam/pinjam/detail-tempat', search: { editId: id } as any });
+	};
+
+	const getStatusBadge = (status: 'diproses' | 'selesai' | 'ditolak' | 'revisi') => {
 		switch (status) {
 			case 'diproses':
 				return (
@@ -80,6 +85,12 @@ function RouteComponent() {
 				return (
 					<span className='inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800'>
 						Ditolak
+					</span>
+				);
+			case 'revisi':
+				return (
+					<span className='inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800'>
+						Perlu Revisi
 					</span>
 				);
 		}
@@ -129,6 +140,18 @@ function RouteComponent() {
 										<span className='text-sm text-gray-700'>
 											{item.keterangan}
 										</span>
+									) : item.status === 'revisi' ? (
+										<div className='space-y-2'>
+											<p className='text-sm text-gray-700'>
+												{(item as any).revisiNotes}
+											</p>
+											<button
+												onClick={() => handleAjukanKembali(item.id)}
+												className='text-sm text-blue-600 underline hover:text-blue-800'
+											>
+												Ajukan Kembali
+											</button>
+										</div>
 									) : (
 										<span className='text-sm text-gray-400'>-</span>
 									)}

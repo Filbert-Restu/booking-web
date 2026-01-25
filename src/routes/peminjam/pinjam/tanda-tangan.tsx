@@ -12,13 +12,13 @@ export const Route = createFileRoute('/peminjam/pinjam/tanda-tangan')({
 function RouteComponent() {
 	const navigate = useNavigate();
 	// State untuk checkbox konfirmasi tanda tangan
-	const [ttdKetuaOrganisasi, setTtdKetuaOrganisasi] = useState(false);
-	const [ttdKetuaPelaksana, setTtdKetuaPelaksana] = useState(false);
+	const [ttdExecutiveSummary, setTtdExecutiveSummary] = useState(false);
+	const [ttdLembarPengesahan, setTtdLembarPengesahan] = useState(false);
 
 	const handleSubmit = (e: React.FormEvent) => {
 		e.preventDefault();
-		if (!ttdKetuaOrganisasi || !ttdKetuaPelaksana) {
-			alert('Mohon centang konfirmasi bahwa Anda sudah menambahkan kedua tanda tangan');
+		if (!ttdExecutiveSummary || !ttdLembarPengesahan) {
+			alert('Mohon centang konfirmasi bahwa kedua dokumen sudah ditandatangani');
 			return;
 		}
 		// TODO: Submit all data to API
@@ -27,7 +27,7 @@ function RouteComponent() {
 	};
 
 	// Check apakah semua tanda tangan sudah dilengkapi
-	const isAllSignaturesComplete = ttdKetuaOrganisasi && ttdKetuaPelaksana;
+	const isAllSignaturesComplete = ttdExecutiveSummary && ttdLembarPengesahan;
 
 	const handleBack = () => {
 		navigate({ to: '/peminjam/pinjam/proposal' });
@@ -113,29 +113,29 @@ function RouteComponent() {
 						<div className='space-y-3'>
 							<div className='flex items-start space-x-3 p-3 bg-gray-50 rounded-lg'>
 								<Checkbox
-									id='ttd-ketua-organisasi'
-									checked={ttdKetuaOrganisasi}
-									onCheckedChange={(checked) => setTtdKetuaOrganisasi(checked as boolean)}
+									id='ttd-lembar-pengesahan'
+									checked={ttdLembarPengesahan}
+									onCheckedChange={(checked) => setTtdLembarPengesahan(checked as boolean)}
 								/>
 								<label
-									htmlFor='ttd-ketua-organisasi'
+									htmlFor='ttd-lembar-pengesahan'
 									className='text-sm leading-relaxed cursor-pointer'
 								>
-									Saya sudah menambahkan tanda tangan Ketua Organisasi Mahasiswa
+									Lembar Pengesahan sudah ditandatangani
 								</label>
 							</div>
 
 							<div className='flex items-start space-x-3 p-3 bg-gray-50 rounded-lg'>
 								<Checkbox
-									id='ttd-ketua-pelaksana'
-									checked={ttdKetuaPelaksana}
-									onCheckedChange={(checked) => setTtdKetuaPelaksana(checked as boolean)}
+									id='ttd-executive-summary'
+									checked={ttdExecutiveSummary}
+									onCheckedChange={(checked) => setTtdExecutiveSummary(checked as boolean)}
 								/>
 								<label
-									htmlFor='ttd-ketua-pelaksana'
+									htmlFor='ttd-executive-summary'
 									className='text-sm leading-relaxed cursor-pointer'
 								>
-									Saya sudah menambahkan tanda tangan Ketua Pelaksana
+									Executive Summary sudah ditandatangani
 								</label>
 							</div>
 						</div>
