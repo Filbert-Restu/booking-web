@@ -11,7 +11,6 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as TandaTanganRouteImport } from './routes/tanda-tangan'
 import { Route as PreviewDokumenRouteImport } from './routes/preview-dokumen'
-import { Route as LoginOptionRouteImport } from './routes/login-option'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as Wadek1RouteRouteImport } from './routes/wadek1/route'
 import { Route as SumberDayaRouteRouteImport } from './routes/sumber-daya/route'
@@ -45,7 +44,10 @@ import { Route as KetuaDepartemenRiwayatPersetujuanRouteImport } from './routes/
 import { Route as KemahasiswaanRiwayatPersetujuanRouteImport } from './routes/kemahasiswaan/riwayat-persetujuan'
 import { Route as DosenPendampingRiwayatPersetujuanRouteImport } from './routes/dosen-pendamping/riwayat-persetujuan'
 import { Route as PeminjamPinjamIndexRouteImport } from './routes/peminjam/pinjam/index'
+import { Route as AdminWorkflowsIndexRouteImport } from './routes/admin/workflows/index'
 import { Route as AdminUsersIndexRouteImport } from './routes/admin/users/index'
+import { Route as AdminUnitsIndexRouteImport } from './routes/admin/units/index'
+import { Route as AdminRolesIndexRouteImport } from './routes/admin/roles/index'
 import { Route as AdminPeminjamanRuangIndexRouteImport } from './routes/admin/peminjaman-ruang/index'
 import { Route as AdminManajemenRuangIndexRouteImport } from './routes/admin/manajemen-ruang/index'
 import { Route as PeminjamPinjamTandaTanganRouteImport } from './routes/peminjam/pinjam/tanda-tangan'
@@ -66,11 +68,6 @@ const TandaTanganRoute = TandaTanganRouteImport.update({
 const PreviewDokumenRoute = PreviewDokumenRouteImport.update({
   id: '/preview-dokumen',
   path: '/preview-dokumen',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const LoginOptionRoute = LoginOptionRouteImport.update({
-  id: '/login-option',
-  path: '/login-option',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LoginRoute = LoginRouteImport.update({
@@ -246,9 +243,24 @@ const PeminjamPinjamIndexRoute = PeminjamPinjamIndexRouteImport.update({
   path: '/pinjam/',
   getParentRoute: () => PeminjamRouteRoute,
 } as any)
+const AdminWorkflowsIndexRoute = AdminWorkflowsIndexRouteImport.update({
+  id: '/workflows/',
+  path: '/workflows/',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
 const AdminUsersIndexRoute = AdminUsersIndexRouteImport.update({
   id: '/users/',
   path: '/users/',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminUnitsIndexRoute = AdminUnitsIndexRouteImport.update({
+  id: '/units/',
+  path: '/units/',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminRolesIndexRoute = AdminRolesIndexRouteImport.update({
+  id: '/roles/',
+  path: '/roles/',
   getParentRoute: () => AdminRouteRoute,
 } as any)
 const AdminPeminjamanRuangIndexRoute =
@@ -324,7 +336,6 @@ export interface FileRoutesByFullPath {
   '/sumber-daya': typeof SumberDayaRouteRouteWithChildren
   '/wadek1': typeof Wadek1RouteRouteWithChildren
   '/login': typeof LoginRoute
-  '/login-option': typeof LoginOptionRoute
   '/preview-dokumen': typeof PreviewDokumenRoute
   '/tanda-tangan': typeof TandaTanganRoute
   '/dosen-pendamping/riwayat-persetujuan': typeof DosenPendampingRiwayatPersetujuanRoute
@@ -359,13 +370,15 @@ export interface FileRoutesByFullPath {
   '/peminjam/pinjam/tanda-tangan': typeof PeminjamPinjamTandaTanganRoute
   '/admin/manajemen-ruang': typeof AdminManajemenRuangIndexRoute
   '/admin/peminjaman-ruang': typeof AdminPeminjamanRuangIndexRoute
+  '/admin/roles': typeof AdminRolesIndexRoute
+  '/admin/units': typeof AdminUnitsIndexRoute
   '/admin/users': typeof AdminUsersIndexRoute
+  '/admin/workflows': typeof AdminWorkflowsIndexRoute
   '/peminjam/pinjam': typeof PeminjamPinjamIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
-  '/login-option': typeof LoginOptionRoute
   '/preview-dokumen': typeof PreviewDokumenRoute
   '/tanda-tangan': typeof TandaTanganRoute
   '/dosen-pendamping/riwayat-persetujuan': typeof DosenPendampingRiwayatPersetujuanRoute
@@ -400,7 +413,10 @@ export interface FileRoutesByTo {
   '/peminjam/pinjam/tanda-tangan': typeof PeminjamPinjamTandaTanganRoute
   '/admin/manajemen-ruang': typeof AdminManajemenRuangIndexRoute
   '/admin/peminjaman-ruang': typeof AdminPeminjamanRuangIndexRoute
+  '/admin/roles': typeof AdminRolesIndexRoute
+  '/admin/units': typeof AdminUnitsIndexRoute
   '/admin/users': typeof AdminUsersIndexRoute
+  '/admin/workflows': typeof AdminWorkflowsIndexRoute
   '/peminjam/pinjam': typeof PeminjamPinjamIndexRoute
 }
 export interface FileRoutesById {
@@ -416,7 +432,6 @@ export interface FileRoutesById {
   '/sumber-daya': typeof SumberDayaRouteRouteWithChildren
   '/wadek1': typeof Wadek1RouteRouteWithChildren
   '/login': typeof LoginRoute
-  '/login-option': typeof LoginOptionRoute
   '/preview-dokumen': typeof PreviewDokumenRoute
   '/tanda-tangan': typeof TandaTanganRoute
   '/dosen-pendamping/riwayat-persetujuan': typeof DosenPendampingRiwayatPersetujuanRoute
@@ -451,7 +466,10 @@ export interface FileRoutesById {
   '/peminjam/pinjam/tanda-tangan': typeof PeminjamPinjamTandaTanganRoute
   '/admin/manajemen-ruang/': typeof AdminManajemenRuangIndexRoute
   '/admin/peminjaman-ruang/': typeof AdminPeminjamanRuangIndexRoute
+  '/admin/roles/': typeof AdminRolesIndexRoute
+  '/admin/units/': typeof AdminUnitsIndexRoute
   '/admin/users/': typeof AdminUsersIndexRoute
+  '/admin/workflows/': typeof AdminWorkflowsIndexRoute
   '/peminjam/pinjam/': typeof PeminjamPinjamIndexRoute
 }
 export interface FileRouteTypes {
@@ -468,7 +486,6 @@ export interface FileRouteTypes {
     | '/sumber-daya'
     | '/wadek1'
     | '/login'
-    | '/login-option'
     | '/preview-dokumen'
     | '/tanda-tangan'
     | '/dosen-pendamping/riwayat-persetujuan'
@@ -503,13 +520,15 @@ export interface FileRouteTypes {
     | '/peminjam/pinjam/tanda-tangan'
     | '/admin/manajemen-ruang'
     | '/admin/peminjaman-ruang'
+    | '/admin/roles'
+    | '/admin/units'
     | '/admin/users'
+    | '/admin/workflows'
     | '/peminjam/pinjam'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/login'
-    | '/login-option'
     | '/preview-dokumen'
     | '/tanda-tangan'
     | '/dosen-pendamping/riwayat-persetujuan'
@@ -544,7 +563,10 @@ export interface FileRouteTypes {
     | '/peminjam/pinjam/tanda-tangan'
     | '/admin/manajemen-ruang'
     | '/admin/peminjaman-ruang'
+    | '/admin/roles'
+    | '/admin/units'
     | '/admin/users'
+    | '/admin/workflows'
     | '/peminjam/pinjam'
   id:
     | '__root__'
@@ -559,7 +581,6 @@ export interface FileRouteTypes {
     | '/sumber-daya'
     | '/wadek1'
     | '/login'
-    | '/login-option'
     | '/preview-dokumen'
     | '/tanda-tangan'
     | '/dosen-pendamping/riwayat-persetujuan'
@@ -594,7 +615,10 @@ export interface FileRouteTypes {
     | '/peminjam/pinjam/tanda-tangan'
     | '/admin/manajemen-ruang/'
     | '/admin/peminjaman-ruang/'
+    | '/admin/roles/'
+    | '/admin/units/'
     | '/admin/users/'
+    | '/admin/workflows/'
     | '/peminjam/pinjam/'
   fileRoutesById: FileRoutesById
 }
@@ -610,7 +634,6 @@ export interface RootRouteChildren {
   SumberDayaRouteRoute: typeof SumberDayaRouteRouteWithChildren
   Wadek1RouteRoute: typeof Wadek1RouteRouteWithChildren
   LoginRoute: typeof LoginRoute
-  LoginOptionRoute: typeof LoginOptionRoute
   PreviewDokumenRoute: typeof PreviewDokumenRoute
   TandaTanganRoute: typeof TandaTanganRoute
 }
@@ -629,13 +652,6 @@ declare module '@tanstack/react-router' {
       path: '/preview-dokumen'
       fullPath: '/preview-dokumen'
       preLoaderRoute: typeof PreviewDokumenRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/login-option': {
-      id: '/login-option'
-      path: '/login-option'
-      fullPath: '/login-option'
-      preLoaderRoute: typeof LoginOptionRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/login': {
@@ -869,11 +885,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PeminjamPinjamIndexRouteImport
       parentRoute: typeof PeminjamRouteRoute
     }
+    '/admin/workflows/': {
+      id: '/admin/workflows/'
+      path: '/workflows'
+      fullPath: '/admin/workflows'
+      preLoaderRoute: typeof AdminWorkflowsIndexRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
     '/admin/users/': {
       id: '/admin/users/'
       path: '/users'
       fullPath: '/admin/users'
       preLoaderRoute: typeof AdminUsersIndexRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/units/': {
+      id: '/admin/units/'
+      path: '/units'
+      fullPath: '/admin/units'
+      preLoaderRoute: typeof AdminUnitsIndexRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/roles/': {
+      id: '/admin/roles/'
+      path: '/roles'
+      fullPath: '/admin/roles'
+      preLoaderRoute: typeof AdminRolesIndexRouteImport
       parentRoute: typeof AdminRouteRoute
     }
     '/admin/peminjaman-ruang/': {
@@ -965,7 +1002,10 @@ interface AdminRouteRouteChildren {
   AdminUsersEditRoute: typeof AdminUsersEditRoute
   AdminManajemenRuangIndexRoute: typeof AdminManajemenRuangIndexRoute
   AdminPeminjamanRuangIndexRoute: typeof AdminPeminjamanRuangIndexRoute
+  AdminRolesIndexRoute: typeof AdminRolesIndexRoute
+  AdminUnitsIndexRoute: typeof AdminUnitsIndexRoute
   AdminUsersIndexRoute: typeof AdminUsersIndexRoute
+  AdminWorkflowsIndexRoute: typeof AdminWorkflowsIndexRoute
 }
 
 const AdminRouteRouteChildren: AdminRouteRouteChildren = {
@@ -977,7 +1017,10 @@ const AdminRouteRouteChildren: AdminRouteRouteChildren = {
   AdminUsersEditRoute: AdminUsersEditRoute,
   AdminManajemenRuangIndexRoute: AdminManajemenRuangIndexRoute,
   AdminPeminjamanRuangIndexRoute: AdminPeminjamanRuangIndexRoute,
+  AdminRolesIndexRoute: AdminRolesIndexRoute,
+  AdminUnitsIndexRoute: AdminUnitsIndexRoute,
   AdminUsersIndexRoute: AdminUsersIndexRoute,
+  AdminWorkflowsIndexRoute: AdminWorkflowsIndexRoute,
 }
 
 const AdminRouteRouteWithChildren = AdminRouteRoute._addFileChildren(
@@ -1124,7 +1167,6 @@ const rootRouteChildren: RootRouteChildren = {
   SumberDayaRouteRoute: SumberDayaRouteRouteWithChildren,
   Wadek1RouteRoute: Wadek1RouteRouteWithChildren,
   LoginRoute: LoginRoute,
-  LoginOptionRoute: LoginOptionRoute,
   PreviewDokumenRoute: PreviewDokumenRoute,
   TandaTanganRoute: TandaTanganRoute,
 }

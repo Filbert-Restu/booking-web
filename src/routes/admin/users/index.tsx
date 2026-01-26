@@ -1,9 +1,38 @@
 import { createFileRoute } from '@tanstack/react-router';
+import { useEffect, useState } from 'react';
+import { AxiosError } from 'axios';
+import { userService, type User } from '@/services/user.service';
+import { roleService, type Role } from '@/services/role.service';
+import { unitService, type Unit } from '@/services/unit.service';
 import { Button } from '@/shared/components/ui/button/button';
-import { UserPlus, Search } from 'lucide-react';
-import { UserTable } from '@/shared/components/common/UserTable';
-import { UserDetailModal } from '@/shared/components/common/UserDetailModal';
-import { useState } from 'react';
+import { Input } from '@/shared/components/ui/input';
+import { Plus, Pencil, Trash2, Search, Eye } from 'lucide-react';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/shared/components/ui/table';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/shared/components/ui/dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/shared/components/ui/alert-dialog';
 import {
   Select,
   SelectContent,
@@ -11,169 +40,769 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/shared/components/ui/select';
-import { Input } from '@/shared/components/ui/input';
 
 export const Route = createFileRoute('/admin/users/')({
   component: RouteComponent,
 });
 
-interface User {
-  id: number;
-  name: string;
-  email: string;
-  role: string;
-  status: 'active' | 'inactive';
-  createdAt: string;
-}
-
-// Data dummy users
-const usersData: User[] = [
-  {
-    id: 1,
-    name: 'Ahmad Fauzi',
-    email: 'ahmad.fauzi@example.com',
-    role: 'Admin',
-    status: 'active',
-    createdAt: '2024-01-15',
-  },
-  {
-    id: 2,
-    name: 'Siti Rahma',
-    email: 'siti.rahma@example.com',
-    role: 'Peminjam',
-    status: 'active',
-    createdAt: '2024-02-20',
-  },
-  {
-    id: 3,
-    name: 'Budi Santoso',
-    email: 'budi.santoso@example.com',
-    role: 'Peminjam',
-    status: 'inactive',
-    createdAt: '2024-03-10',
-  },
-  {
-    id: 4,
-    name: 'Dewi Lestari',
-    email: 'dewi.lestari@example.com',
-    role: 'Kemahasiswaan',
-    status: 'active',
-    createdAt: '2024-04-05',
-  },
-];
-
 function RouteComponent() {
-  const [selectedRole, setSelectedRole] = useState<string>('Semua');
-  const [searchName, setSearchName] = useState<string>('');
-  const [detailUser, setDetailUser] = useState<User | null>(null);
-  const [openDetail, setOpenDetail] = useState(false);
+  const [users, setUsers] = useState<User[]>([]);
+  const [filteredUsers, setFilteredUsers] = useState<User[]>([]);
+  const [roles, setRoles] = useState<Role[]>([]);
+  const [units, setUnits] = useState<Unit[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
+  const [selectedRoleId, setSelectedRoleId] = useState<string>('all');
+  const [selectedUnitId, setSelectedUnitId] = useState<string>('all');
 
-  const handleDelete = (id: number) => {
-    if (confirm('Apakah Anda yakin ingin menghapus Peminjam ini?')) {
-      // TODO: Implement delete API call
-      console.log('Delete user with id:', id);
-    }
-  };
+  // Modal states
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
-  const handleViewDetail = (user: User) => {
-    setDetailUser(user);
-    setOpenDetail(true);
-  };
-
-  const handleAddUser = () => {
-    // Pindah ke halaman tambah user add.tsx
-    window.location.href = '/admin/users/add';
-  };
-
-  const handleToggleStatus = (id: number, newStatus: 'active' | 'inactive') => {
-    if (
-      confirm(
-        `Apakah Anda yakin ingin ${newStatus === `active` ? `mengaktifkan` : `menonaktifkan`} user ini?`,
-      )
-    ) {
-      // TODO: Implement toggle status API call
-      console.log(`Toggle user ${id} to ${newStatus}`);
-    }
-  };
-
-  const roles = ['Semua', 'Admin', 'Kemahasiswaan', 'Sumber Daya', 'Peminjam'];
-
-  const filteredUsers = usersData.filter((user) => {
-    const matchRole = selectedRole === 'Semua' || user.role === selectedRole;
-    const matchName = user.name
-      .toLowerCase()
-      .includes(searchName.toLowerCase());
-    return matchRole && matchName;
+  // Form states
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    password: '',
+    role_id: 0,
+    unit_id: 0,
   });
+  const [formError, setFormError] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Debounce search query
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchQuery(searchQuery);
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
+  // Filter users based on search, role, and unit
+  useEffect(() => {
+    let filtered = users;
+
+    // Filter by search query
+    if (debouncedSearchQuery.trim()) {
+      const query = debouncedSearchQuery.toLowerCase();
+      filtered = filtered.filter(
+        (user) =>
+          user.name.toLowerCase().includes(query) ||
+          user.email.toLowerCase().includes(query) ||
+          user.role?.name.toLowerCase().includes(query) ||
+          user.unit?.name.toLowerCase().includes(query),
+      );
+    }
+
+    // Filter by role
+    if (selectedRoleId !== 'all') {
+      filtered = filtered.filter(
+        (user) => user.role_id === Number(selectedRoleId),
+      );
+    }
+
+    // Filter by unit
+    if (selectedUnitId !== 'all') {
+      filtered = filtered.filter(
+        (user) => user.unit_id === Number(selectedUnitId),
+      );
+    }
+
+    setFilteredUsers(filtered);
+  }, [debouncedSearchQuery, selectedRoleId, selectedUnitId, users]);
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const fetchData = async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      const [usersData, rolesData, unitsData] = await Promise.all([
+        userService.getUsers(),
+        roleService.getRoles(),
+        unitService.getUnits(),
+      ]);
+      setUsers(usersData);
+      setFilteredUsers(usersData);
+      setRoles(rolesData);
+      setUnits(unitsData);
+    } catch (err) {
+      console.error('Failed to fetch data:', err);
+      const error = err as AxiosError<{ message: string }>;
+      setError(
+        error.response?.data?.message ||
+          'Gagal memuat data. Silakan coba lagi.',
+      );
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleCreate = () => {
+    setFormData({
+      name: '',
+      email: '',
+      password: '',
+      role_id: roles[0]?.id || 0,
+      unit_id: units[0]?.id || 0,
+    });
+    setFormError('');
+    setIsCreateModalOpen(true);
+  };
+
+  const handleEdit = (user: User) => {
+    setSelectedUser(user);
+    setFormData({
+      name: user.name,
+      email: user.email,
+      password: '',
+      role_id: user.role_id,
+      unit_id: user.unit_id,
+    });
+    setFormError('');
+    setIsEditModalOpen(true);
+  };
+
+  const handleDelete = (user: User) => {
+    setSelectedUser(user);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const handleDetail = (user: User) => {
+    setSelectedUser(user);
+    setIsDetailModalOpen(true);
+  };
+
+  const handleSubmitCreate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setFormError('');
+
+    if (
+      !formData.name.trim() ||
+      !formData.email.trim() ||
+      !formData.password.trim()
+    ) {
+      setFormError('Semua field harus diisi');
+      return;
+    }
+
+    try {
+      setIsSubmitting(true);
+      await userService.createUser(formData);
+      setIsCreateModalOpen(false);
+      fetchData();
+    } catch (err) {
+      console.error('Failed to create user:', err);
+      const error = err as AxiosError<{ message: string }>;
+      setFormError(
+        error.response?.data?.message ||
+          'Gagal membuat user. Silakan coba lagi.',
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleSubmitEdit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setFormError('');
+
+    if (!selectedUser) return;
+
+    if (!formData.name.trim() || !formData.email.trim()) {
+      setFormError('Nama dan email harus diisi');
+      return;
+    }
+
+    try {
+      setIsSubmitting(true);
+      const updateData: any = {
+        name: formData.name,
+        email: formData.email,
+        role_id: formData.role_id,
+        unit_id: formData.unit_id,
+      };
+
+      // Only include password if it's not empty
+      if (formData.password.trim()) {
+        updateData.password = formData.password;
+      }
+
+      await userService.updateUser(selectedUser.id, updateData);
+      setIsEditModalOpen(false);
+      fetchData();
+    } catch (err) {
+      console.error('Failed to update user:', err);
+      const error = err as AxiosError<{ message: string }>;
+      setFormError(
+        error.response?.data?.message ||
+          'Gagal mengupdate user. Silakan coba lagi.',
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!selectedUser) return;
+
+    try {
+      await userService.deleteUser(selectedUser.id);
+      setIsDeleteDialogOpen(false);
+      fetchData();
+    } catch (err) {
+      console.error('Failed to delete user:', err);
+      const error = err as AxiosError<{ message: string }>;
+      alert(
+        error.response?.data?.message ||
+          'Gagal menghapus user. Silakan coba lagi.',
+      );
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className='flex items-center justify-center min-h-screen'>
+        <div className='text-center'>
+          <div className='animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto'></div>
+          <p className='mt-4 text-gray-600'>Memuat data user...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className='flex items-center justify-center min-h-screen'>
+        <div className='text-center'>
+          <p className='text-red-600 mb-4'>{error}</p>
+          <Button onClick={fetchData}>Coba Lagi</Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className='p-6 space-y-6'>
-      <div className='block md:flex md:justify-between items-center space-y-4 md:space-y-0'>
-        <div>
-          <h1 className='text-2xl font-bold text-gray-900'>Manajemen User</h1>
-          <p className='text-gray-600 mt-1'>
-            Kelola pengguna sistem peminjaman ruang
-          </p>
-        </div>
-        <Button
-          onClick={handleAddUser}
-          className='flex items-center gap-2'
-          variant='default'
-        >
-          <UserPlus className='w-4 h-4' />
-          Tambah User
-        </Button>
+    <div className='container mx-auto px-2 sm:px-4 py-4 sm:py-8 max-w-7xl'>
+      {/* Header */}
+      <div className='mb-4 sm:mb-6'>
+        <h1 className='text-xl sm:text-2xl font-bold text-gray-900 mb-1 sm:mb-2'>
+          Manajemen User
+        </h1>
+        <p className='text-sm sm:text-base text-gray-600'>
+          Kelola pengguna sistem peminjaman ruang
+        </p>
       </div>
-      <div className='bg-white rounded-lg shadow-sm border border-gray-200 p-4'>
-        <div className='flex gap-4'>
-          {/* Search by Name */}
-          <div className='flex-1 space-y-2'>
-            <label className='text-sm font-medium text-gray-700'>
-              Cari Nama
-            </label>
-            <div className='relative'>
-              <Search className='absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400' />
-              <Input
-                type='text'
-                placeholder='Cari berdasarkan nama...'
-                value={searchName}
-                onChange={(e) => setSearchName(e.target.value)}
-                className='pl-10'
-              />
-            </div>
+
+      {/* Actions Bar */}
+      <div className='space-y-3 mb-4 sm:mb-6'>
+        <div className='flex flex-row justify-between gap-2'>
+          <div className='relative flex-1'>
+            <Search className='absolute left-2 sm:left-3 top-1/2 -translate-y-1/2 h-3 w-3 sm:h-4 sm:w-4 text-gray-400' />
+            <Input
+              type='text'
+              placeholder='Cari...'
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className='pl-7 sm:pl-10 text-sm h-9 sm:h-10'
+            />
           </div>
-          {/* Filter Role Dropdown */}
-          <div className='w-48 space-y-2'>
-            <label className='text-sm font-medium text-gray-700'>
-              Filter Role
-            </label>
-            <Select value={selectedRole} onValueChange={setSelectedRole}>
-              <SelectTrigger>
-                <SelectValue placeholder='Pilih Role' />
-              </SelectTrigger>
-              <SelectContent>
-                {roles.map((role) => (
-                  <SelectItem key={role} value={role}>
-                    {role}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+          <Button
+            onClick={handleCreate}
+            className='whitespace-nowrap h-10 sm:h-11 px-4 sm:px-6 text-sm sm:text-base'
+          >
+            <Plus className='h-5 w-5 mr-2' />
+            <span>Tambah User</span>
+          </Button>
+        </div>
+        <div className='flex flex-row gap-2'>
+          <Select value={selectedRoleId} onValueChange={setSelectedRoleId}>
+            <SelectTrigger className='h-9 sm:h-10 text-xs sm:text-sm'>
+              <SelectValue placeholder='Filter Role' />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value='all'>Semua Role</SelectItem>
+              {roles.map((role) => (
+                <SelectItem key={role.id} value={role.id.toString()}>
+                  {role.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select value={selectedUnitId} onValueChange={setSelectedUnitId}>
+            <SelectTrigger className='h-9 sm:h-10 text-xs sm:text-sm'>
+              <SelectValue placeholder='Filter Unit' />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value='all'>Semua Unit</SelectItem>
+              {units.map((unit) => (
+                <SelectItem key={unit.id} value={unit.id.toString()}>
+                  {unit.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
       </div>
 
-      <UserTable
-        users={filteredUsers}
-        onDelete={handleDelete}
-        onViewDetail={handleViewDetail}
-        onToggleStatus={handleToggleStatus}
-      />
-      <UserDetailModal
-        open={openDetail}
-        onOpenChange={setOpenDetail}
-        user={detailUser}
-      />
+      {/* Table */}
+      <div className='bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden'>
+        <div className='overflow-x-auto'>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className='w-8 sm:w-[50px] text-center text-xs sm:text-sm'>
+                  No
+                </TableHead>
+                <TableHead className='text-xs sm:text-sm'>Nama</TableHead>
+                <TableHead className='hidden sm:table-cell text-xs sm:text-sm'>
+                  Email
+                </TableHead>
+                <TableHead className='text-xs sm:text-sm'>Role</TableHead>
+                <TableHead className='hidden md:table-cell text-xs sm:text-sm'>
+                  Unit
+                </TableHead>
+                <TableHead className='hidden lg:table-cell text-xs sm:text-sm'>
+                  Terdaftar
+                </TableHead>
+                <TableHead className='text-center text-xs sm:text-sm w-20 sm:w-auto'>
+                  Aksi
+                </TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filteredUsers.length === 0 ? (
+                <TableRow>
+                  <TableCell
+                    colSpan={7}
+                    className='text-center text-gray-500 h-32'
+                  >
+                    {debouncedSearchQuery
+                      ? 'Tidak ada user yang sesuai dengan pencarian'
+                      : 'Belum ada user'}
+                  </TableCell>
+                </TableRow>
+              ) : (
+                filteredUsers.map((user, index) => (
+                  <TableRow key={user.id}>
+                    <TableCell className='font-medium text-center text-xs sm:text-sm py-2 sm:py-3'>
+                      {index + 1}
+                    </TableCell>
+                    <TableCell className='text-xs sm:text-sm font-medium text-gray-900 py-2 sm:py-3'>
+                      <div>{user.name}</div>
+                      <div className='sm:hidden text-[10px] text-gray-500 mt-0.5'>
+                        {user.email}
+                      </div>
+                    </TableCell>
+                    <TableCell className='hidden sm:table-cell text-xs sm:text-sm text-gray-500 py-2 sm:py-3'>
+                      {user.email}
+                    </TableCell>
+                    <TableCell className='text-xs sm:text-sm text-gray-500 py-2 sm:py-3'>
+                      <span className='inline-flex items-center px-1.5 sm:px-2.5 py-0.5 rounded-full text-[10px] sm:text-xs font-medium bg-blue-100 text-blue-700'>
+                        {user.role?.name || '-'}
+                      </span>
+                    </TableCell>
+                    <TableCell className='hidden md:table-cell text-xs sm:text-sm text-gray-500 py-2 sm:py-3'>
+                      {user.unit?.name || '-'}
+                    </TableCell>
+                    <TableCell className='hidden lg:table-cell text-xs sm:text-sm text-gray-500 py-2 sm:py-3'>
+                      {new Date(user.created_at).toLocaleDateString('id-ID', {
+                        day: 'numeric',
+                        month: 'short',
+                        year: 'numeric',
+                      })}
+                    </TableCell>
+                    <TableCell className='py-2 sm:py-3'>
+                      <div className='flex items-center justify-center gap-1 sm:gap-2'>
+                        <Button
+                          variant='ghost'
+                          size='sm'
+                          onClick={() => handleDetail(user)}
+                          className='h-6 w-6 sm:h-8 sm:w-8 p-0'
+                        >
+                          <Eye className='h-3 w-3 sm:h-4 sm:w-4' />
+                        </Button>
+                        <Button
+                          variant='ghost'
+                          size='sm'
+                          onClick={() => handleEdit(user)}
+                          className='h-6 w-6 sm:h-8 sm:w-8 p-0'
+                        >
+                          <Pencil className='h-3 w-3 sm:h-4 sm:w-4' />
+                        </Button>
+                        <Button
+                          variant='ghost'
+                          size='sm'
+                          onClick={() => handleDelete(user)}
+                          className='h-6 w-6 sm:h-8 sm:w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50'
+                        >
+                          <Trash2 className='h-3 w-3 sm:h-4 sm:w-4' />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </div>
+      </div>
+
+      {/* Create User Modal */}
+      <Dialog open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen}>
+        <DialogContent className='sm:max-w-[500px]'>
+          <form onSubmit={handleSubmitCreate}>
+            <DialogHeader>
+              <DialogTitle>Tambah User Baru</DialogTitle>
+              <DialogDescription>
+                Masukkan informasi user yang akan ditambahkan
+              </DialogDescription>
+            </DialogHeader>
+            <div className='grid gap-4 py-4'>
+              <div className='grid gap-2'>
+                <label htmlFor='name' className='text-sm font-medium'>
+                  Nama <span className='text-red-500'>*</span>
+                </label>
+                <Input
+                  id='name'
+                  value={formData.name}
+                  onChange={(e) =>
+                    setFormData({ ...formData, name: e.target.value })
+                  }
+                  placeholder='Nama lengkap user'
+                  required
+                />
+              </div>
+              <div className='grid gap-2'>
+                <label htmlFor='email' className='text-sm font-medium'>
+                  Email <span className='text-red-500'>*</span>
+                </label>
+                <Input
+                  id='email'
+                  type='email'
+                  value={formData.email}
+                  onChange={(e) =>
+                    setFormData({ ...formData, email: e.target.value })
+                  }
+                  placeholder='email@example.com'
+                  required
+                />
+              </div>
+              <div className='grid gap-2'>
+                <label htmlFor='password' className='text-sm font-medium'>
+                  Password <span className='text-red-500'>*</span>
+                </label>
+                <Input
+                  id='password'
+                  type='password'
+                  value={formData.password}
+                  onChange={(e) =>
+                    setFormData({ ...formData, password: e.target.value })
+                  }
+                  placeholder='Minimal 8 karakter'
+                  required
+                />
+              </div>
+              <div className='grid gap-2'>
+                <label htmlFor='role_id' className='text-sm font-medium'>
+                  Role <span className='text-red-500'>*</span>
+                </label>
+                <Select
+                  value={formData.role_id.toString()}
+                  onValueChange={(value) =>
+                    setFormData({ ...formData, role_id: Number(value) })
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {roles.map((role) => (
+                      <SelectItem key={role.id} value={role.id.toString()}>
+                        {role.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className='grid gap-2'>
+                <label htmlFor='unit_id' className='text-sm font-medium'>
+                  Unit <span className='text-red-500'>*</span>
+                </label>
+                <Select
+                  value={formData.unit_id.toString()}
+                  onValueChange={(value) =>
+                    setFormData({ ...formData, unit_id: Number(value) })
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {units.map((unit) => (
+                      <SelectItem key={unit.id} value={unit.id.toString()}>
+                        {unit.name} ({unit.code})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              {formError && <p className='text-sm text-red-600'>{formError}</p>}
+            </div>
+            <DialogFooter>
+              <Button
+                type='button'
+                variant='outline'
+                onClick={() => setIsCreateModalOpen(false)}
+                disabled={isSubmitting}
+              >
+                Batal
+              </Button>
+              <Button type='submit' disabled={isSubmitting}>
+                {isSubmitting ? 'Menyimpan...' : 'Simpan'}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit User Modal */}
+      <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
+        <DialogContent className='sm:max-w-[500px]'>
+          <form onSubmit={handleSubmitEdit}>
+            <DialogHeader>
+              <DialogTitle>Edit User</DialogTitle>
+              <DialogDescription>
+                Ubah informasi user yang dipilih
+              </DialogDescription>
+            </DialogHeader>
+            <div className='grid gap-4 py-4'>
+              <div className='grid gap-2'>
+                <label htmlFor='edit-name' className='text-sm font-medium'>
+                  Nama <span className='text-red-500'>*</span>
+                </label>
+                <Input
+                  id='edit-name'
+                  value={formData.name}
+                  onChange={(e) =>
+                    setFormData({ ...formData, name: e.target.value })
+                  }
+                  placeholder='Nama lengkap user'
+                  required
+                />
+              </div>
+              <div className='grid gap-2'>
+                <label htmlFor='edit-email' className='text-sm font-medium'>
+                  Email <span className='text-red-500'>*</span>
+                </label>
+                <Input
+                  id='edit-email'
+                  type='email'
+                  value={formData.email}
+                  onChange={(e) =>
+                    setFormData({ ...formData, email: e.target.value })
+                  }
+                  placeholder='email@example.com'
+                  required
+                />
+              </div>
+              <div className='grid gap-2'>
+                <label htmlFor='edit-password' className='text-sm font-medium'>
+                  Password (Kosongkan jika tidak ingin mengubah)
+                </label>
+                <Input
+                  id='edit-password'
+                  type='password'
+                  value={formData.password}
+                  onChange={(e) =>
+                    setFormData({ ...formData, password: e.target.value })
+                  }
+                  placeholder='Minimal 8 karakter'
+                />
+              </div>
+              <div className='grid gap-2'>
+                <label htmlFor='edit-role_id' className='text-sm font-medium'>
+                  Role <span className='text-red-500'>*</span>
+                </label>
+                <Select
+                  value={formData.role_id.toString()}
+                  onValueChange={(value) =>
+                    setFormData({ ...formData, role_id: Number(value) })
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {roles.map((role) => (
+                      <SelectItem key={role.id} value={role.id.toString()}>
+                        {role.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className='grid gap-2'>
+                <label htmlFor='edit-unit_id' className='text-sm font-medium'>
+                  Unit <span className='text-red-500'>*</span>
+                </label>
+                <Select
+                  value={formData.unit_id.toString()}
+                  onValueChange={(value) =>
+                    setFormData({ ...formData, unit_id: Number(value) })
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {units.map((unit) => (
+                      <SelectItem key={unit.id} value={unit.id.toString()}>
+                        {unit.name} ({unit.code})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              {formError && <p className='text-sm text-red-600'>{formError}</p>}
+            </div>
+            <DialogFooter>
+              <Button
+                type='button'
+                variant='outline'
+                onClick={() => setIsEditModalOpen(false)}
+                disabled={isSubmitting}
+              >
+                Batal
+              </Button>
+              <Button type='submit' disabled={isSubmitting}>
+                {isSubmitting ? 'Menyimpan...' : 'Simpan'}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Detail User Modal */}
+      <Dialog open={isDetailModalOpen} onOpenChange={setIsDetailModalOpen}>
+        <DialogContent className='sm:max-w-[600px]'>
+          <DialogHeader>
+            <DialogTitle>Detail User</DialogTitle>
+            <DialogDescription>
+              Informasi lengkap tentang user
+            </DialogDescription>
+          </DialogHeader>
+          {selectedUser && (
+            <div className='space-y-4 py-4'>
+              <div className='grid grid-cols-2 gap-4'>
+                <div>
+                  <p className='text-sm font-medium text-gray-500'>ID</p>
+                  <p className='text-sm text-gray-900'>{selectedUser.id}</p>
+                </div>
+                <div>
+                  <p className='text-sm font-medium text-gray-500'>Status</p>
+                  <span className='inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700'>
+                    {selectedUser.status || 'Active'}
+                  </span>
+                </div>
+              </div>
+              <div>
+                <p className='text-sm font-medium text-gray-500'>Nama</p>
+                <p className='text-sm text-gray-900'>{selectedUser.name}</p>
+              </div>
+              <div>
+                <p className='text-sm font-medium text-gray-500'>Email</p>
+                <p className='text-sm text-gray-900'>{selectedUser.email}</p>
+              </div>
+              <div>
+                <p className='text-sm font-medium text-gray-500'>Role</p>
+                <p className='text-sm text-gray-900'>
+                  {selectedUser.role?.name || '-'}
+                </p>
+              </div>
+              <div>
+                <p className='text-sm font-medium text-gray-500'>Unit</p>
+                <p className='text-sm text-gray-900'>
+                  {selectedUser.unit?.name || '-'} (
+                  {selectedUser.unit?.code || '-'})
+                </p>
+                {selectedUser.unit?.category && (
+                  <p className='text-xs text-gray-500 mt-1'>
+                    Kategori: {selectedUser.unit.category}
+                  </p>
+                )}
+              </div>
+              <div className='grid grid-cols-2 gap-4'>
+                <div>
+                  <p className='text-sm font-medium text-gray-500'>Terdaftar</p>
+                  <p className='text-sm text-gray-900'>
+                    {new Date(selectedUser.created_at).toLocaleDateString(
+                      'id-ID',
+                      {
+                        day: 'numeric',
+                        month: 'long',
+                        year: 'numeric',
+                      },
+                    )}
+                  </p>
+                </div>
+                <div>
+                  <p className='text-sm font-medium text-gray-500'>
+                    Diperbarui
+                  </p>
+                  <p className='text-sm text-gray-900'>
+                    {new Date(selectedUser.updated_at).toLocaleDateString(
+                      'id-ID',
+                      {
+                        day: 'numeric',
+                        month: 'long',
+                        year: 'numeric',
+                      },
+                    )}
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button onClick={() => setIsDetailModalOpen(false)}>Tutup</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog
+        open={isDeleteDialogOpen}
+        onOpenChange={setIsDeleteDialogOpen}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Hapus User</AlertDialogTitle>
+            <AlertDialogDescription>
+              Apakah Anda yakin ingin menghapus user{' '}
+              <strong>{selectedUser?.name}</strong>? Tindakan ini tidak dapat
+              dibatalkan.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Batal</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleConfirmDelete}
+              className='bg-red-600 hover:bg-red-700'
+            >
+              Hapus
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

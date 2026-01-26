@@ -6,29 +6,39 @@ import { X } from 'lucide-react';
 import { Button } from '@/shared/components/ui/button/button';
 import { cn } from '@/shared/lib/utils';
 import { Badge } from '@/shared/components/ui/badge';
-
-interface Booking {
-  id: number;
-  activity: string;
-  date: string;
-  time: string;
-  approveSumberdaya: 'approved' | 'pending' | 'rejected';
-  approveKemahasiswaan: 'approved' | 'pending' | 'rejected';
-}
+import type { RoomBooking } from '@/services/booking.service';
 
 interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  booking?: Booking | null;
+  booking?: RoomBooking | null;
 }
 
 const statusMap = {
   approved: { text: 'Disetujui', variant: 'success' },
   pending: { text: 'Menunggu', variant: 'warning' },
   rejected: { text: 'Ditolak', variant: 'destructive' },
+  cancelled: { text: 'Dibatalkan', variant: 'secondary' },
+  completed: { text: 'Selesai', variant: 'default' },
 } as const;
 
 export function BookingDetailModal({ open, onOpenChange, booking }: Props) {
+  if (!booking) return null;
+
+  // Format date
+  const formattedDate = new Date(booking.booking_date).toLocaleDateString(
+    'id-ID',
+    {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    },
+  );
+
+  // Format time range
+  const timeRange = `${booking.start_time.substring(0, 5)} - ${booking.end_time.substring(0, 5)}`;
+
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
       <Dialog.Portal>
@@ -57,21 +67,54 @@ export function BookingDetailModal({ open, onOpenChange, booking }: Props) {
           </div>
 
           <div className='mt-6 grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6'>
-            <DetailRow label='Kegiatan' className='sm:col-span-2'>
-              {booking?.activity ?? '-'}
+            <DetailRow label='Tujuan / Kegiatan' className='sm:col-span-2'>
+              {booking.purpose}
             </DetailRow>
-            <DetailRow label='Tanggal'>{booking?.date ?? '-'}</DetailRow>
-            <DetailRow label='Waktu'>{booking?.time ?? '-'}</DetailRow>
-            <DetailRow label='Persetujuan Sumber Daya'>
-              <ApprovalStatus
-                status={booking?.approveSumberdaya ?? 'pending'}
-              />
+
+            {booking.room && (
+              <DetailRow label='Ruangan' className='sm:col-span-2'>
+                {booking.room.name}
+                {booking.room.capacity &&
+                  ` (Kapasitas: ${booking.room.capacity} orang)`}
+              </DetailRow>
+            )}
+
+            <DetailRow label='Tanggal'>{formattedDate}</DetailRow>
+            <DetailRow label='Waktu'>{timeRange}</DetailRow>
+
+            {booking.expected_participants && (
+              <DetailRow label='Jumlah Peserta'>
+                {booking.expected_participants} orang
+              </DetailRow>
+            )}
+
+            <DetailRow label='Status'>
+              <BookingStatus status={booking.status} />
             </DetailRow>
-            <DetailRow label='Persetujuan Kemahasiswaan'>
-              <ApprovalStatus
-                status={booking?.approveKemahasiswaan ?? 'pending'}
-              />
-            </DetailRow>
+
+            {booking.special_requirements && (
+              <DetailRow label='Kebutuhan Khusus' className='sm:col-span-2'>
+                {booking.special_requirements}
+              </DetailRow>
+            )}
+
+            {booking.rejection_reason && (
+              <DetailRow label='Alasan Penolakan' className='sm:col-span-2'>
+                <span className='text-red-600'>{booking.rejection_reason}</span>
+              </DetailRow>
+            )}
+
+            {booking.booked_by_user && (
+              <DetailRow label='Peminjam'>
+                {booking.booked_by_user.name}
+              </DetailRow>
+            )}
+
+            {booking.document && (
+              <DetailRow label='Dokumen Terkait'>
+                {booking.document.title}
+              </DetailRow>
+            )}
           </div>
 
           <div className='mt-8 flex justify-end gap-2'>
@@ -113,12 +156,20 @@ function DetailRow({
   );
 }
 
-function ApprovalStatus({
+function BookingStatus({
   status,
 }: {
-  status: 'approved' | 'pending' | 'rejected';
+  status: 'approved' | 'pending' | 'rejected' | 'cancelled' | 'completed';
 }) {
-  const { text, variant } = statusMap[status];
+  // Normalize status ke lowercase untuk matching
+  const normalizedStatus = status?.toLowerCase() as keyof typeof statusMap;
+  const statusInfo = statusMap[normalizedStatus] || {
+    text: status || 'Unknown',
+    variant: 'secondary',
+  };
+
+  const { text, variant } = statusInfo;
+
   return (
     <Badge
       variant={
