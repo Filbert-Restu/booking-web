@@ -378,13 +378,13 @@ function RouteComponent() {
                   prev.map((room) =>
                     room.id === selectedRoom.id
                       ? {
-                          ...room,
-                          code: editRoomName,
-                          name: editRoomName,
-                          quota: Number(editRoomQuota) || 0,
-                          note: editRoomNote,
-                          photoName: editRoomPhotoName ?? room.photoName,
-                        }
+                        ...room,
+                        code: editRoomName,
+                        name: editRoomName,
+                        quota: Number(editRoomQuota) || 0,
+                        note: editRoomNote,
+                        photoName: editRoomPhotoName ?? room.photoName,
+                      }
                       : room,
                   ),
                 );

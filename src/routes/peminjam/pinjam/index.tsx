@@ -1,4 +1,5 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
+import { useEffect, useState } from 'react';
 import { Button } from '@/shared/components/ui/button/button';
 import {
 	Table,
@@ -8,93 +9,134 @@ import {
 	TableHeader,
 	TableRow,
 } from '@/shared/components/ui/table';
+import { documentService, type Document } from '@/services/document.service';
+import { AxiosError } from 'axios';
 
 export const Route = createFileRoute('/peminjam/pinjam/')({
 	component: RouteComponent,
 });
 
-// Dummy data untuk history pengajuan
-const submissionHistory = [
-	{
-		id: 1,
-		namaKegiatan: 'Seminar Nasional Teknologi',
-		tanggal: '2026-02-15',
-		ruang: 'Auditorium Utama',
-		status: 'diproses' as const,
-		keterangan: 'Ketua Prodi',
-	},
-	{
-		id: 2,
-		namaKegiatan: 'Workshop AI & Machine Learning',
-		tanggal: '2026-02-10',
-		ruang: 'Lab Komputer 1',
-		status: 'revisi' as const,
-		revisiNotes: 'Mohon lengkapi proposal dengan detail anggaran dan susunan acara',
-	},
-	{
-		id: 3,
-		namaKegiatan: 'Rapat Koordinasi BEM',
-		tanggal: '2026-01-20',
-		ruang: 'Ruang Rapat 2',
-		status: 'selesai' as const,
-	},
-	{
-		id: 4,
-		namaKegiatan: 'Kuliah Tamu Industri',
-		tanggal: '2026-01-15',
-		ruang: 'Auditorium Utama',
-		status: 'ditolak' as const,
-	},
-	{
-		id: 5,
-		namaKegiatan: 'Pelatihan Leadership',
-		tanggal: '2026-02-20',
-		ruang: 'Aula Lantai 3',
-		status: 'diproses' as const,
-		keterangan: 'Senat Mahasiswa',
-	},
-];
-
 function RouteComponent() {
 	const navigate = useNavigate();
+	const [documents, setDocuments] = useState<Document[]>([]);
+	const [loading, setLoading] = useState(true);
+	const [error, setError] = useState<string | null>(null);
+
+	useEffect(() => {
+		fetchDocuments();
+	}, []);
+
+	const fetchDocuments = async () => {
+		try {
+			setLoading(true);
+			setError(null);
+			const data = await documentService.getDocuments();
+			// Combine my_documents and processed_documents
+			const allDocs = [
+				...(data.my_documents || []),
+				...(data.processed_documents || []),
+			];
+			setDocuments(allDocs);
+		} catch (err) {
+			console.error('Failed to fetch documents:', err);
+			if (err instanceof AxiosError) {
+				setError(err.response?.data?.message || 'Gagal memuat data dokumen');
+			} else {
+				setError('Terjadi kesalahan saat memuat data');
+			}
+		} finally {
+			setLoading(false);
+		}
+	};
 
 	const handleAjukanPinjam = () => {
 		navigate({ to: '/peminjam/pinjam/detail-tempat' });
 	};
 
-	const handleAjukanKembali = (id: number) => {
-		// Navigate to stepper with existing data
-		navigate({ to: '/peminjam/pinjam/detail-tempat', search: { editId: id } as any });
+	const handleAjukanKembali = (documentId: number) => {
+		// Navigate to stepper with existing document data
+		navigate({ to: '/peminjam/pinjam/detail-tempat', search: { editId: documentId } as any });
 	};
 
-	const getStatusBadge = (status: 'diproses' | 'selesai' | 'ditolak' | 'revisi') => {
-		switch (status) {
-			case 'diproses':
-				return (
-					<span className='inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800'>
-						Diproses
-					</span>
-				);
-			case 'selesai':
-				return (
-					<span className='inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800'>
-						Selesai
-					</span>
-				);
-			case 'ditolak':
-				return (
-					<span className='inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800'>
-						Ditolak
-					</span>
-				);
-			case 'revisi':
-				return (
-					<span className='inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800'>
-						Perlu Revisi
-					</span>
-				);
-		}
+	const getStatusBadge = (status: Document['status']) => {
+		const statusConfig: Record<Document['status'], { bg: string; text: string; label: string }> = {
+			DRAFT: {
+				bg: 'bg-gray-100',
+				text: 'text-gray-800',
+				label: 'Draft',
+			},
+			IN_PROGRESS: {
+				bg: 'bg-yellow-100',
+				text: 'text-yellow-800',
+				label: 'Diproses',
+			},
+			APPROVED: {
+				bg: 'bg-green-100',
+				text: 'text-green-800',
+				label: 'Disetujui',
+			},
+			REJECTED: {
+				bg: 'bg-red-100',
+				text: 'text-red-800',
+				label: 'Ditolak',
+			},
+			REVISED: {
+				bg: 'bg-orange-100',
+				text: 'text-orange-800',
+				label: 'Perlu Revisi',
+			},
+		};
+		const config = statusConfig[status];
+		return (
+			<span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${config.bg} ${config.text}`}>
+				{config.label}
+			</span>
+		);
 	};
+
+	const getRoomInfo = (doc: Document) => {
+		const content = doc.content as any;
+		if (content?.room_id) {
+			return `Ruang ${content.room_code || content.room_id}`;
+		}
+		return '-';
+	};
+
+	const getBookingDate = (doc: Document) => {
+		const content = doc.content as any;
+		if (content?.booking_date) {
+			return new Date(content.booking_date).toLocaleDateString('id-ID');
+		}
+		return '-';
+	};
+
+	const getCurrentHolder = (doc: Document) => {
+		if (doc.status === 'IN_PROGRESS' && doc.currentHolder) {
+			return doc.currentHolder.role?.name || doc.currentHolder.name;
+		}
+		return '-';
+	};
+
+	if (loading) {
+		return (
+			<div className='p-6 flex justify-center items-center min-h-screen'>
+				<div className='text-center'>
+					<div className='text-lg font-semibold text-gray-700'>Memuat data...</div>
+				</div>
+			</div>
+		);
+	}
+
+	if (error) {
+		return (
+			<div className='p-6 flex justify-center items-center min-h-screen'>
+				<div className='text-center'>
+					<div className='text-lg font-semibold text-red-600 mb-4'>{error}</div>
+					<Button onClick={fetchDocuments}>Coba Lagi</Button>
+				</div>
+			</div>
+		);
+	}
 
 	return (
 		<div className='space-y-6'>
@@ -108,12 +150,6 @@ function RouteComponent() {
 
 			{/* Tabel History Pengajuan */}
 			<div className='bg-white rounded-lg shadow-sm border border-gray-200'>
-				{/* <div className='px-6 py-4 border-b border-gray-200'>
-					<h2 className='text-lg font-semibold text-gray-900'>
-						History Pengajuan
-					</h2>
-				</div> */}
-
 				<Table>
 					<TableHeader>
 						<TableRow>
@@ -126,38 +162,56 @@ function RouteComponent() {
 						</TableRow>
 					</TableHeader>
 					<TableBody>
-						{submissionHistory.map((item, index) => (
-							<TableRow key={item.id}>
-								<TableCell>{index + 1}</TableCell>
-								<TableCell className='font-medium'>
-									{item.namaKegiatan}
-								</TableCell>
-								<TableCell>{item.tanggal}</TableCell>
-								<TableCell>{item.ruang}</TableCell>
-								<TableCell>{getStatusBadge(item.status)}</TableCell>
-								<TableCell>
-									{item.status === 'diproses' ? (
-										<span className='text-sm text-gray-700'>
-											{item.keterangan}
-										</span>
-									) : item.status === 'revisi' ? (
-										<div className='space-y-2'>
-											<p className='text-sm text-gray-700'>
-												{(item as any).revisiNotes}
-											</p>
-											<button
-												onClick={() => handleAjukanKembali(item.id)}
-												className='text-sm text-blue-600 underline hover:text-blue-800'
-											>
-												Ajukan Kembali
-											</button>
-										</div>
-									) : (
-										<span className='text-sm text-gray-400'>-</span>
-									)}
+						{documents.length === 0 ? (
+							<TableRow>
+								<TableCell colSpan={6} className='text-center text-gray-500 py-8'>
+									Belum ada pengajuan peminjaman
 								</TableCell>
 							</TableRow>
-						))}
+						) : (
+							documents.map((doc, index) => (
+								<TableRow key={doc.id}>
+									<TableCell>{index + 1}</TableCell>
+									<TableCell className='font-medium'>{doc.title}</TableCell>
+									<TableCell>{getBookingDate(doc)}</TableCell>
+									<TableCell>{getRoomInfo(doc)}</TableCell>
+									<TableCell>{getStatusBadge(doc.status)}</TableCell>
+									<TableCell>
+										{doc.status === 'IN_PROGRESS' ? (
+											<span className='text-sm text-gray-700'>
+												{getCurrentHolder(doc)}
+											</span>
+										) : doc.status === 'REVISED' ? (
+											<div className='space-y-2'>
+												<p className='text-sm text-gray-700'>
+													Perlu revisi - silakan ajukan kembali
+												</p>
+												<button
+													onClick={() => handleAjukanKembali(doc.id)}
+													className='text-sm text-blue-600 underline hover:text-blue-800'
+												>
+													Ajukan Kembali
+												</button>
+											</div>
+										) : doc.status === 'DRAFT' ? (
+											<div className='space-y-2'>
+												<p className='text-sm text-gray-700'>
+													Belum disubmit
+												</p>
+												<button
+													onClick={() => handleAjukanKembali(doc.id)}
+													className='text-sm text-blue-600 underline hover:text-blue-800'
+												>
+													Lanjutkan
+												</button>
+											</div>
+										) : (
+											<span className='text-sm text-gray-400'>-</span>
+										)}
+									</TableCell>
+								</TableRow>
+							))
+						)}
 					</TableBody>
 				</Table>
 			</div>
