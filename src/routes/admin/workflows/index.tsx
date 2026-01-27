@@ -13,24 +13,7 @@ import { Button } from '@/shared/components/ui/button/button';
 import { Input } from '@/shared/components/ui/input';
 import { Label } from '@/shared/components/ui/label';
 import { Textarea } from '@/shared/components/ui/textarea';
-import {
-  Plus,
-  Pencil,
-  Trash2,
-  Search,
-  Eye,
-  Settings,
-  ChevronDown,
-  ChevronUp,
-} from 'lucide-react';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/shared/components/ui/table';
+import { Plus, Search } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -40,27 +23,18 @@ import {
   DialogTitle,
 } from '@/shared/components/ui/dialog';
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/shared/components/ui/alert-dialog';
-import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
 } from '@/shared/components/ui/select';
-import { Card, CardContent } from '@/shared/components/ui/card';
-import { Badge } from '@/shared/components/ui/badge';
 import { CreateWorkflowDialog } from '@/shared/components/ui/workflows/CreateWorkflowDialog';
 import { WorkflowDetailDialog } from '@/shared/components/ui/workflows/WorkflowDetailDialog';
 import { WorkflowDeleteDialog } from '@/shared/components/ui/workflows/WorkflowDeleteDialog';
+import { WorkflowTable } from '@/shared/components/ui/workflows/WorkflowTable';
+import { WorkflowStepDialog } from '@/shared/components/ui/workflows/WorkflowStepDialog';
+import { WorkflowStepDeleteDialog } from '@/shared/components/ui/workflows/WorkflowStepDeleteDialog';
 
 export const Route = createFileRoute('/admin/workflows/')({
   component: RouteComponent,
@@ -494,209 +468,19 @@ function RouteComponent() {
       </div>
 
       {/* Workflows Table */}
-      <div className='bg-white rounded-lg shadow overflow-x-auto'>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className='w-8 sm:w-12'></TableHead>
-              <TableHead className='min-w-[150px]'>Nama Workflow</TableHead>
-              <TableHead className='hidden sm:table-cell'>Kategori</TableHead>
-              <TableHead className='hidden md:table-cell'>
-                Jumlah Step
-              </TableHead>
-              <TableHead className='hidden lg:table-cell'>Deskripsi</TableHead>
-              <TableHead className='text-right w-[100px] sm:w-auto'>
-                Aksi
-              </TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {filteredWorkflows.length === 0 ? (
-              <TableRow>
-                <TableCell
-                  colSpan={6}
-                  className='text-center py-8 text-gray-500'
-                >
-                  Tidak ada workflow ditemukan
-                </TableCell>
-              </TableRow>
-            ) : (
-              filteredWorkflows.map((workflow) => (
-                <>
-                  <TableRow key={workflow.id}>
-                    <TableCell className='py-2 sm:py-4'>
-                      <Button
-                        variant='ghost'
-                        size='sm'
-                        onClick={() => toggleWorkflowExpansion(workflow.id)}
-                        className='h-7 w-7 p-0 sm:h-8 sm:w-8'
-                      >
-                        {expandedWorkflows.has(workflow.id) ? (
-                          <ChevronUp className='h-3 w-3 sm:h-4 sm:w-4' />
-                        ) : (
-                          <ChevronDown className='h-3 w-3 sm:h-4 sm:w-4' />
-                        )}
-                      </Button>
-                    </TableCell>
-                    <TableCell className='font-medium py-2 sm:py-4'>
-                      <div>
-                        <div className='text-sm sm:text-base'>
-                          {workflow.name}
-                        </div>
-                        <div className='sm:hidden text-xs text-gray-500 mt-1 space-y-0.5'>
-                          <div>
-                            <Badge variant='secondary' className='text-xs'>
-                              {getCategoryLabel(workflow.applies_to_category)}
-                            </Badge>
-                          </div>
-                          <div>{workflow.steps?.length || 0} step(s)</div>
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell className='hidden sm:table-cell py-2 sm:py-4'>
-                      <Badge variant='secondary'>
-                        {getCategoryLabel(workflow.applies_to_category)}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className='hidden md:table-cell py-2 sm:py-4'>
-                      {workflow.steps?.length || 0} step(s)
-                    </TableCell>
-                    <TableCell className='hidden lg:table-cell max-w-md truncate py-2 sm:py-4'>
-                      {workflow.description || '-'}
-                    </TableCell>
-                    <TableCell className='text-right py-2 sm:py-4'>
-                      <div className='flex justify-end gap-1'>
-                        <Button
-                          variant='ghost'
-                          size='sm'
-                          onClick={() => handleViewWorkflow(workflow)}
-                          className='h-7 w-7 p-0 sm:h-8 sm:w-8'
-                          title='View'
-                        >
-                          <Eye className='h-3 w-3 sm:h-4 sm:w-4' />
-                        </Button>
-                        <Button
-                          variant='ghost'
-                          size='sm'
-                          onClick={() => handleManageSteps(workflow)}
-                          className='h-7 w-7 p-0 sm:h-8 sm:w-8'
-                          title='Manage Steps'
-                        >
-                          <Settings className='h-3 w-3 sm:h-4 sm:w-4' />
-                        </Button>
-                        <Button
-                          variant='ghost'
-                          size='sm'
-                          onClick={() => handleEditWorkflow(workflow)}
-                          className='h-7 w-7 p-0 sm:h-8 sm:w-8'
-                          title='Edit'
-                        >
-                          <Pencil className='h-3 w-3 sm:h-4 sm:w-4' />
-                        </Button>
-                        <Button
-                          variant='ghost'
-                          size='sm'
-                          onClick={() => handleDeleteWorkflow(workflow)}
-                          className='h-7 w-7 p-0 sm:h-8 sm:w-8'
-                          title='Delete'
-                        >
-                          <Trash2 className='h-3 w-3 sm:h-4 sm:w-4 text-red-500' />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                  {expandedWorkflows.has(workflow.id) && (
-                    <TableRow>
-                      <TableCell colSpan={6} className='bg-gray-50 p-2 sm:p-4'>
-                        <div>
-                          <h4 className='font-semibold mb-2 sm:mb-3 text-sm sm:text-base'>
-                            Workflow Steps:
-                          </h4>
-                          {workflow.steps && workflow.steps.length > 0 ? (
-                            <div className='space-y-2'>
-                              {workflow.steps.map((step) => (
-                                <Card key={step.id}>
-                                  <CardContent className='p-2 sm:p-4'>
-                                    <div className='flex items-start justify-between gap-2'>
-                                      <div className='flex-1 min-w-0'>
-                                        <div className='flex items-center gap-2 mb-1 sm:mb-2 flex-wrap'>
-                                          <Badge
-                                            variant='outline'
-                                            className='text-xs'
-                                          >
-                                            Step {step.step_order}
-                                          </Badge>
-                                          <span className='font-medium text-sm sm:text-base'>
-                                            {step.step_name}
-                                          </span>
-                                        </div>
-                                        <div className='text-xs sm:text-sm text-gray-600 space-y-0.5 sm:space-y-1'>
-                                          <div className='break-words'>
-                                            <span className='font-medium'>
-                                              Role:
-                                            </span>{' '}
-                                            {step.target_role_slug}
-                                          </div>
-                                          <div>
-                                            <span className='font-medium'>
-                                              Scope:
-                                            </span>{' '}
-                                            {getScopeTypeLabel(step.scope_type)}
-                                          </div>
-                                          {step.target_category_lookup && (
-                                            <div>
-                                              <span className='font-medium'>
-                                                Target Category:
-                                              </span>{' '}
-                                              {getCategoryLabel(
-                                                step.target_category_lookup,
-                                              )}
-                                            </div>
-                                          )}
-                                        </div>
-                                      </div>
-                                      <div className='flex gap-1 flex-shrink-0'>
-                                        <Button
-                                          variant='ghost'
-                                          size='sm'
-                                          onClick={() =>
-                                            handleEditStep(workflow, step)
-                                          }
-                                          className='h-7 w-7 p-0'
-                                        >
-                                          <Pencil className='h-3 w-3' />
-                                        </Button>
-                                        <Button
-                                          variant='ghost'
-                                          size='sm'
-                                          onClick={() =>
-                                            handleDeleteStep(workflow, step)
-                                          }
-                                          className='h-7 w-7 p-0'
-                                        >
-                                          <Trash2 className='h-3 w-3 text-red-500' />
-                                        </Button>
-                                      </div>
-                                    </div>
-                                  </CardContent>
-                                </Card>
-                              ))}
-                            </div>
-                          ) : (
-                            <p className='text-gray-500 text-sm'>
-                              Belum ada step untuk workflow ini
-                            </p>
-                          )}
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  )}
-                </>
-              ))
-            )}
-          </TableBody>
-        </Table>
-      </div>
+      <WorkflowTable
+        workflows={filteredWorkflows}
+        expandedWorkflows={expandedWorkflows}
+        onToggleExpand={toggleWorkflowExpansion}
+        onView={handleViewWorkflow}
+        onManageSteps={handleManageSteps}
+        onEdit={handleEditWorkflow}
+        onDelete={handleDeleteWorkflow}
+        onEditStep={handleEditStep}
+        onDeleteStep={handleDeleteStep}
+        getScopeTypeLabel={getScopeTypeLabel}
+        getCategoryLabel={getCategoryLabel}
+      />
 
       {/* Create Workflow Modal */}
       <CreateWorkflowDialog
@@ -793,272 +577,42 @@ function RouteComponent() {
       />
 
       {/* Add Step Modal */}
-      <Dialog open={isStepModalOpen} onOpenChange={setIsStepModalOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Tambah Step ke Workflow</DialogTitle>
-            <DialogDescription>
-              Tambahkan langkah baru ke workflow "{workflowForStep?.name}"
-            </DialogDescription>
-          </DialogHeader>
-          <div className='space-y-4 py-4'>
-            <div>
-              <Label htmlFor='new_step_name'>Nama Step</Label>
-              <Input
-                id='new_step_name'
-                value={stepFormData.step_name}
-                onChange={(e) =>
-                  setStepFormData({
-                    ...stepFormData,
-                    step_name: e.target.value,
-                  })
-                }
-                placeholder='Contoh: Approval Ketua'
-              />
-            </div>
-            <div>
-              <Label htmlFor='new_target_role'>Target Role</Label>
-              <Select
-                value={stepFormData.target_role_slug}
-                onValueChange={(value) =>
-                  setStepFormData({ ...stepFormData, target_role_slug: value })
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder='Pilih role...' />
-                </SelectTrigger>
-                <SelectContent>
-                  {roles.map((role) => (
-                    <SelectItem key={role.id} value={role.slug}>
-                      {role.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label htmlFor='new_scope_type'>Scope Type</Label>
-              <Select
-                value={stepFormData.scope_type}
-                onValueChange={(
-                  value:
-                    | 'SELF'
-                    | 'PARENT'
-                    | 'FACULTY_LEADER'
-                    | 'SPECIFIC_CATEGORY',
-                ) => setStepFormData({ ...stepFormData, scope_type: value })}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {scopeTypes.map((type) => (
-                    <SelectItem key={type.value} value={type.value}>
-                      <div>
-                        <div className='font-medium'>{type.label}</div>
-                        <div className='text-xs text-gray-500'>
-                          {type.description}
-                        </div>
-                      </div>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            {stepFormData.scope_type === 'SPECIFIC_CATEGORY' && (
-              <div>
-                <Label htmlFor='new_target_category'>Target Category</Label>
-                <Select
-                  value={stepFormData.target_category_lookup}
-                  onValueChange={(value) =>
-                    setStepFormData({
-                      ...stepFormData,
-                      target_category_lookup: value,
-                    })
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder='Pilih kategori...' />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {categories.map((cat) => (
-                      <SelectItem key={cat.value} value={cat.value}>
-                        {cat.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            )}
-            <div>
-              <Label htmlFor='new_step_order'>Order</Label>
-              <Input
-                id='new_step_order'
-                type='number'
-                value={stepFormData.step_order}
-                onChange={(e) =>
-                  setStepFormData({
-                    ...stepFormData,
-                    step_order: parseInt(e.target.value),
-                  })
-                }
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant='outline' onClick={() => setIsStepModalOpen(false)}>
-              Batal
-            </Button>
-            <Button onClick={submitAddStep}>Tambah Step</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <WorkflowStepDialog
+        open={isStepModalOpen}
+        onOpenChange={setIsStepModalOpen}
+        title='Tambah Step ke Workflow'
+        description={`Tambahkan langkah baru ke workflow "${workflowForStep?.name || ''}"`}
+        stepFormData={stepFormData}
+        setStepFormData={setStepFormData}
+        roles={roles}
+        categories={categories}
+        scopeTypes={scopeTypes}
+        onSubmit={submitAddStep}
+        submitLabel='Tambah Step'
+      />
 
       {/* Edit Step Modal */}
-      <Dialog open={isEditStepModalOpen} onOpenChange={setIsEditStepModalOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Edit Step</DialogTitle>
-            <DialogDescription>
-              Update informasi step workflow
-            </DialogDescription>
-          </DialogHeader>
-          <div className='space-y-4 py-4'>
-            <div>
-              <Label htmlFor='edit_step_name'>Nama Step</Label>
-              <Input
-                id='edit_step_name'
-                value={stepFormData.step_name}
-                onChange={(e) =>
-                  setStepFormData({
-                    ...stepFormData,
-                    step_name: e.target.value,
-                  })
-                }
-              />
-            </div>
-            <div>
-              <Label htmlFor='edit_target_role'>Target Role</Label>
-              <Select
-                value={stepFormData.target_role_slug}
-                onValueChange={(value) =>
-                  setStepFormData({ ...stepFormData, target_role_slug: value })
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {roles.map((role) => (
-                    <SelectItem key={role.id} value={role.slug}>
-                      {role.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label htmlFor='edit_scope_type'>Scope Type</Label>
-              <Select
-                value={stepFormData.scope_type}
-                onValueChange={(
-                  value:
-                    | 'SELF'
-                    | 'PARENT'
-                    | 'FACULTY_LEADER'
-                    | 'SPECIFIC_CATEGORY',
-                ) => setStepFormData({ ...stepFormData, scope_type: value })}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {scopeTypes.map((type) => (
-                    <SelectItem key={type.value} value={type.value}>
-                      <div>
-                        <div className='font-medium'>{type.label}</div>
-                        <div className='text-xs text-gray-500'>
-                          {type.description}
-                        </div>
-                      </div>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            {stepFormData.scope_type === 'SPECIFIC_CATEGORY' && (
-              <div>
-                <Label htmlFor='edit_target_category'>Target Category</Label>
-                <Select
-                  value={stepFormData.target_category_lookup}
-                  onValueChange={(value) =>
-                    setStepFormData({
-                      ...stepFormData,
-                      target_category_lookup: value,
-                    })
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {categories.map((cat) => (
-                      <SelectItem key={cat.value} value={cat.value}>
-                        {cat.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            )}
-            <div>
-              <Label htmlFor='edit_step_order'>Order</Label>
-              <Input
-                id='edit_step_order'
-                type='number'
-                value={stepFormData.step_order}
-                onChange={(e) =>
-                  setStepFormData({
-                    ...stepFormData,
-                    step_order: parseInt(e.target.value),
-                  })
-                }
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button
-              variant='outline'
-              onClick={() => setIsEditStepModalOpen(false)}
-            >
-              Batal
-            </Button>
-            <Button onClick={submitEditStep}>Simpan Perubahan</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <WorkflowStepDialog
+        open={isEditStepModalOpen}
+        onOpenChange={setIsEditStepModalOpen}
+        title='Edit Step'
+        description='Update informasi step workflow'
+        stepFormData={stepFormData}
+        setStepFormData={setStepFormData}
+        roles={roles}
+        categories={categories}
+        scopeTypes={scopeTypes}
+        onSubmit={submitEditStep}
+        submitLabel='Simpan Perubahan'
+      />
 
       {/* Delete Step Dialog */}
-      <AlertDialog
+      <WorkflowStepDeleteDialog
         open={isDeleteStepDialogOpen}
         onOpenChange={setIsDeleteStepDialogOpen}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Hapus Step</AlertDialogTitle>
-            <AlertDialogDescription>
-              Apakah Anda yakin ingin menghapus step "{selectedStep?.step_name}
-              "? Tindakan ini tidak dapat dibatalkan.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Batal</AlertDialogCancel>
-            <AlertDialogAction onClick={confirmDeleteStep}>
-              Hapus
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+        stepName={selectedStep?.step_name || ''}
+        onConfirm={confirmDeleteStep}
+      />
     </div>
   );
 }
