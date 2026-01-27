@@ -1,7 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Clock, Calendar } from 'lucide-react';
-
+import { AxiosError } from 'axios';
 import {
 	Select,
 	SelectContent,
@@ -20,39 +20,67 @@ import {
 	TableHeader,
 	TableRow,
 } from '@/shared/components/ui/table';
-
-type ReservationStatus = {
-	id: number;
-	borrowerId: string;
-	borrowerName: string;
-	date: string;
-	time: string;
-	status: 'pending' | 'approved';
-};
+import { roomService, type Room } from '@/services/room.service';
+import { documentService } from '@/services/document.service';
 
 export const Route = createFileRoute('/sumber-daya/tambah-peminjaman')({
 	component: RouteComponent,
 });
 
+// Using RoomBooking from roomService but with additional fields
+interface LocalRoomBooking {
+	id: number;
+	borrower_id?: string;
+	borrower_name?: string;
+	booked_by?: number;
+	booking_date: string;
+	start_time: string;
+	end_time: string;
+	status: 'PENDING' | 'APPROVED' | 'REJECTED' | 'CANCELLED' | 'COMPLETED';
+	purpose?: string;
+}
+
 function RouteComponent() {
-	const [selectedRoom, setSelectedRoom] = useState('K105');
+	const [rooms, setRooms] = useState<Room[]>([]);
+	const [selectedRoom, setSelectedRoom] = useState<string>('');
+	const [roomBookings, setRoomBookings] = useState<LocalRoomBooking[]>([]);
 	const [search, setSearch] = useState('');
 	const [showRoomDetails, setShowRoomDetails] = useState(false);
+	const [loading, setLoading] = useState(false);
 
 	const [borrowerId, setBorrowerId] = useState('');
 	const [borrowerName, setBorrowerName] = useState('');
 	const [startTime, setStartTime] = useState('09:30');
-	const [endTime, setEndTime] = useState('09:30');
+	const [endTime, setEndTime] = useState('11:30');
 	const [startDate, setStartDate] = useState('2026-01-31');
 	const [endDate, setEndDate] = useState('2026-01-31');
 	const [activity, setActivity] = useState('');
 
-	const getStatusBadge = (status: 'pending' | 'approved') => {
+	useEffect(() => {
+		fetchRooms();
+	}, []);
+
+	const fetchRooms = async () => {
+		try {
+			const data = await roomService.getRooms({ status: 'ACTIVE' });
+			setRooms(data);
+			if (data.length > 0 && !selectedRoom) {
+				setSelectedRoom(data[0].code);
+			}
+		} catch (err) {
+			console.error('Failed to fetch rooms:', err);
+		}
+	};
+
+	const getStatusBadge = (status: 'PENDING' | 'APPROVED' | 'REJECTED' | 'CANCELLED' | 'COMPLETED') => {
 		const statusConfig = {
-			pending: { bg: 'bg-yellow-100', text: 'text-yellow-800', label: 'Pending' },
-			approved: { bg: 'bg-green-100', text: 'text-green-800', label: 'Approved' },
+			PENDING: { bg: 'bg-yellow-100', text: 'text-yellow-800', label: 'Pending' },
+			APPROVED: { bg: 'bg-green-100', text: 'text-green-800', label: 'Approved' },
+			REJECTED: { bg: 'bg-red-100', text: 'text-red-800', label: 'Rejected' },
+			CANCELLED: { bg: 'bg-gray-100', text: 'text-gray-800', label: 'Cancelled' },
+			COMPLETED: { bg: 'bg-blue-100', text: 'text-blue-800', label: 'Completed' },
 		};
-		const config = statusConfig[status];
+		const config = statusConfig[status] || statusConfig.PENDING;
 		return (
 			<span className={`px-2 py-1 rounded-full text-xs font-medium ${config.bg} ${config.text}`}>
 				{config.label}
@@ -60,73 +88,105 @@ function RouteComponent() {
 		);
 	};
 
-	const reservations: ReservationStatus[] = [
-		{
-			id: 1,
-			borrowerId: '24060119120011',
-			borrowerName: 'Ahmad Fauzi',
-			date: '31/01/2026',
-			time: '09:30 - 11:30',
-			status: 'approved',
-		},
-		{
-			id: 2,
-			borrowerId: '24060120130045',
-			borrowerName: 'Siti Nurhaliza',
-			date: '31/01/2026',
-			time: '13:00 - 15:00',
-			status: 'approved',
-		},
-		{
-			id: 3,
-			borrowerId: '199012012015041001',
-			borrowerName: 'Dr. Budi Santoso',
-			date: '01/02/2026',
-			time: '08:00 - 10:00',
-			status: 'pending',
-		},
-		{
-			id: 4,
-			borrowerId: '24060119140028',
-			borrowerName: 'Rina Wijaya',
-			date: '02/02/2026',
-			time: '14:00 - 16:00',
-			status: 'pending',
-		},
-	];
+	const handleSearch = async () => {
+		if (!selectedRoom) {
+			alert('Pilih ruangan terlebih dahulu!');
+			return;
+		}
 
-	const handleSearch = () => {
-		setShowRoomDetails(true);
-		// TODO: Integrate with API to fetch room availability
+		try {
+			setLoading(true);
+			const room = rooms.find(r => r.code === selectedRoom);
+			if (room) {
+				// Fetch room schedule to show existing bookings
+				const schedule = await roomService.getRoomSchedule(room.id, startDate, endDate);
+				setRoomBookings(schedule.bookings || []);
+				setShowRoomDetails(true);
+			}
+		} catch (err) {
+			console.error('Failed to fetch room schedule:', err);
+			alert('Gagal memuat jadwal ruangan');
+		} finally {
+			setLoading(false);
+		}
 	};
 
-	const handleSubmit = (e: React.FormEvent) => {
+	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
-		
+
 		if (!borrowerId.trim() || !borrowerName.trim() || !activity.trim()) {
 			alert('NIM/NIP Peminjam, Nama Peminjam, dan Aktivitas wajib diisi!');
 			return;
 		}
 
-		// TODO: Integrate with API when backend is ready
-		console.log({
-			selectedRoom,
-			borrowerId,
-			borrowerName,
-			startTime,
-			endTime,
-			startDate,
-			endDate,
-			activity,
-		});
+		if (!selectedRoom) {
+			alert('Pilih ruangan terlebih dahulu!');
+			return;
+		}
 
-		alert('Peminjaman berhasil ditambahkan!');
-		
-		// Reset form
-		setBorrowerId('');
-		setBorrowerName('');
-		setActivity('');
+		try {
+			setLoading(true);
+			const room = rooms.find(r => r.code === selectedRoom);
+			if (!room) {
+				alert('Ruangan tidak ditemukan!');
+				return;
+			}
+
+			// Create document for manual booking
+			// Using workflow_id 1 as default for peminjaman ruang
+			const documentData = {
+				workflow_id: 1,
+				title: `Manual Booking - ${activity}`,
+				content: {
+					room_id: room.id,
+					room_code: room.code,
+					room_name: room.name,
+					booking_date: startDate,
+					start_time: startTime,
+					end_time: endTime,
+					event_name: activity,
+					borrower_id: borrowerId,
+					borrower_name: borrowerName,
+					manual_booking: true,
+				},
+			};
+
+			const doc = await documentService.createDocument(documentData);
+
+			// Auto-approve the document since it's manual booking by Sumber Daya
+			await documentService.submitDocument(doc.id);
+
+			alert('Peminjaman manual berhasil ditambahkan!');
+
+			// Reset form
+			setBorrowerId('');
+			setBorrowerName('');
+			setActivity('');
+
+			// Refresh schedule
+			await handleSearch();
+		} catch (err) {
+			console.error('Failed to create manual booking:', err);
+			if (err instanceof AxiosError) {
+				alert(err.response?.data?.message || 'Gagal menambahkan peminjaman');
+			} else {
+				alert('Terjadi kesalahan saat menambahkan peminjaman');
+			}
+		} finally {
+			setLoading(false);
+		}
 	};
+
+	const filteredBookings = roomBookings.filter((item) =>
+		[
+			item.borrower_id,
+			item.borrower_name,
+			item.booking_date,
+		]
+			.join(' ')
+			.toLowerCase()
+			.includes(search.toLowerCase()),
+	);
 
 	return (
 		<div className='space-y-6'>
@@ -139,12 +199,16 @@ function RouteComponent() {
 							<SelectValue placeholder='Pilih ruangan...' />
 						</SelectTrigger>
 						<SelectContent>
-							<SelectItem value='K105'>K105</SelectItem>
-							<SelectItem value='K106'>K106</SelectItem>
-							<SelectItem value='K201'>K201</SelectItem>
+							{rooms.map((room) => (
+								<SelectItem key={room.id} value={room.code}>
+									{room.code} - {room.name}
+								</SelectItem>
+							))}
 						</SelectContent>
 					</Select>
-					<Button onClick={handleSearch}>Cari</Button>
+					<Button onClick={handleSearch} disabled={loading}>
+						{loading ? 'Memuat...' : 'Cari'}
+					</Button>
 				</div>
 			</div>
 
@@ -253,8 +317,8 @@ function RouteComponent() {
 							</div>
 
 							<div className='flex justify-end'>
-								<Button type='submit' className='mt-2'>
-									Tambah Peminjaman
+								<Button type='submit' className='mt-2' disabled={loading}>
+									{loading ? 'Menyimpan...' : 'Tambah Peminjaman'}
 								</Button>
 							</div>
 						</form>
@@ -290,63 +354,37 @@ function RouteComponent() {
 										</TableRow>
 									</TableHeader>
 									<TableBody>
-										{reservations.length === 0 ? (
+										{filteredBookings.length === 0 ? (
 											<TableRow>
 												<TableCell
 													colSpan={6}
 													className='text-center text-gray-500 py-8'
 												>
-													No data available in table
+													Tidak ada data peminjaman
 												</TableCell>
 											</TableRow>
 										) : (
-											reservations
-												.filter((item) =>
-													[
-														item.borrowerId,
-														item.borrowerName,
-														item.date,
-														item.time,
-													]
-														.join(' ')
-														.toLowerCase()
-														.includes(search.toLowerCase()),
-												)
-												.map((item, index) => (
-													<TableRow key={item.id}>
-														<TableCell className='text-center'>
-															{index + 1}
-														</TableCell>
-														<TableCell>{item.borrowerId}</TableCell>
-														<TableCell>{item.borrowerName}</TableCell>
-														<TableCell>{item.date}</TableCell>
-														<TableCell>{item.time}</TableCell>
-														<TableCell>
-															{getStatusBadge(item.status)}
-														</TableCell>
-													</TableRow>
-												))
+											filteredBookings.map((item, index) => (
+												<TableRow key={item.id}>
+													<TableCell className='text-center'>
+														{index + 1}
+													</TableCell>
+													<TableCell>{item.borrower_id}</TableCell>
+													<TableCell>{item.borrower_name}</TableCell>
+													<TableCell>{item.booking_date}</TableCell>
+													<TableCell>{item.start_time} - {item.end_time}</TableCell>
+													<TableCell>
+														{getStatusBadge(item.status)}
+													</TableCell>
+												</TableRow>
+											))
 										)}
 									</TableBody>
 								</Table>
 							</div>
 
 							<div className='flex items-center justify-between px-4 py-3 border-t text-xs text-gray-500 bg-gray-50'>
-								<span>Showing 0 to 0 of {reservations.length} entries</span>
-								<div className='flex gap-2'>
-									<button
-										className='text-primary disabled:text-gray-400'
-										disabled
-									>
-										Previous
-									</button>
-									<button
-										className='text-primary disabled:text-gray-400'
-										disabled
-									>
-										Next
-									</button>
-								</div>
+								<span>Showing {filteredBookings.length} entries</span>
 							</div>
 						</div>
 					</div>

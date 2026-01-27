@@ -1,6 +1,6 @@
-import { createFileRoute } from '@tanstack/react-router';
-import { useState } from 'react';
-import type { ChangeEvent, FormEvent } from 'react';
+import { createFileRoute, useNavigate } from '@tanstack/react-router';
+import { useEffect, useState } from 'react';
+import { AxiosError } from 'axios';
 import { Button } from '@/shared/components/ui/button/button';
 import { Input } from '@/shared/components/ui/input';
 import {
@@ -10,7 +10,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/shared/components/ui/select';
-import { PlusCircle, Pencil, Search, ToggleRight, ToggleLeft } from 'lucide-react';
+import { PlusCircle, Pencil, Search, ToggleRight, ToggleLeft, Trash2 } from 'lucide-react';
 import {
   Table,
   TableBody,
@@ -19,87 +19,82 @@ import {
   TableHeader,
   TableRow,
 } from '@/shared/components/ui/table';
+import { roomService, type Room } from '@/services/room.service';
 
 export const Route = createFileRoute('/admin/manajemen-ruang/')({
   component: RouteComponent,
 });
 
-type RoomStatus = 'enable' | 'disable';
-
-interface Room {
-  id: number;
-  code: string;
-  name: string;
-  quota: number;
-  peruntukan: string;
-  status: RoomStatus;
-  note?: string;
-  photoName?: string;
-}
-
-const initialRooms: Room[] = [
-  { id: 1, code: 'A102', name: 'A102', quota: 60, peruntukan: 'dosen', status: 'disable' },
-  { id: 2, code: 'A101', name: 'A101', quota: 60, peruntukan: 'dosen', status: 'disable' },
-  { id: 3, code: 'A103', name: 'A103', quota: 60, peruntukan: 'dosen', status: 'disable' },
-  { id: 4, code: 'A104', name: 'A104', quota: 60, peruntukan: 'dosen', status: 'disable' },
-  { id: 5, code: 'A105', name: 'A105', quota: 60, peruntukan: 'dosen', status: 'disable' },
-  { id: 6, code: 'A106', name: 'A106', quota: 60, peruntukan: 'dosen', status: 'disable' },
-  { id: 7, code: 'A107', name: 'A107', quota: 60, peruntukan: 'dosen', status: 'disable' },
-  { id: 8, code: 'A203', name: 'A203', quota: 60, peruntukan: 'dosen', status: 'disable' },
-  { id: 9, code: 'A204', name: 'A204', quota: 60, peruntukan: 'dosen', status: 'disable' },
-  { id: 10, code: 'A205', name: 'A205', quota: 60, peruntukan: 'dosen', status: 'disable' },
-];
-
 function RouteComponent() {
-  const [rooms, setRooms] = useState<Room[]>(initialRooms);
+  const navigate = useNavigate();
+  const [rooms, setRooms] = useState<Room[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [entriesPerPage, setEntriesPerPage] = useState('10');
-  const [isAddOpen, setIsAddOpen] = useState(false);
-  const [isEditOpen, setIsEditOpen] = useState(false);
-  const [selectedRoom, setSelectedRoom] = useState<Room | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const [newRoomName, setNewRoomName] = useState('');
-  const [newRoomQuota, setNewRoomQuota] = useState('10');
-  const [newRoomNote, setNewRoomNote] = useState('');
-  const [newRoomPhotoName, setNewRoomPhotoName] = useState<string | null>(
-    null,
-  );
+  useEffect(() => {
+    fetchRooms();
+  }, []);
 
-  const [editRoomName, setEditRoomName] = useState('');
-  const [editRoomQuota, setEditRoomQuota] = useState('');
-  const [editRoomNote, setEditRoomNote] = useState('');
-  const [editRoomPhotoName, setEditRoomPhotoName] = useState<string | null>(
-    null,
-  );
+  const fetchRooms = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const rooms = await roomService.getRooms();
+      setRooms(rooms);
+    } catch (err) {
+      console.error('Failed to fetch rooms:', err);
+      if (err instanceof AxiosError) {
+        setError(err.response?.data?.message || 'Gagal memuat data ruangan');
+      } else {
+        setError('Terjadi kesalahan saat memuat data');
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleAddRoom = () => {
-    setNewRoomName('');
-    setNewRoomQuota('10');
-    setNewRoomNote('');
-    setNewRoomPhotoName(null);
-    setIsAddOpen(true);
+    navigate({ to: '/admin/manajemen-ruang/add' });
   };
 
   const handleEditRoom = (id: number) => {
-    const room = rooms.find((r) => r.id === id);
-    if (!room) return;
-
-    setSelectedRoom(room);
-    setEditRoomName(room.name);
-    setEditRoomQuota(String(room.quota));
-    setEditRoomNote(room.note ?? '');
-    setEditRoomPhotoName(room.photoName ?? null);
-    setIsEditOpen(true);
+    navigate({ to: '/admin/manajemen-ruang/edit', search: { id: String(id) } });
   };
 
-  const handleToggleStatus = (id: number) => {
-    setRooms((prev) =>
-      prev.map((room) =>
-        room.id === id
-          ? { ...room, status: room.status === 'enable' ? 'disable' : 'enable' }
-          : room,
-      ),
-    );
+  const handleToggleStatus = async (room: Room) => {
+    const newStatus = room.status === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE';
+
+    try {
+      await roomService.updateRoom(room.id, { status: newStatus });
+      // Update local state
+      setRooms(prev =>
+        prev.map(r => (r.id === room.id ? { ...r, status: newStatus } : r))
+      );
+    } catch (err) {
+      console.error('Failed to toggle room status:', err);
+      alert('Gagal mengubah status ruangan');
+    }
+  };
+
+  const handleDeleteRoom = async (room: Room) => {
+    if (!confirm(`Apakah Anda yakin ingin menghapus ruangan ${room.name}?`)) {
+      return;
+    }
+
+    try {
+      await roomService.deleteRoom(room.id);
+      setRooms(prev => prev.filter(r => r.id !== room.id));
+      alert('Ruangan berhasil dihapus');
+    } catch (err) {
+      console.error('Failed to delete room:', err);
+      if (err instanceof AxiosError) {
+        alert(err.response?.data?.message || 'Gagal menghapus ruangan');
+      } else {
+        alert('Terjadi kesalahan saat menghapus ruangan');
+      }
+    }
   };
 
   const filteredRooms = rooms.filter((room) => {
@@ -107,11 +102,30 @@ function RouteComponent() {
     return (
       room.name.toLowerCase().includes(term) ||
       room.code.toLowerCase().includes(term) ||
-      room.peruntukan.toLowerCase().includes(term)
+      (room.description && room.description.toLowerCase().includes(term))
     );
   });
 
   const visibleRooms = filteredRooms.slice(0, Number(entriesPerPage));
+
+  if (loading) {
+    return (
+      <div className='p-6 flex justify-center items-center min-h-screen'>
+        <div className='text-lg font-semibold text-gray-700'>Memuat data ruangan...</div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className='p-6'>
+        <div className='bg-red-50 border border-red-200 rounded-lg p-4 text-center'>
+          <p className='text-red-600 font-semibold mb-2'>{error}</p>
+          <Button onClick={fetchRooms}>Coba Lagi</Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className='p-6 space-y-6'>
@@ -144,338 +158,108 @@ function RouteComponent() {
               <SelectItem value='10'>10</SelectItem>
               <SelectItem value='25'>25</SelectItem>
               <SelectItem value='50'>50</SelectItem>
+              <SelectItem value='100'>100</SelectItem>
             </SelectContent>
           </Select>
           <span>entries</span>
         </div>
 
-        <div className='w-full md:w-64'>
-          <label className='text-sm font-medium text-gray-700 mb-1 block'>Search</label>
-          <div className='relative'>
-            <Search className='absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400' />
-            <Input
-              placeholder='Cari nama, kode, atau peruntukan ruang...'
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className='pl-9'
-            />
-          </div>
+        <div className='relative w-full md:w-64'>
+          <Search className='absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400' />
+          <Input
+            type='text'
+            placeholder='Cari ruangan...'
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className='pl-10'
+          />
         </div>
       </div>
 
-      <div className='bg-white rounded-lg shadow-sm border border-gray-200'>
+      <div className='bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden'>
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className='text-center w-16'>No</TableHead>
-              <TableHead className='text-center'>Nama</TableHead>
-              <TableHead className='text-center w-24'>Kuota</TableHead>
-              <TableHead className='text-center'>Peruntukan</TableHead>
-              <TableHead className='text-center w-32'>Status</TableHead>
-              <TableHead className='text-center w-40'>Action</TableHead>
+              <TableHead className='w-12'>No</TableHead>
+              <TableHead>Kode</TableHead>
+              <TableHead>Nama Ruangan</TableHead>
+              <TableHead>Kapasitas</TableHead>
+              <TableHead>Fasilitas</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead className='text-center'>Aksi</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {visibleRooms.map((room, index) => (
-              <TableRow key={room.id}>
-                <TableCell className='text-center'>{index + 1}</TableCell>
-                <TableCell className='text-center'>{room.name}</TableCell>
-                <TableCell className='text-center'>{room.quota}</TableCell>
-                <TableCell className='text-center capitalize'>{room.peruntukan}</TableCell>
-                <TableCell className='text-center'>
-                  <span
-                    className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wide ${room.status === 'enable' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}
-                  >
-                    {room.status === 'enable' ? 'Enable' : 'Disable'}
-                  </span>
-                </TableCell>
-                <TableCell className='text-center'>
-                  <div className='flex items-center justify-center gap-2'>
-                    <Button
-                      size='sm'
-                      variant='outline'
-                      className='flex items-center gap-1'
-                      onClick={() => handleEditRoom(room.id)}
-                    >
-                      <Pencil className='w-4 h-4' />
-                      Edit
-                    </Button>
-                    <Button
-                      size='sm'
-                      variant={room.status === 'enable' ? 'destructive' : 'default'}
-                      className='flex items-center gap-1'
-                      onClick={() => handleToggleStatus(room.id)}
-                    >
-                      {room.status === 'enable' ? (
-                        <ToggleLeft className='w-4 h-4' />
-                      ) : (
-                        <ToggleRight className='w-4 h-4' />
-                      )}
-                      {room.status === 'enable' ? 'Disable' : 'Enable'}
-                    </Button>
-                  </div>
+            {visibleRooms.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={7} className='h-24 text-center text-gray-500'>
+                  {searchTerm ? 'Tidak ada ruangan yang cocok dengan pencarian' : 'Belum ada data ruangan'}
                 </TableCell>
               </TableRow>
-            ))}
+            ) : (
+              visibleRooms.map((room, index) => (
+                <TableRow key={room.id}>
+                  <TableCell className='font-medium'>{index + 1}</TableCell>
+                  <TableCell>{room.code}</TableCell>
+                  <TableCell>{room.name}</TableCell>
+                  <TableCell>{room.capacity || '-'}</TableCell>
+                  <TableCell>
+                    {Array.isArray(room.facilities) && room.facilities.length > 0
+                      ? room.facilities.join(', ')
+                      : '-'}
+                  </TableCell>
+                  <TableCell>
+                    <span
+                      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${room.status === 'ACTIVE'
+                          ? 'bg-green-100 text-green-800'
+                          : room.status === 'MAINTENANCE'
+                            ? 'bg-yellow-100 text-yellow-800'
+                            : 'bg-gray-100 text-gray-800'
+                        }`}
+                    >
+                      {room.status === 'ACTIVE' ? 'Aktif' : room.status === 'MAINTENANCE' ? 'Maintenance' : 'Nonaktif'}
+                    </span>
+                  </TableCell>
+                  <TableCell>
+                    <div className='flex items-center justify-center gap-2'>
+                      <button
+                        onClick={() => handleEditRoom(room.id)}
+                        className='p-1.5 hover:bg-gray-100 rounded-md transition-colors'
+                        title='Edit ruangan'
+                      >
+                        <Pencil className='w-4 h-4 text-blue-600' />
+                      </button>
+                      <button
+                        onClick={() => handleToggleStatus(room)}
+                        className='p-1.5 hover:bg-gray-100 rounded-md transition-colors'
+                        title={room.status === 'ACTIVE' ? 'Nonaktifkan' : 'Aktifkan'}
+                      >
+                        {room.status === 'ACTIVE' ? (
+                          <ToggleRight className='w-4 h-4 text-green-600' />
+                        ) : (
+                          <ToggleLeft className='w-4 h-4 text-gray-400' />
+                        )}
+                      </button>
+                      <button
+                        onClick={() => handleDeleteRoom(room)}
+                        className='p-1.5 hover:bg-gray-100 rounded-md transition-colors'
+                        title='Hapus ruangan'
+                      >
+                        <Trash2 className='w-4 h-4 text-red-600' />
+                      </button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
           </TableBody>
         </Table>
-
-        {visibleRooms.length === 0 && (
-          <div className='text-center py-10 text-gray-500'>
-            Tidak ada ruang yang ditemukan.
-          </div>
-        )}
       </div>
 
-      {/* Modal Tambah Ruangan */}
-      {isAddOpen && (
-        <div className='fixed inset-0 z-50 flex items-center justify-center bg-black/40'>
-          <div className='w-full max-w-xl bg-white rounded-lg shadow-lg border border-gray-200 p-6 space-y-6'>
-            <div className='flex items-start justify-between'>
-              <h2 className='text-xl font-semibold text-gray-900'>Tambah Ruangan Baru</h2>
-              <button
-                type='button'
-                onClick={() => setIsAddOpen(false)}
-                className='text-gray-400 hover:text-gray-600 text-2xl leading-none'
-                aria-label='Tutup'
-              >
-                &times;
-              </button>
-            </div>
-
-            <form
-              onSubmit={(event: FormEvent) => {
-                event.preventDefault();
-                const newId = rooms.length
-                  ? Math.max(...rooms.map((r) => r.id)) + 1
-                  : 1;
-
-                setRooms((prev) => [
-                  ...prev,
-                  {
-                    id: newId,
-                    code: newRoomName,
-                    name: newRoomName,
-                    quota: Number(newRoomQuota) || 0,
-                    peruntukan: 'dosen',
-                    status: 'disable',
-                    note: newRoomNote,
-                    photoName: newRoomPhotoName ?? undefined,
-                  },
-                ]);
-
-                setIsAddOpen(false);
-              }}
-              className='space-y-4'
-            >
-              <div className='space-y-1'>
-                <label
-                  htmlFor='nama-ruangan-baru'
-                  className='block text-sm font-medium text-gray-700'
-                >
-                  Nama Ruangan
-                </label>
-                <Input
-                  id='nama-ruangan-baru'
-                  value={newRoomName}
-                  onChange={(e) => setNewRoomName(e.target.value)}
-                  placeholder='B101'
-                  required
-                />
-              </div>
-
-              <div className='space-y-1'>
-                <label
-                  htmlFor='kuota-ruangan-baru'
-                  className='block text-sm font-medium text-gray-700'
-                >
-                  Kuota Ruangan
-                </label>
-                <Input
-                  id='kuota-ruangan-baru'
-                  type='number'
-                  min={1}
-                  value={newRoomQuota}
-                  onChange={(e) => setNewRoomQuota(e.target.value)}
-                  required
-                />
-              </div>
-
-              <div className='space-y-1'>
-                <label
-                  htmlFor='catatan-ruangan-baru'
-                  className='block text-sm font-medium text-gray-700'
-                >
-                  Catatan
-                </label>
-                <textarea
-                  id='catatan-ruangan-baru'
-                  value={newRoomNote}
-                  onChange={(e) => setNewRoomNote(e.target.value)}
-                  placeholder='ruang kelas'
-                  rows={4}
-                  className='block w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500'
-                />
-              </div>
-
-              <div className='space-y-1'>
-                <label
-                  htmlFor='foto-ruangan-baru'
-                  className='block text-sm font-medium text-gray-700'
-                >
-                  Foto Ruangan
-                </label>
-                <input
-                  id='foto-ruangan-baru'
-                  type='file'
-                  accept='image/*'
-                  onChange={(event: ChangeEvent<HTMLInputElement>) => {
-                    const file = event.target.files?.[0] ?? null;
-                    setNewRoomPhotoName(file?.name ?? null);
-                  }}
-                  className='block w-full text-sm text-gray-900 file:mr-4 file:rounded-md file:border-0 file:bg-gray-100 file:px-4 file:py-2 file:text-sm file:font-medium file:text-gray-700 hover:file:bg-gray-200'
-                />
-              </div>
-
-              <div className='flex justify-end gap-3 pt-4'>
-                <Button
-                  type='button'
-                  variant='outline'
-                  onClick={() => setIsAddOpen(false)}
-                  className='px-6'
-                >
-                  Tutup
-                </Button>
-                <Button type='submit' className='px-6'>
-                  Tambah
-                </Button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* Modal Edit Ruangan */}
-      {isEditOpen && selectedRoom && (
-        <div className='fixed inset-0 z-50 flex items-center justify-center bg-black/40'>
-          <div className='w-full max-w-xl bg-white rounded-lg shadow-lg border border-gray-200 p-6 space-y-6'>
-            <div className='flex items-start justify-between'>
-              <h2 className='text-xl font-semibold text-gray-900'>Edit Ruangan</h2>
-              <button
-                type='button'
-                onClick={() => setIsEditOpen(false)}
-                className='text-gray-400 hover:text-gray-600 text-2xl leading-none'
-                aria-label='Tutup'
-              >
-                &times;
-              </button>
-            </div>
-
-            <form
-              onSubmit={(event: FormEvent) => {
-                event.preventDefault();
-                setRooms((prev) =>
-                  prev.map((room) =>
-                    room.id === selectedRoom.id
-                      ? {
-                        ...room,
-                        code: editRoomName,
-                        name: editRoomName,
-                        quota: Number(editRoomQuota) || 0,
-                        note: editRoomNote,
-                        photoName: editRoomPhotoName ?? room.photoName,
-                      }
-                      : room,
-                  ),
-                );
-                setIsEditOpen(false);
-              }}
-              className='space-y-4'
-            >
-              <div className='space-y-1'>
-                <label
-                  htmlFor='nama-ruangan-edit'
-                  className='block text-sm font-medium text-gray-700'
-                >
-                  Nama Ruangan
-                </label>
-                <Input
-                  id='nama-ruangan-edit'
-                  value={editRoomName}
-                  onChange={(e) => setEditRoomName(e.target.value)}
-                  required
-                />
-              </div>
-
-              <div className='space-y-1'>
-                <label
-                  htmlFor='kuota-ruangan-edit'
-                  className='block text-sm font-medium text-gray-700'
-                >
-                  Kuota Ruangan
-                </label>
-                <Input
-                  id='kuota-ruangan-edit'
-                  type='number'
-                  min={1}
-                  value={editRoomQuota}
-                  onChange={(e) => setEditRoomQuota(e.target.value)}
-                  required
-                />
-              </div>
-
-              <div className='space-y-1'>
-                <label
-                  htmlFor='catatan-ruangan-edit'
-                  className='block text-sm font-medium text-gray-700'
-                >
-                  Catatan
-                </label>
-                <textarea
-                  id='catatan-ruangan-edit'
-                  value={editRoomNote}
-                  onChange={(e) => setEditRoomNote(e.target.value)}
-                  rows={4}
-                  className='block w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500'
-                />
-              </div>
-
-              <div className='space-y-1'>
-                <label
-                  htmlFor='foto-ruangan-edit'
-                  className='block text-sm font-medium text-gray-700'
-                >
-                  Foto Ruangan
-                </label>
-                <input
-                  id='foto-ruangan-edit'
-                  type='file'
-                  accept='image/*'
-                  onChange={(event: ChangeEvent<HTMLInputElement>) => {
-                    const file = event.target.files?.[0] ?? null;
-                    setEditRoomPhotoName(file?.name ?? null);
-                  }}
-                  className='block w-full text-sm text-gray-900 file:mr-4 file:rounded-md file:border-0 file:bg-gray-100 file:px-4 file:py-2 file:text-sm file:font-medium file:text-gray-700 hover:file:bg-gray-200'
-                />
-              </div>
-
-              <div className='flex justify-end gap-3 pt-4'>
-                <Button
-                  type='button'
-                  variant='outline'
-                  onClick={() => setIsEditOpen(false)}
-                  className='px-6'
-                >
-                  Tutup
-                </Button>
-                <Button type='submit' className='px-6'>
-                  Simpan
-                </Button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+      <div className='text-sm text-gray-600'>
+        Menampilkan {visibleRooms.length} dari {filteredRooms.length} ruangan
+        {searchTerm && ` (difilter dari ${rooms.length} total ruangan)`}
+      </div>
     </div>
   );
 }

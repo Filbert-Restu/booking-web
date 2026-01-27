@@ -1,56 +1,106 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
-import { useMemo, useState } from 'react';
-import { StatCard } from '@/shared/components/common/StatCard';
+import { useEffect, useState } from 'react';
 import { Clock, Users, CheckCircle } from 'lucide-react';
+import { AxiosError } from 'axios';
+import { StatCard } from '@/shared/components/common/StatCard';
 import { Approval } from '@/features/approvals';
 import type { ActorRole } from '@/features/approvals';
-import {
-  getMockBookings,
-  mapBookingsToApprovalItems,
-  type ApprovalDocType,
-  type ApprovalModeType,
-} from '../_shared/approval-mock';
+import type { ApprovalDocType, ApprovalModeType } from '../_shared/approval-mock';
+import { documentService } from '@/services/document.service';
+import { mapDocumentsToApprovalItems, type ApprovalItem } from '@/features/approvals/approval-utils';
+import { Button } from '@/shared/components/ui/button/button';
 
 export const Route = createFileRoute('/dosen-pendamping/')({
   component: RouteComponent,
 });
 
 function RouteComponent() {
-  const [bookings] = useState(() => getMockBookings());
-  const mappedBookings = useMemo(() => mapBookingsToApprovalItems(bookings), [bookings]);
   const navigate = useNavigate();
+  const [approvalItems, setApprovalItems] = useState<ApprovalItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const actorRole: ActorRole = 'dosen-pendamping';
+
+  useEffect(() => {
+    fetchDocuments();
+  }, []);
+
+  const fetchDocuments = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const data = await documentService.getDocuments();
+      const pendingDocs = data.pending_documents || [];
+      const mappedItems = mapDocumentsToApprovalItems(pendingDocs);
+      setApprovalItems(mappedItems);
+    } catch (err) {
+      console.error('Failed to fetch documents:', err);
+      if (err instanceof AxiosError) {
+        setError(err.response?.data?.message || 'Gagal memuat data dokumen');
+      } else {
+        setError('Terjadi kesalahan saat memuat data');
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const stats = [
     {
       title: 'Antrean Approval',
-      value: String(mappedBookings.filter(b => b.status === 'waiting').length),
+      value: String(approvalItems.filter(b => b.status === 'waiting').length),
       icon: Clock,
       textColor: 'text-yellow-600',
       bgLight: 'bg-yellow-50',
     },
     {
       title: 'Total Pengaju',
-      value: String(mappedBookings.length),
+      value: String(approvalItems.length),
       icon: Users,
       textColor: 'text-blue-600',
       bgLight: 'bg-blue-50',
     },
     {
       title: 'Total Diapprove',
-      value: String(mappedBookings.filter(b => b.status === 'approved').length),
+      value: String(approvalItems.filter(b => b.status === 'approved').length),
       icon: CheckCircle,
       textColor: 'text-green-600',
       bgLight: 'bg-green-50',
     },
   ];
 
-  const handleApprove = (id: number) => {
-    console.log(`${actorRole} approve booking:`, id);
+  const handleApprove = async (id: number) => {
+    try {
+      await documentService.approveDocument(id, 'Disetujui oleh Dosen Pendamping');
+      alert('Dokumen berhasil disetujui!');
+      await fetchDocuments();
+    } catch (err) {
+      console.error('Failed to approve document:', err);
+      if (err instanceof AxiosError) {
+        alert(err.response?.data?.message || 'Gagal menyetujui dokumen');
+      } else {
+        alert('Terjadi kesalahan saat menyetujui dokumen');
+      }
+    }
   };
 
-  const handleRevise = (id: number) => {
-    console.log(`${actorRole} revise booking:`, id);
+  const handleRevise = async (id: number) => {
+    const note = prompt('Masukkan catatan revisi:');
+    if (!note) return;
+
+    try {
+      const doc = await documentService.getDocument(id);
+      await documentService.reviseDocument(id, doc.creator_id, note);
+      alert('Dokumen dikembalikan untuk revisi!');
+      await fetchDocuments();
+    } catch (err) {
+      console.error('Failed to revise document:', err);
+      if (err instanceof AxiosError) {
+        alert(err.response?.data?.message || 'Gagal mengembalikan dokumen');
+      } else {
+        alert('Terjadi kesalahan saat mengembalikan dokumen');
+      }
+    }
   };
 
   const handleOpenDoc = (payload: {
@@ -59,17 +109,38 @@ function RouteComponent() {
     booking: { id: number };
   }) => {
     if (payload.mode === 'preview') {
-      navigate({ 
+      navigate({
         to: '/preview-dokumen',
         search: { doc: payload.doc, id: payload.booking.id, return: '/dosen-pendamping' } as any
       });
     } else if (payload.mode === 'sign') {
-      navigate({ 
+      navigate({
         to: '/tanda-tangan',
         search: { doc: payload.doc, id: payload.booking.id, return: '/dosen-pendamping' } as any
       });
     }
   };
+
+  if (loading) {
+    return (
+      <div className='p-6 flex justify-center items-center min-h-screen'>
+        <div className='text-center'>
+          <div className='text-lg font-semibold text-gray-700'>Memuat data...</div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className='p-6 flex justify-center items-center min-h-screen'>
+        <div className='text-center'>
+          <div className='text-lg font-semibold text-red-600 mb-4'>{error}</div>
+          <Button onClick={fetchDocuments}>Coba Lagi</Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <>
@@ -78,7 +149,7 @@ function RouteComponent() {
           Dashboard Dosen Pendamping
         </h1>
         <p className='text-gray-600 mt-1'>
-          Review dan persetujuan peminjaman ruang oleh dosen pendamping.
+          Review dan persetujuan peminjaman ruang oleh Dosen Pendamping
         </p>
       </div>
 
@@ -97,15 +168,21 @@ function RouteComponent() {
 
       <div className='mt-6'>
         <h2 className='text-lg font-semibold mb-4'>Persetujuan Peminjaman</h2>
-        <Approval
-          bookings={mappedBookings}
-          onApprove={handleApprove}
-          onRevise={handleRevise}
-          actorRole={actorRole}
-          onOpenDoc={handleOpenDoc}
-          showOrganisasi={true}
-          showProposal={true}
-        />
+        {approvalItems.length === 0 ? (
+          <div className='bg-white rounded-lg border border-gray-200 p-8 text-center'>
+            <p className='text-gray-500'>Tidak ada dokumen yang menunggu persetujuan</p>
+          </div>
+        ) : (
+          <Approval
+            bookings={approvalItems}
+            onApprove={handleApprove}
+            onRevise={handleRevise}
+            actorRole={actorRole}
+            onOpenDoc={handleOpenDoc}
+            showOrganisasi={true}
+            showProposal={true}
+          />
+        )}
       </div>
     </>
   );

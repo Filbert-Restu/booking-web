@@ -146,6 +146,46 @@ export const roomService = {
     },
 
     /**
+     * Create ruangan baru (admin/unit manager)
+     */
+    async createRoom(data: {
+        name: string;
+        code: string;
+        capacity?: number;
+        facilities?: string[];
+        status?: 'ACTIVE' | 'MAINTENANCE' | 'INACTIVE';
+        description?: string;
+    }): Promise<Room> {
+        const response = await api.post<{ success: boolean; data: Room }>('/rooms', data);
+        return response.data.data;
+    },
+
+    /**
+     * Update ruangan (admin/unit manager)
+     */
+    async updateRoom(
+        id: number,
+        data: {
+            name?: string;
+            code?: string;
+            capacity?: number;
+            facilities?: string[];
+            status?: 'ACTIVE' | 'MAINTENANCE' | 'INACTIVE';
+            description?: string;
+        }
+    ): Promise<Room> {
+        const response = await api.put<{ success: boolean; data: Room }>(`/rooms/${id}`, data);
+        return response.data.data;
+    },
+
+    /**
+     * Delete ruangan (admin/unit manager)
+     */
+    async deleteRoom(id: number): Promise<void> {
+        await api.delete(`/rooms/${id}`);
+    },
+
+    /**
      * Upload foto ruangan (admin/unit manager)
      */
     async uploadImage(roomId: number, image: File): Promise<{ path: string; url: string }> {
