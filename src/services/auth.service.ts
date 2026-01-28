@@ -5,6 +5,13 @@ interface LoginRequest {
   password: string;
 }
 
+interface RegisterRequest {
+  name: string;
+  email: string;
+  password: string;
+  password_confirmation: string;
+}
+
 interface LoginResponse {
   message: string;
   token: string;
@@ -35,6 +42,14 @@ export const authService = {
    */
   async login(credentials: LoginRequest): Promise<LoginResponse> {
     const response = await api.post<LoginResponse>('/login', credentials);
+    return response.data;
+  },
+
+  /**
+   * Register user baru
+   */
+  async register(data: RegisterRequest): Promise<LoginResponse> {
+    const response = await api.post<LoginResponse>('/register', data);
     return response.data;
   },
 
@@ -107,24 +122,28 @@ export const authService = {
    */
   redirectByRole(role: string): void {
     const roleRoutes: Record<string, string> = {
-      Admin: '/admin/',
-      'Wakil Dekan 1': '/wadek/',
-      'Kemahasiswaan Fakultas': '/kemahasiswaan/',
-      'Sumber Daya Fakultas': '/sumber-daya/',
-      'Ketua Prodi': '/ketua-prodi/',
-      'Pembimbing Ormawa': '/pembimbing/',
-      'Ketua Senat': '/ketua-senat/',
-      'Ketua BEM': '/ketua-bem/',
-      'Ketua HIMA': '/ketua-hima/',
-      'Ketua UKM': '/ketua-ukm/',
-      'Sekretaris Senat': '/sekretaris-senat/',
-      'Sekretaris BEM': '/sekretaris-bem/',
-      'Sekretaris HIMA': '/sekretaris-hima/',
-      'Sekretaris UKM': '/sekretaris-ukm/',
-      Mahasiswa: '/peminjam/',
+      // Admin & Pimpinan
+      'Admin': '/admin/',
+      'Wakil Dekan 1': '/wadek1/',
+
+      // Staff Fakultas
+      'Kemahasiswaan': '/kemahasiswaan/',
+      'Sumber Daya': '/sumber-daya/',
+
+      // Dosen & Ketua Departemen (approval only, tapi kalau login redirect ke dashboard)
+      'Dosen Pendamping Himpunan': '/ketua-departemen/',
+      'Ketua Departemen': '/ketua-departemen/',
+
+      // Ketua Organisasi (BEM, Senat, HIMA, UKM semua ke ketua-ormawa)
+      'Ketua Ormawa': '/ketua-ormawa/',
+      'Senat': '/ketua-ormawa/', // Senat juga ketua senat
+
+      // Sekretaris & Mahasiswa -> Peminjam
+      'Sekretaris': '/peminjam/',
+      'Peminjam': '/peminjam/',
     };
 
-    const path = roleRoutes[role] || '/';
+    const path = roleRoutes[role] || '/peminjam/'; // Default ke peminjam
     window.location.href = path;
   },
 };

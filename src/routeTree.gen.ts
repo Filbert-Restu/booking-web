@@ -10,7 +10,9 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as TandaTanganRouteImport } from './routes/tanda-tangan'
+import { Route as RegisterRouteImport } from './routes/register'
 import { Route as PreviewDokumenRouteImport } from './routes/preview-dokumen'
+import { Route as LoginOptionRouteImport } from './routes/login-option'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as Wadek1RouteRouteImport } from './routes/wadek1/route'
 import { Route as SumberDayaRouteRouteImport } from './routes/sumber-daya/route'
@@ -65,9 +67,19 @@ const TandaTanganRoute = TandaTanganRouteImport.update({
   path: '/tanda-tangan',
   getParentRoute: () => rootRouteImport,
 } as any)
+const RegisterRoute = RegisterRouteImport.update({
+  id: '/register',
+  path: '/register',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PreviewDokumenRoute = PreviewDokumenRouteImport.update({
   id: '/preview-dokumen',
   path: '/preview-dokumen',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LoginOptionRoute = LoginOptionRouteImport.update({
+  id: '/login-option',
+  path: '/login-option',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LoginRoute = LoginRouteImport.update({
@@ -336,7 +348,9 @@ export interface FileRoutesByFullPath {
   '/sumber-daya': typeof SumberDayaRouteRouteWithChildren
   '/wadek1': typeof Wadek1RouteRouteWithChildren
   '/login': typeof LoginRoute
+  '/login-option': typeof LoginOptionRoute
   '/preview-dokumen': typeof PreviewDokumenRoute
+  '/register': typeof RegisterRoute
   '/tanda-tangan': typeof TandaTanganRoute
   '/dosen-pendamping/riwayat-persetujuan': typeof DosenPendampingRiwayatPersetujuanRoute
   '/kemahasiswaan/riwayat-persetujuan': typeof KemahasiswaanRiwayatPersetujuanRoute
@@ -379,7 +393,9 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
+  '/login-option': typeof LoginOptionRoute
   '/preview-dokumen': typeof PreviewDokumenRoute
+  '/register': typeof RegisterRoute
   '/tanda-tangan': typeof TandaTanganRoute
   '/dosen-pendamping/riwayat-persetujuan': typeof DosenPendampingRiwayatPersetujuanRoute
   '/kemahasiswaan/riwayat-persetujuan': typeof KemahasiswaanRiwayatPersetujuanRoute
@@ -432,7 +448,9 @@ export interface FileRoutesById {
   '/sumber-daya': typeof SumberDayaRouteRouteWithChildren
   '/wadek1': typeof Wadek1RouteRouteWithChildren
   '/login': typeof LoginRoute
+  '/login-option': typeof LoginOptionRoute
   '/preview-dokumen': typeof PreviewDokumenRoute
+  '/register': typeof RegisterRoute
   '/tanda-tangan': typeof TandaTanganRoute
   '/dosen-pendamping/riwayat-persetujuan': typeof DosenPendampingRiwayatPersetujuanRoute
   '/kemahasiswaan/riwayat-persetujuan': typeof KemahasiswaanRiwayatPersetujuanRoute
@@ -486,7 +504,9 @@ export interface FileRouteTypes {
     | '/sumber-daya'
     | '/wadek1'
     | '/login'
+    | '/login-option'
     | '/preview-dokumen'
+    | '/register'
     | '/tanda-tangan'
     | '/dosen-pendamping/riwayat-persetujuan'
     | '/kemahasiswaan/riwayat-persetujuan'
@@ -529,7 +549,9 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/login'
+    | '/login-option'
     | '/preview-dokumen'
+    | '/register'
     | '/tanda-tangan'
     | '/dosen-pendamping/riwayat-persetujuan'
     | '/kemahasiswaan/riwayat-persetujuan'
@@ -581,7 +603,9 @@ export interface FileRouteTypes {
     | '/sumber-daya'
     | '/wadek1'
     | '/login'
+    | '/login-option'
     | '/preview-dokumen'
+    | '/register'
     | '/tanda-tangan'
     | '/dosen-pendamping/riwayat-persetujuan'
     | '/kemahasiswaan/riwayat-persetujuan'
@@ -634,7 +658,9 @@ export interface RootRouteChildren {
   SumberDayaRouteRoute: typeof SumberDayaRouteRouteWithChildren
   Wadek1RouteRoute: typeof Wadek1RouteRouteWithChildren
   LoginRoute: typeof LoginRoute
+  LoginOptionRoute: typeof LoginOptionRoute
   PreviewDokumenRoute: typeof PreviewDokumenRoute
+  RegisterRoute: typeof RegisterRoute
   TandaTanganRoute: typeof TandaTanganRoute
 }
 
@@ -647,11 +673,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TandaTanganRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/register': {
+      id: '/register'
+      path: '/register'
+      fullPath: '/register'
+      preLoaderRoute: typeof RegisterRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/preview-dokumen': {
       id: '/preview-dokumen'
       path: '/preview-dokumen'
       fullPath: '/preview-dokumen'
       preLoaderRoute: typeof PreviewDokumenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/login-option': {
+      id: '/login-option'
+      path: '/login-option'
+      fullPath: '/login-option'
+      preLoaderRoute: typeof LoginOptionRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/login': {
@@ -1167,7 +1207,9 @@ const rootRouteChildren: RootRouteChildren = {
   SumberDayaRouteRoute: SumberDayaRouteRouteWithChildren,
   Wadek1RouteRoute: Wadek1RouteRouteWithChildren,
   LoginRoute: LoginRoute,
+  LoginOptionRoute: LoginOptionRoute,
   PreviewDokumenRoute: PreviewDokumenRoute,
+  RegisterRoute: RegisterRoute,
   TandaTanganRoute: TandaTanganRoute,
 }
 export const routeTree = rootRouteImport

@@ -4,10 +4,7 @@ import {
   Calendar,
   Building2,
   ClipboardList,
-  UserCheck,
-  FileCheck,
   BookOpen,
-  FileText,
   CalendarCheck,
   Home,
   History,
@@ -44,11 +41,6 @@ export const menuConfigurations: Record<UserRole, MenuConfig> = {
             url: '/admin',
             icon: LayoutDashboard,
           },
-          {
-            title: 'Manajemen User',
-            url: '/admin/users',
-            icon: Users,
-          },
         ],
       },
       {
@@ -67,22 +59,22 @@ export const menuConfigurations: Record<UserRole, MenuConfig> = {
         ],
       },
       {
-        label: 'Peminjaman',
+        label: 'Konfigurasi',
         items: [
           {
-            title: 'Manajemen Peminjaman',
-            url: '/admin/manajemen-peminjaman',
+            title: 'Manajemen User',
+            url: '/admin/users',
+            icon: Users,
+          },
+          {
+            title: 'Manajemen Unit',
+            url: '/admin/units',
+            icon: Building2,
+          },
+          {
+            title: 'Manajemen Alur',
+            url: '/admin/workflows',
             icon: ClipboardList,
-          },
-          {
-            title: 'Approve Kemahasiswaan',
-            url: '/admin/approve-kemahasiswaan',
-            icon: UserCheck,
-          },
-          {
-            title: 'Approve Sumberdaya',
-            url: '/admin/approve-sumberdaya',
-            icon: FileCheck,
           },
         ],
       },
