@@ -134,9 +134,11 @@ export const authService = {
       'Dosen Pendamping Himpunan': '/ketua-departemen/',
       'Ketua Departemen': '/ketua-departemen/',
 
-      // Ketua Organisasi (BEM, Senat, HIMA, UKM semua ke ketua-ormawa)
+      // Ketua Organisasi (BEM, HIMA, UKM ke ketua-ormawa)
       'Ketua Ormawa': '/ketua-ormawa/',
-      'Senat': '/ketua-ormawa/', // Senat juga ketua senat
+      
+      // Senat punya route sendiri
+      'Senat': '/senat/',
 
       // Sekretaris & Mahasiswa -> Peminjam
       'Sekretaris': '/peminjam/',
