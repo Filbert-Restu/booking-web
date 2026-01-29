@@ -14,7 +14,7 @@ import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
 import { BookingDetailModal } from '@/features/bookings/BookingDetailModal';
 
-export const Route = createFileRoute('/admin/peminjaman-ruang/')({
+export const Route = createFileRoute('/admin/room-bookings/')({
   component: RouteComponent,
 });
 

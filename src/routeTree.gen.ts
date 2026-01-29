@@ -45,12 +45,14 @@ import { Route as KetuaOrmawaPreviewRouteImport } from './routes/ketua-ormawa/pr
 import { Route as KetuaDepartemenRiwayatPersetujuanRouteImport } from './routes/ketua-departemen/riwayat-persetujuan'
 import { Route as KemahasiswaanRiwayatPersetujuanRouteImport } from './routes/kemahasiswaan/riwayat-persetujuan'
 import { Route as DosenPendampingRiwayatPersetujuanRouteImport } from './routes/dosen-pendamping/riwayat-persetujuan'
+import { Route as PeminjamSignIndexRouteImport } from './routes/peminjam/sign/index'
 import { Route as PeminjamPinjamIndexRouteImport } from './routes/peminjam/pinjam/index'
 import { Route as AdminWorkflowsIndexRouteImport } from './routes/admin/workflows/index'
 import { Route as AdminUsersIndexRouteImport } from './routes/admin/users/index'
 import { Route as AdminUnitsIndexRouteImport } from './routes/admin/units/index'
+import { Route as AdminRoomsIndexRouteImport } from './routes/admin/rooms/index'
+import { Route as AdminRoomBookingsIndexRouteImport } from './routes/admin/room-bookings/index'
 import { Route as AdminRolesIndexRouteImport } from './routes/admin/roles/index'
-import { Route as AdminPeminjamanRuangIndexRouteImport } from './routes/admin/peminjaman-ruang/index'
 import { Route as AdminManajemenRuangIndexRouteImport } from './routes/admin/manajemen-ruang/index'
 import { Route as PeminjamPinjamTandaTanganRouteImport } from './routes/peminjam/pinjam/tanda-tangan'
 import { Route as PeminjamPinjamProposalRouteImport } from './routes/peminjam/pinjam/proposal'
@@ -61,6 +63,7 @@ import { Route as AdminUsersDetailRouteImport } from './routes/admin/users/detai
 import { Route as AdminUsersAddRouteImport } from './routes/admin/users/add'
 import { Route as AdminManajemenRuangEditRouteImport } from './routes/admin/manajemen-ruang/edit'
 import { Route as AdminManajemenRuangAddRouteImport } from './routes/admin/manajemen-ruang/add'
+import { Route as PeminjamPinjamAjukanIndexRouteImport } from './routes/peminjam/pinjam/ajukan/index'
 
 const TandaTanganRoute = TandaTanganRouteImport.update({
   id: '/tanda-tangan',
@@ -250,6 +253,11 @@ const DosenPendampingRiwayatPersetujuanRoute =
     path: '/riwayat-persetujuan',
     getParentRoute: () => DosenPendampingRouteRoute,
   } as any)
+const PeminjamSignIndexRoute = PeminjamSignIndexRouteImport.update({
+  id: '/sign/',
+  path: '/sign/',
+  getParentRoute: () => PeminjamRouteRoute,
+} as any)
 const PeminjamPinjamIndexRoute = PeminjamPinjamIndexRouteImport.update({
   id: '/pinjam/',
   path: '/pinjam/',
@@ -270,17 +278,21 @@ const AdminUnitsIndexRoute = AdminUnitsIndexRouteImport.update({
   path: '/units/',
   getParentRoute: () => AdminRouteRoute,
 } as any)
+const AdminRoomsIndexRoute = AdminRoomsIndexRouteImport.update({
+  id: '/rooms/',
+  path: '/rooms/',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminRoomBookingsIndexRoute = AdminRoomBookingsIndexRouteImport.update({
+  id: '/room-bookings/',
+  path: '/room-bookings/',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
 const AdminRolesIndexRoute = AdminRolesIndexRouteImport.update({
   id: '/roles/',
   path: '/roles/',
   getParentRoute: () => AdminRouteRoute,
 } as any)
-const AdminPeminjamanRuangIndexRoute =
-  AdminPeminjamanRuangIndexRouteImport.update({
-    id: '/peminjaman-ruang/',
-    path: '/peminjaman-ruang/',
-    getParentRoute: () => AdminRouteRoute,
-  } as any)
 const AdminManajemenRuangIndexRoute =
   AdminManajemenRuangIndexRouteImport.update({
     id: '/manajemen-ruang/',
@@ -335,6 +347,12 @@ const AdminManajemenRuangAddRoute = AdminManajemenRuangAddRouteImport.update({
   path: '/manajemen-ruang/add',
   getParentRoute: () => AdminRouteRoute,
 } as any)
+const PeminjamPinjamAjukanIndexRoute =
+  PeminjamPinjamAjukanIndexRouteImport.update({
+    id: '/pinjam/ajukan/',
+    path: '/pinjam/ajukan/',
+    getParentRoute: () => PeminjamRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -383,12 +401,15 @@ export interface FileRoutesByFullPath {
   '/peminjam/pinjam/proposal': typeof PeminjamPinjamProposalRoute
   '/peminjam/pinjam/tanda-tangan': typeof PeminjamPinjamTandaTanganRoute
   '/admin/manajemen-ruang': typeof AdminManajemenRuangIndexRoute
-  '/admin/peminjaman-ruang': typeof AdminPeminjamanRuangIndexRoute
   '/admin/roles': typeof AdminRolesIndexRoute
+  '/admin/room-bookings': typeof AdminRoomBookingsIndexRoute
+  '/admin/rooms': typeof AdminRoomsIndexRoute
   '/admin/units': typeof AdminUnitsIndexRoute
   '/admin/users': typeof AdminUsersIndexRoute
   '/admin/workflows': typeof AdminWorkflowsIndexRoute
   '/peminjam/pinjam': typeof PeminjamPinjamIndexRoute
+  '/peminjam/sign': typeof PeminjamSignIndexRoute
+  '/peminjam/pinjam/ajukan': typeof PeminjamPinjamAjukanIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -428,12 +449,15 @@ export interface FileRoutesByTo {
   '/peminjam/pinjam/proposal': typeof PeminjamPinjamProposalRoute
   '/peminjam/pinjam/tanda-tangan': typeof PeminjamPinjamTandaTanganRoute
   '/admin/manajemen-ruang': typeof AdminManajemenRuangIndexRoute
-  '/admin/peminjaman-ruang': typeof AdminPeminjamanRuangIndexRoute
   '/admin/roles': typeof AdminRolesIndexRoute
+  '/admin/room-bookings': typeof AdminRoomBookingsIndexRoute
+  '/admin/rooms': typeof AdminRoomsIndexRoute
   '/admin/units': typeof AdminUnitsIndexRoute
   '/admin/users': typeof AdminUsersIndexRoute
   '/admin/workflows': typeof AdminWorkflowsIndexRoute
   '/peminjam/pinjam': typeof PeminjamPinjamIndexRoute
+  '/peminjam/sign': typeof PeminjamSignIndexRoute
+  '/peminjam/pinjam/ajukan': typeof PeminjamPinjamAjukanIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -483,12 +507,15 @@ export interface FileRoutesById {
   '/peminjam/pinjam/proposal': typeof PeminjamPinjamProposalRoute
   '/peminjam/pinjam/tanda-tangan': typeof PeminjamPinjamTandaTanganRoute
   '/admin/manajemen-ruang/': typeof AdminManajemenRuangIndexRoute
-  '/admin/peminjaman-ruang/': typeof AdminPeminjamanRuangIndexRoute
   '/admin/roles/': typeof AdminRolesIndexRoute
+  '/admin/room-bookings/': typeof AdminRoomBookingsIndexRoute
+  '/admin/rooms/': typeof AdminRoomsIndexRoute
   '/admin/units/': typeof AdminUnitsIndexRoute
   '/admin/users/': typeof AdminUsersIndexRoute
   '/admin/workflows/': typeof AdminWorkflowsIndexRoute
   '/peminjam/pinjam/': typeof PeminjamPinjamIndexRoute
+  '/peminjam/sign/': typeof PeminjamSignIndexRoute
+  '/peminjam/pinjam/ajukan/': typeof PeminjamPinjamAjukanIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -539,12 +566,15 @@ export interface FileRouteTypes {
     | '/peminjam/pinjam/proposal'
     | '/peminjam/pinjam/tanda-tangan'
     | '/admin/manajemen-ruang'
-    | '/admin/peminjaman-ruang'
     | '/admin/roles'
+    | '/admin/room-bookings'
+    | '/admin/rooms'
     | '/admin/units'
     | '/admin/users'
     | '/admin/workflows'
     | '/peminjam/pinjam'
+    | '/peminjam/sign'
+    | '/peminjam/pinjam/ajukan'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -584,12 +614,15 @@ export interface FileRouteTypes {
     | '/peminjam/pinjam/proposal'
     | '/peminjam/pinjam/tanda-tangan'
     | '/admin/manajemen-ruang'
-    | '/admin/peminjaman-ruang'
     | '/admin/roles'
+    | '/admin/room-bookings'
+    | '/admin/rooms'
     | '/admin/units'
     | '/admin/users'
     | '/admin/workflows'
     | '/peminjam/pinjam'
+    | '/peminjam/sign'
+    | '/peminjam/pinjam/ajukan'
   id:
     | '__root__'
     | '/'
@@ -638,12 +671,15 @@ export interface FileRouteTypes {
     | '/peminjam/pinjam/proposal'
     | '/peminjam/pinjam/tanda-tangan'
     | '/admin/manajemen-ruang/'
-    | '/admin/peminjaman-ruang/'
     | '/admin/roles/'
+    | '/admin/room-bookings/'
+    | '/admin/rooms/'
     | '/admin/units/'
     | '/admin/users/'
     | '/admin/workflows/'
     | '/peminjam/pinjam/'
+    | '/peminjam/sign/'
+    | '/peminjam/pinjam/ajukan/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -918,6 +954,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DosenPendampingRiwayatPersetujuanRouteImport
       parentRoute: typeof DosenPendampingRouteRoute
     }
+    '/peminjam/sign/': {
+      id: '/peminjam/sign/'
+      path: '/sign'
+      fullPath: '/peminjam/sign'
+      preLoaderRoute: typeof PeminjamSignIndexRouteImport
+      parentRoute: typeof PeminjamRouteRoute
+    }
     '/peminjam/pinjam/': {
       id: '/peminjam/pinjam/'
       path: '/pinjam'
@@ -946,18 +989,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminUnitsIndexRouteImport
       parentRoute: typeof AdminRouteRoute
     }
+    '/admin/rooms/': {
+      id: '/admin/rooms/'
+      path: '/rooms'
+      fullPath: '/admin/rooms'
+      preLoaderRoute: typeof AdminRoomsIndexRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/room-bookings/': {
+      id: '/admin/room-bookings/'
+      path: '/room-bookings'
+      fullPath: '/admin/room-bookings'
+      preLoaderRoute: typeof AdminRoomBookingsIndexRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
     '/admin/roles/': {
       id: '/admin/roles/'
       path: '/roles'
       fullPath: '/admin/roles'
       preLoaderRoute: typeof AdminRolesIndexRouteImport
-      parentRoute: typeof AdminRouteRoute
-    }
-    '/admin/peminjaman-ruang/': {
-      id: '/admin/peminjaman-ruang/'
-      path: '/peminjaman-ruang'
-      fullPath: '/admin/peminjaman-ruang'
-      preLoaderRoute: typeof AdminPeminjamanRuangIndexRouteImport
       parentRoute: typeof AdminRouteRoute
     }
     '/admin/manajemen-ruang/': {
@@ -1030,6 +1080,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminManajemenRuangAddRouteImport
       parentRoute: typeof AdminRouteRoute
     }
+    '/peminjam/pinjam/ajukan/': {
+      id: '/peminjam/pinjam/ajukan/'
+      path: '/pinjam/ajukan'
+      fullPath: '/peminjam/pinjam/ajukan'
+      preLoaderRoute: typeof PeminjamPinjamAjukanIndexRouteImport
+      parentRoute: typeof PeminjamRouteRoute
+    }
   }
 }
 
@@ -1041,8 +1098,9 @@ interface AdminRouteRouteChildren {
   AdminUsersDetailRoute: typeof AdminUsersDetailRoute
   AdminUsersEditRoute: typeof AdminUsersEditRoute
   AdminManajemenRuangIndexRoute: typeof AdminManajemenRuangIndexRoute
-  AdminPeminjamanRuangIndexRoute: typeof AdminPeminjamanRuangIndexRoute
   AdminRolesIndexRoute: typeof AdminRolesIndexRoute
+  AdminRoomBookingsIndexRoute: typeof AdminRoomBookingsIndexRoute
+  AdminRoomsIndexRoute: typeof AdminRoomsIndexRoute
   AdminUnitsIndexRoute: typeof AdminUnitsIndexRoute
   AdminUsersIndexRoute: typeof AdminUsersIndexRoute
   AdminWorkflowsIndexRoute: typeof AdminWorkflowsIndexRoute
@@ -1056,8 +1114,9 @@ const AdminRouteRouteChildren: AdminRouteRouteChildren = {
   AdminUsersDetailRoute: AdminUsersDetailRoute,
   AdminUsersEditRoute: AdminUsersEditRoute,
   AdminManajemenRuangIndexRoute: AdminManajemenRuangIndexRoute,
-  AdminPeminjamanRuangIndexRoute: AdminPeminjamanRuangIndexRoute,
   AdminRolesIndexRoute: AdminRolesIndexRoute,
+  AdminRoomBookingsIndexRoute: AdminRoomBookingsIndexRoute,
+  AdminRoomsIndexRoute: AdminRoomsIndexRoute,
   AdminUnitsIndexRoute: AdminUnitsIndexRoute,
   AdminUsersIndexRoute: AdminUsersIndexRoute,
   AdminWorkflowsIndexRoute: AdminWorkflowsIndexRoute,
@@ -1133,6 +1192,8 @@ interface PeminjamRouteRouteChildren {
   PeminjamPinjamProposalRoute: typeof PeminjamPinjamProposalRoute
   PeminjamPinjamTandaTanganRoute: typeof PeminjamPinjamTandaTanganRoute
   PeminjamPinjamIndexRoute: typeof PeminjamPinjamIndexRoute
+  PeminjamSignIndexRoute: typeof PeminjamSignIndexRoute
+  PeminjamPinjamAjukanIndexRoute: typeof PeminjamPinjamAjukanIndexRoute
 }
 
 const PeminjamRouteRouteChildren: PeminjamRouteRouteChildren = {
@@ -1143,6 +1204,8 @@ const PeminjamRouteRouteChildren: PeminjamRouteRouteChildren = {
   PeminjamPinjamProposalRoute: PeminjamPinjamProposalRoute,
   PeminjamPinjamTandaTanganRoute: PeminjamPinjamTandaTanganRoute,
   PeminjamPinjamIndexRoute: PeminjamPinjamIndexRoute,
+  PeminjamSignIndexRoute: PeminjamSignIndexRoute,
+  PeminjamPinjamAjukanIndexRoute: PeminjamPinjamAjukanIndexRoute,
 }
 
 const PeminjamRouteRouteWithChildren = PeminjamRouteRoute._addFileChildren(

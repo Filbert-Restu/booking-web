@@ -103,7 +103,7 @@ export default function BookingCalendar() {
         )}
 
         {isLoading ? (
-          <div className='flex items-center justify-center h-[560px]'>
+          <div className='flex items-center justify-center h-140'>
             <div className='text-gray-500'>Memuat data booking...</div>
           </div>
         ) : (

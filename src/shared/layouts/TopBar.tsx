@@ -19,7 +19,7 @@ type TopBarProps = {
 
 export function TopBar({
   title,
-  actionHref = '/login',
+  actionHref = '/login-option',
   actionLabel = 'Login',
 }: TopBarProps) {
   // Check if we're inside a SidebarProvider

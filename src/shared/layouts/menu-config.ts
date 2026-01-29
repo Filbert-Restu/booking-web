@@ -239,6 +239,11 @@ export const menuConfigurations: Record<UserRole, MenuConfig> = {
             url: '/peminjam/reservasi',
             icon: ClipboardList,
           },
+          {
+            title: 'Tanda Tangan',
+            url: '/peminjam/sign',
+            icon: BookOpen,
+          },
         ],
       },
     ],
