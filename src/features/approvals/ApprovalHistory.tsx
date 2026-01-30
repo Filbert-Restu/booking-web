@@ -83,7 +83,6 @@ export function ApprovalHistory({
 						<TableRow>
 							<TableHead className='w-12'>No</TableHead>
 							<TableHead>Token</TableHead>
-							<TableHead>Kegiatan Ormawa</TableHead>
 							<TableHead>Kegiatan</TableHead>
 							<TableHead>No. HP</TableHead>
 							<TableHead>Nama Peminjam</TableHead>
@@ -110,7 +109,6 @@ export function ApprovalHistory({
 								<TableRow key={item.id}>
 									<TableCell className='font-medium'>{index + 1}</TableCell>
 									<TableCell>{item.token || '-'}</TableCell>
-									<TableCell>{item.kegiatanOrmawa || '-'}</TableCell>
 									<TableCell>{item.kegiatan}</TableCell>
 									<TableCell>{item.noHp}</TableCell>
 									<TableCell>{item.namaPeminjam}</TableCell>

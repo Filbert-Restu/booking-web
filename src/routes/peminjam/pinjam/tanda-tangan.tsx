@@ -20,7 +20,10 @@ function RouteComponent() {
 	// Redirect if no document_id (user skipped previous steps)
 	useEffect(() => {
 		if (!formData.document_id) {
-			navigate({ to: '/peminjam/pinjam/detail-tempat' });
+			navigate({
+				to: '/peminjam/pinjam/detail-tempat',
+				search: { editId: undefined },
+			});
 		}
 	}, [formData.document_id, navigate]);
 

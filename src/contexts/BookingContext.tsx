@@ -9,6 +9,11 @@ export interface BookingFormData {
     end_time?: string;
     purpose?: string;
 
+    // Ketua Pelaksana Info
+    ketua_pelaksana_nama?: string;
+    ketua_pelaksana_nim?: string;
+    ketua_pelaksana_hp?: string;
+
     // Step 2: Proposal
     event_name?: string;
     event_nature?: string;

@@ -47,6 +47,7 @@ import { Route as KemahasiswaanRiwayatPersetujuanRouteImport } from './routes/ke
 import { Route as DosenPendampingRiwayatPersetujuanRouteImport } from './routes/dosen-pendamping/riwayat-persetujuan'
 import { Route as PeminjamSignIndexRouteImport } from './routes/peminjam/sign/index'
 import { Route as PeminjamPinjamIndexRouteImport } from './routes/peminjam/pinjam/index'
+import { Route as KemahasiswaanTemplateDokumenIndexRouteImport } from './routes/kemahasiswaan/template-dokumen.index'
 import { Route as AdminWorkflowsIndexRouteImport } from './routes/admin/workflows/index'
 import { Route as AdminUsersIndexRouteImport } from './routes/admin/users/index'
 import { Route as AdminUnitsIndexRouteImport } from './routes/admin/units/index'
@@ -64,6 +65,7 @@ import { Route as AdminUsersAddRouteImport } from './routes/admin/users/add'
 import { Route as AdminManajemenRuangEditRouteImport } from './routes/admin/manajemen-ruang/edit'
 import { Route as AdminManajemenRuangAddRouteImport } from './routes/admin/manajemen-ruang/add'
 import { Route as PeminjamPinjamAjukanIndexRouteImport } from './routes/peminjam/pinjam/ajukan/index'
+import { Route as KemahasiswaanTemplateDokumenTemplateIdEditRouteImport } from './routes/kemahasiswaan/template-dokumen.$templateId.edit'
 
 const TandaTanganRoute = TandaTanganRouteImport.update({
   id: '/tanda-tangan',
@@ -263,6 +265,12 @@ const PeminjamPinjamIndexRoute = PeminjamPinjamIndexRouteImport.update({
   path: '/pinjam/',
   getParentRoute: () => PeminjamRouteRoute,
 } as any)
+const KemahasiswaanTemplateDokumenIndexRoute =
+  KemahasiswaanTemplateDokumenIndexRouteImport.update({
+    id: '/template-dokumen/',
+    path: '/template-dokumen/',
+    getParentRoute: () => KemahasiswaanRouteRoute,
+  } as any)
 const AdminWorkflowsIndexRoute = AdminWorkflowsIndexRouteImport.update({
   id: '/workflows/',
   path: '/workflows/',
@@ -353,6 +361,12 @@ const PeminjamPinjamAjukanIndexRoute =
     path: '/pinjam/ajukan/',
     getParentRoute: () => PeminjamRouteRoute,
   } as any)
+const KemahasiswaanTemplateDokumenTemplateIdEditRoute =
+  KemahasiswaanTemplateDokumenTemplateIdEditRouteImport.update({
+    id: '/template-dokumen/$templateId/edit',
+    path: '/template-dokumen/$templateId/edit',
+    getParentRoute: () => KemahasiswaanRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -407,8 +421,10 @@ export interface FileRoutesByFullPath {
   '/admin/units': typeof AdminUnitsIndexRoute
   '/admin/users': typeof AdminUsersIndexRoute
   '/admin/workflows': typeof AdminWorkflowsIndexRoute
+  '/kemahasiswaan/template-dokumen': typeof KemahasiswaanTemplateDokumenIndexRoute
   '/peminjam/pinjam': typeof PeminjamPinjamIndexRoute
   '/peminjam/sign': typeof PeminjamSignIndexRoute
+  '/kemahasiswaan/template-dokumen/$templateId/edit': typeof KemahasiswaanTemplateDokumenTemplateIdEditRoute
   '/peminjam/pinjam/ajukan': typeof PeminjamPinjamAjukanIndexRoute
 }
 export interface FileRoutesByTo {
@@ -455,8 +471,10 @@ export interface FileRoutesByTo {
   '/admin/units': typeof AdminUnitsIndexRoute
   '/admin/users': typeof AdminUsersIndexRoute
   '/admin/workflows': typeof AdminWorkflowsIndexRoute
+  '/kemahasiswaan/template-dokumen': typeof KemahasiswaanTemplateDokumenIndexRoute
   '/peminjam/pinjam': typeof PeminjamPinjamIndexRoute
   '/peminjam/sign': typeof PeminjamSignIndexRoute
+  '/kemahasiswaan/template-dokumen/$templateId/edit': typeof KemahasiswaanTemplateDokumenTemplateIdEditRoute
   '/peminjam/pinjam/ajukan': typeof PeminjamPinjamAjukanIndexRoute
 }
 export interface FileRoutesById {
@@ -513,8 +531,10 @@ export interface FileRoutesById {
   '/admin/units/': typeof AdminUnitsIndexRoute
   '/admin/users/': typeof AdminUsersIndexRoute
   '/admin/workflows/': typeof AdminWorkflowsIndexRoute
+  '/kemahasiswaan/template-dokumen/': typeof KemahasiswaanTemplateDokumenIndexRoute
   '/peminjam/pinjam/': typeof PeminjamPinjamIndexRoute
   '/peminjam/sign/': typeof PeminjamSignIndexRoute
+  '/kemahasiswaan/template-dokumen/$templateId/edit': typeof KemahasiswaanTemplateDokumenTemplateIdEditRoute
   '/peminjam/pinjam/ajukan/': typeof PeminjamPinjamAjukanIndexRoute
 }
 export interface FileRouteTypes {
@@ -572,8 +592,10 @@ export interface FileRouteTypes {
     | '/admin/units'
     | '/admin/users'
     | '/admin/workflows'
+    | '/kemahasiswaan/template-dokumen'
     | '/peminjam/pinjam'
     | '/peminjam/sign'
+    | '/kemahasiswaan/template-dokumen/$templateId/edit'
     | '/peminjam/pinjam/ajukan'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -620,8 +642,10 @@ export interface FileRouteTypes {
     | '/admin/units'
     | '/admin/users'
     | '/admin/workflows'
+    | '/kemahasiswaan/template-dokumen'
     | '/peminjam/pinjam'
     | '/peminjam/sign'
+    | '/kemahasiswaan/template-dokumen/$templateId/edit'
     | '/peminjam/pinjam/ajukan'
   id:
     | '__root__'
@@ -677,8 +701,10 @@ export interface FileRouteTypes {
     | '/admin/units/'
     | '/admin/users/'
     | '/admin/workflows/'
+    | '/kemahasiswaan/template-dokumen/'
     | '/peminjam/pinjam/'
     | '/peminjam/sign/'
+    | '/kemahasiswaan/template-dokumen/$templateId/edit'
     | '/peminjam/pinjam/ajukan/'
   fileRoutesById: FileRoutesById
 }
@@ -968,6 +994,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PeminjamPinjamIndexRouteImport
       parentRoute: typeof PeminjamRouteRoute
     }
+    '/kemahasiswaan/template-dokumen/': {
+      id: '/kemahasiswaan/template-dokumen/'
+      path: '/template-dokumen'
+      fullPath: '/kemahasiswaan/template-dokumen'
+      preLoaderRoute: typeof KemahasiswaanTemplateDokumenIndexRouteImport
+      parentRoute: typeof KemahasiswaanRouteRoute
+    }
     '/admin/workflows/': {
       id: '/admin/workflows/'
       path: '/workflows'
@@ -1087,6 +1120,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PeminjamPinjamAjukanIndexRouteImport
       parentRoute: typeof PeminjamRouteRoute
     }
+    '/kemahasiswaan/template-dokumen/$templateId/edit': {
+      id: '/kemahasiswaan/template-dokumen/$templateId/edit'
+      path: '/template-dokumen/$templateId/edit'
+      fullPath: '/kemahasiswaan/template-dokumen/$templateId/edit'
+      preLoaderRoute: typeof KemahasiswaanTemplateDokumenTemplateIdEditRouteImport
+      parentRoute: typeof KemahasiswaanRouteRoute
+    }
   }
 }
 
@@ -1143,11 +1183,17 @@ const DosenPendampingRouteRouteWithChildren =
 interface KemahasiswaanRouteRouteChildren {
   KemahasiswaanRiwayatPersetujuanRoute: typeof KemahasiswaanRiwayatPersetujuanRoute
   KemahasiswaanIndexRoute: typeof KemahasiswaanIndexRoute
+  KemahasiswaanTemplateDokumenIndexRoute: typeof KemahasiswaanTemplateDokumenIndexRoute
+  KemahasiswaanTemplateDokumenTemplateIdEditRoute: typeof KemahasiswaanTemplateDokumenTemplateIdEditRoute
 }
 
 const KemahasiswaanRouteRouteChildren: KemahasiswaanRouteRouteChildren = {
   KemahasiswaanRiwayatPersetujuanRoute: KemahasiswaanRiwayatPersetujuanRoute,
   KemahasiswaanIndexRoute: KemahasiswaanIndexRoute,
+  KemahasiswaanTemplateDokumenIndexRoute:
+    KemahasiswaanTemplateDokumenIndexRoute,
+  KemahasiswaanTemplateDokumenTemplateIdEditRoute:
+    KemahasiswaanTemplateDokumenTemplateIdEditRoute,
 }
 
 const KemahasiswaanRouteRouteWithChildren =

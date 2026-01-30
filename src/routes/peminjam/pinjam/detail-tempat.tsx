@@ -18,28 +18,69 @@ import { documentService } from '@/services/document.service';
 import { useBookingContext } from '@/contexts/BookingContext';
 
 export const Route = createFileRoute('/peminjam/pinjam/detail-tempat')({
+	validateSearch: (search: Record<string, unknown>) => {
+		return {
+			editId: Number(search.editId) || undefined,
+			roomId: search.roomId as number | undefined,
+			roomCode: search.roomCode as string | undefined,
+			bookingDate: search.bookingDate as string | undefined,
+			startTime: search.startTime as string | undefined,
+			endTime: search.endTime as string | undefined,
+			purpose: search.purpose as string | undefined,
+			ketuaNama: search.ketuaNama as string | undefined,
+			ketuaNim: search.ketuaNim as string | undefined,
+			ketuaHp: search.ketuaHp as string | undefined,
+		};
+	},
 	component: RouteComponent,
 });
 
 function RouteComponent() {
 	const navigate = useNavigate();
+	const searchParams = Route.useSearch();
+	const { editId } = searchParams;
 	const { formData, updateFormData } = useBookingContext();
 
+	// Detect if this is from reservation (has document_id already)
+	const [isFromReservation, setIsFromReservation] = useState(false);
+
 	const [rooms, setRooms] = useState<Room[]>([]);
-	const [selectedRoomId, setSelectedRoomId] = useState<number | null>(formData.room_id || null);
-	const [startTime, setStartTime] = useState(formData.start_time || '09:00');
-	const [endTime, setEndTime] = useState(formData.end_time || '11:00');
-	const [bookingDate, setBookingDate] = useState(formData.booking_date || (() => {
+	const [selectedRoomId, setSelectedRoomId] = useState<number | null>(null);
+	const [startTime, setStartTime] = useState('09:00');
+	const [endTime, setEndTime] = useState('11:00');
+	const [bookingDate, setBookingDate] = useState(() => {
 		const tomorrow = new Date();
 		tomorrow.setDate(tomorrow.getDate() + 1);
 		return tomorrow.toISOString().split('T')[0];
-	})());
-	const [activity, setActivity] = useState(formData.purpose || '');
+	});
+	const [activity, setActivity] = useState('');
+	const [ketuaPelaksanaNama, setKetuaPelaksanaNama] = useState('');
+	const [ketuaPelaksanaNim, setKetuaPelaksanaNim] = useState('');
+	const [ketuaPelaksanaHp, setKetuaPelaksanaHp] = useState('');
 
 	const [loading, setLoading] = useState(false);
 	const [error, setError] = useState<string | null>(null);
 	const [checkingAvailability, setCheckingAvailability] = useState(false);
 	const [availabilityMessage, setAvailabilityMessage] = useState<string | null>(null);
+
+	// Auto-fill dari searchParams (dari link Ajukan Pinjam)
+	useEffect(() => {
+		// Check apakah ada data auto-fill dari link
+		const hasAutoFillData = searchParams.roomId || searchParams.purpose;
+		
+		if (hasAutoFillData) {
+			setIsFromReservation(true);
+		}
+		
+		if (searchParams.roomId) setSelectedRoomId(searchParams.roomId);
+		if (searchParams.bookingDate) setBookingDate(searchParams.bookingDate);
+		if (searchParams.startTime) setStartTime(searchParams.startTime);
+		if (searchParams.endTime) setEndTime(searchParams.endTime);
+		if (searchParams.purpose) setActivity(searchParams.purpose);
+		if (searchParams.ketuaNama) setKetuaPelaksanaNama(searchParams.ketuaNama);
+		if (searchParams.ketuaNim) setKetuaPelaksanaNim(searchParams.ketuaNim);
+		if (searchParams.ketuaHp) setKetuaPelaksanaHp(searchParams.ketuaHp);
+	}, [searchParams]);
 
 	const steps = [
 		{ number: 1, title: 'Detail Tempat' },
@@ -49,7 +90,56 @@ function RouteComponent() {
 
 	useEffect(() => {
 		fetchRooms();
-	}, []);
+
+		const initializeData = async () => {
+			if (editId) {
+				try {
+					setLoading(true);
+					const doc = await documentService.getDocument(editId);
+					const content = doc.content as any;
+
+					const data = {
+						document_id: doc.id,
+						room_id: content.room_id,
+						room_code: content.room_code,
+						booking_date: content.booking_date,
+						start_time: content.start_time,
+						end_time: content.end_time,
+						purpose: content.purpose,
+						ketua_pelaksana_nama: content.ketua_pelaksana_nama,
+						ketua_pelaksana_nim: content.ketua_pelaksana_nim,
+						ketua_pelaksana_hp: content.ketua_pelaksana_hp,
+						event_name: doc.title,
+					};
+
+					updateFormData(data);
+					applyDataToLocalState(data);
+					setIsFromReservation(true);
+				} catch (err) {
+					console.error('Failed to fetch document for edit:', err);
+					setError('Gagal memuat data pengajuan');
+				} finally {
+					setLoading(false);
+				}
+			} else if (formData.document_id) {
+				applyDataToLocalState(formData);
+				setIsFromReservation(true);
+			}
+		};
+
+		initializeData();
+	}, [editId]);
+
+	const applyDataToLocalState = (data: any) => {
+		if (data.room_id) setSelectedRoomId(data.room_id);
+		if (data.start_time) setStartTime(data.start_time);
+		if (data.end_time) setEndTime(data.end_time);
+		if (data.booking_date) setBookingDate(data.booking_date);
+		if (data.purpose) setActivity(data.purpose);
+		if (data.ketua_pelaksana_nama) setKetuaPelaksanaNama(data.ketua_pelaksana_nama);
+		if (data.ketua_pelaksana_nim) setKetuaPelaksanaNim(data.ketua_pelaksana_nim);
+		if (data.ketua_pelaksana_hp) setKetuaPelaksanaHp(data.ketua_pelaksana_hp);
+	};
 
 	const fetchRooms = async () => {
 		try {
@@ -117,11 +207,23 @@ function RouteComponent() {
 		e.preventDefault();
 
 		if (!selectedRoomId || !bookingDate || !startTime || !endTime || !activity) {
-			alert('Mohon lengkapi semua field');
+			alert('Mohon lengkapi semua field wajib');
 			return;
 		}
 
-		// Check availability first
+		if (!ketuaPelaksanaNama || !ketuaPelaksanaNim || !ketuaPelaksanaHp) {
+			alert('Mohon lengkapi data Ketua Pelaksana');
+			return;
+		}
+
+		// If from reservation, skip document creation and go directly to next step
+		if (isFromReservation) {
+			// Data already in context, just navigate
+			navigate({ to: '/peminjam/pinjam/proposal' });
+			return;
+		}
+
+		// Check availability first (only for new bookings)
 		try {
 			setLoading(true);
 			const availabilityResult = await roomService.checkAvailability(
@@ -144,10 +246,15 @@ function RouteComponent() {
 				content: {
 					room_id: selectedRoomId,
 					room_code: selectedRoom?.code,
+					room_name: selectedRoom?.name,
 					booking_date: bookingDate,
 					start_time: startTime,
 					end_time: endTime,
 					purpose: activity,
+					ketua_pelaksana_nama: ketuaPelaksanaNama,
+					ketua_pelaksana_nim: ketuaPelaksanaNim,
+					ketua_pelaksana_hp: ketuaPelaksanaHp,
+					peminjam_nama: localStorage.getItem('userName') || 'Pemohon',
 				},
 				meta_data: {
 					type: 'room_reservation',
@@ -164,6 +271,9 @@ function RouteComponent() {
 				start_time: startTime,
 				end_time: endTime,
 				purpose: activity,
+				ketua_pelaksana_nama: ketuaPelaksanaNama,
+				ketua_pelaksana_nim: ketuaPelaksanaNim,
+				ketua_pelaksana_hp: ketuaPelaksanaHp,
 			});
 
 			// Navigate to next step
@@ -221,6 +331,7 @@ function RouteComponent() {
 							<Select
 								value={selectedRoomId?.toString()}
 								onValueChange={(value) => setSelectedRoomId(Number(value))}
+								disabled={isFromReservation}
 							>
 								<SelectTrigger>
 									<SelectValue placeholder='Pilih ruangan...' />
@@ -240,6 +351,51 @@ function RouteComponent() {
 							)}
 						</div>
 
+						{/* Data Ketua Ormawa */}
+						<div className='space-y-3'>
+							<p className='text-sm font-medium text-gray-700'>Data Ketua Ormawa</p>
+
+							<div className='space-y-2'>
+								<label className='block text-sm text-gray-600'>
+									Nama Ketua Pelaksana *
+								</label>
+								<Input
+									placeholder='Masukkan nama ketua pelaksana'
+									value={ketuaPelaksanaNama}
+									onChange={(e) => setKetuaPelaksanaNama(e.target.value)}
+									disabled={isFromReservation}
+									required
+								/>
+							</div>
+
+							<div className='space-y-2'>
+								<label className='block text-sm text-gray-600'>
+									NIM *
+								</label>
+								<Input
+									placeholder='Masukkan NIM'
+									value={ketuaPelaksanaNim}
+									onChange={(e) => setKetuaPelaksanaNim(e.target.value)}
+									disabled={isFromReservation}
+									required
+								/>
+							</div>
+
+							<div className='space-y-2'>
+								<label className='block text-sm text-gray-600'>
+									No HP *
+								</label>
+								<Input
+									type='tel'
+									placeholder='Masukkan nomor HP'
+									value={ketuaPelaksanaHp}
+									onChange={(e) => setKetuaPelaksanaHp(e.target.value)}
+									disabled={isFromReservation}
+									required
+								/>
+							</div>
+						</div>
+
 						<div className='space-y-3'>
 							<p className='text-sm font-medium text-gray-700'>Waktu & Tanggal</p>
 
@@ -254,6 +410,7 @@ function RouteComponent() {
 										value={bookingDate}
 										onChange={(e) => setBookingDate(e.target.value)}
 										min={new Date().toISOString().split('T')[0]}
+										disabled={isFromReservation}
 										required
 									/>
 								</div>
@@ -269,6 +426,7 @@ function RouteComponent() {
 											value={startTime}
 											onChange={(e) => setStartTime(e.target.value)}
 											className='flex-1 min-w-0'
+											disabled={isFromReservation}
 											required
 										/>
 										<span className='text-sm text-gray-500 flex-shrink-0'>-</span>
@@ -277,6 +435,7 @@ function RouteComponent() {
 											value={endTime}
 											onChange={(e) => setEndTime(e.target.value)}
 											className='flex-1 min-w-0'
+											disabled={isFromReservation}
 											required
 										/>
 									</div>
@@ -307,6 +466,7 @@ function RouteComponent() {
 								onChange={(e) => setActivity(e.target.value)}
 								rows={4}
 								className='resize-none'
+								disabled={isFromReservation}
 								required
 							/>
 						</div>
@@ -315,7 +475,7 @@ function RouteComponent() {
 							<Button
 								type='button'
 								variant='outline'
-								onClick={() => navigate({ to: '/peminjam/reservasi' })}
+								onClick={() => navigate({ to: '/peminjam/pinjam' })}
 							>
 								Batal
 							</Button>

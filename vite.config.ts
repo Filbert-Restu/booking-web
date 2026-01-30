@@ -12,6 +12,21 @@ const __dirname = path.dirname(__filename);
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [tanstackRouter(), react(), tailwindcss(), tsconfigPaths()],
+  optimizeDeps: {
+    esbuildOptions: {
+      supported: {
+        'top-level-await': true,
+      },
+    },
+  },
+  build: {
+    commonjsOptions: {
+      transformMixedEsModules: true,
+    },
+  },
+  esbuild: {
+    logOverride: { 'this-is-undefined-in-esm': 'silent' },
+  },
   resolve: {
     alias: {
       // Pastikan mengarah ke folder src yang benar

@@ -19,7 +19,21 @@ function RouteComponent() {
 	// Redirect if no document_id (user skipped step 1)
 	useEffect(() => {
 		if (!formData.document_id) {
-			navigate({ to: '/peminjam/pinjam/detail-tempat' });
+			navigate({
+				to: '/peminjam/pinjam/detail-tempat',
+				search: {
+					editId: undefined,
+					roomId: undefined,
+					roomCode: undefined,
+					bookingDate: undefined,
+					startTime: undefined,
+					endTime: undefined,
+					purpose: undefined,
+					ketuaNama: undefined,
+					ketuaNim: undefined,
+					ketuaHp: undefined,
+				},
+			});
 		}
 	}, [formData.document_id, navigate]);
 
@@ -55,28 +69,47 @@ function RouteComponent() {
 		try {
 			setLoading(true);
 
-			// Update document with proposal data
-			await documentService.updateDocument(formData.document_id!, {
-				title: namaKegiatan, // Update title with event name
-				content: {
-					...formData,
-					event_name: namaKegiatan,
-					event_nature: sifat,
-					event_form: bentuk,
-					objectives: tujuan,
-					benefits: manfaat,
-					target_audience: sasaran,
-					schedule: waktu,
-					location: tempat,
-					equipment: alat,
-					committee_head: ketuaPanitia,
-					invitations: undangan,
-				},
-				meta_data: {
-					type: 'room_reservation',
-					step: 'proposal',
-				},
+			// Update document with proposal data using FormData to support file upload
+			const data = new FormData();
+			data.append('title', namaKegiatan);
+
+			// Content fields
+			const contentData: any = {
+				...formData,
+				event_name: namaKegiatan,
+				event_nature: sifat,
+				event_form: bentuk,
+				objectives: tujuan,
+				benefits: manfaat,
+				target_audience: sasaran,
+				schedule: waktu,
+				location: tempat,
+				equipment: alat,
+				committee_head: ketuaPanitia,
+				invitations: undangan,
+				peminjam_nama: localStorage.getItem('userName') || 'Pemohon',
+			};
+
+			// Append content fields to FormData
+			Object.keys(contentData).forEach(key => {
+				if (contentData[key] !== undefined && contentData[key] !== null) {
+					// Don't append the file again if it's already in the proposal field
+					if (key !== 'proposal_file') {
+						data.append(`content[${key}]`, contentData[key]);
+					}
+				}
 			});
+
+			// Append proposal file if exists
+			if (proposalFile) {
+				data.append('proposal', proposalFile);
+			}
+
+			// Meta data
+			data.append('meta_data[type]', 'room_reservation');
+			data.append('meta_data[step]', 'proposal');
+
+			await documentService.updateDocument(formData.document_id!, data);
 
 			// Save to context
 			updateFormData({
@@ -124,7 +157,21 @@ function RouteComponent() {
 			invitations: undangan,
 			proposal_file: proposalFile,
 		});
-		navigate({ to: '/peminjam/pinjam/detail-tempat' });
+		navigate({
+			to: '/peminjam/pinjam/detail-tempat',
+			search: {
+				editId: undefined,
+				roomId: undefined,
+				roomCode: undefined,
+				bookingDate: undefined,
+				startTime: undefined,
+				endTime: undefined,
+				purpose: undefined,
+				ketuaNama: undefined,
+				ketuaNim: undefined,
+				ketuaHp: undefined,
+			},
+		});
 	};
 
 	return (

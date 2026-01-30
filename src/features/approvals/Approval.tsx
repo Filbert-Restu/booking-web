@@ -160,7 +160,7 @@ export function Approval({
 		if (doc === 'lembar-pengesahan' && !canSignLembarPengesahan) {
 			return;
 		}
-		
+
 		// Mark document as signed and approve
 		setItems((prev) =>
 			prev.map((item) => {
@@ -179,7 +179,7 @@ export function Approval({
 				return item;
 			}),
 		);
-		
+
 		onOpenDoc?.({ booking, doc, role: actorRole, mode: 'sign' });
 		if (!isKemahasiswaan) {
 			onApprove?.(booking.id);
@@ -191,8 +191,8 @@ export function Approval({
 		docType: DocumentType,
 		canSign: boolean,
 	) => {
-		const isSigned = docType === 'executive-summary' 
-			? item.executiveSummarySigned 
+		const isSigned = docType === 'executive-summary'
+			? item.executiveSummarySigned
 			: item.lembarPengesahanSigned;
 
 		return (
@@ -252,7 +252,6 @@ export function Approval({
 						<TableRow>
 							<TableHead className='w-12'>No</TableHead>
 							<TableHead>Token</TableHead>
-							<TableHead>Kegiatan Ormawa</TableHead>
 							<TableHead>Kegiatan</TableHead>
 							<TableHead>No. HP</TableHead>
 							<TableHead>Nama Peminjam</TableHead>
@@ -263,8 +262,8 @@ export function Approval({
 							{showProposal && <TableHead>Proposal</TableHead>}
 							<TableHead className='text-center'>Executive Summary</TableHead>
 							<TableHead className='text-center'>Lembar Pengesahan</TableHead>
-						{isKemahasiswaan && <TableHead className='text-center'>Aksi</TableHead>}
-						{!isKemahasiswaan && <TableHead className='text-center'>Status</TableHead>}
+							{isKemahasiswaan && <TableHead className='text-center'>Aksi</TableHead>}
+							{!isKemahasiswaan && <TableHead className='text-center'>Status</TableHead>}
 						</TableRow>
 					</TableHeader>
 					<TableBody>
@@ -279,7 +278,6 @@ export function Approval({
 								<TableRow key={item.id}>
 									<TableCell className='font-medium'>{index + 1}</TableCell>
 									<TableCell>{item.token || '-'}</TableCell>
-									<TableCell>{item.kegiatanOrmawa || '-'}</TableCell>
 									<TableCell>{item.kegiatan}</TableCell>
 									<TableCell>{item.noHp}</TableCell>
 									<TableCell>{item.namaPeminjam}</TableCell>

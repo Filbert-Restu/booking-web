@@ -458,7 +458,7 @@ function RouteComponent() {
 
       {/* Create User Modal */}
       <Dialog open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen}>
-        <DialogContent className='sm:max-w-[500px]'>
+        <DialogContent className='sm:max-w-125'>
           <form onSubmit={handleSubmitCreate}>
             <DialogHeader>
               <DialogTitle>Tambah User Baru</DialogTitle>

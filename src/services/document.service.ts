@@ -12,6 +12,9 @@ export interface Document {
     current_holder_id?: number;
     status: 'DRAFT' | 'IN_PROGRESS' | 'APPROVED' | 'REJECTED' | 'REVISED';
     current_step_order: number;
+    file_executive_summary?: string;
+    file_approval_sheet?: string;
+    file_proposal?: string;
     completed_at?: string;
     created_at: string;
     updated_at: string;
@@ -21,6 +24,16 @@ export interface Document {
         description?: string;
     };
     currentHolder?: {
+        id: number;
+        name: string;
+        email: string;
+        role?: {
+            id: number;
+            name: string;
+            slug: string;
+        };
+    };
+    creator?: {
         id: number;
         name: string;
         email: string;
@@ -126,7 +139,7 @@ export const documentService = {
     /**
      * Buat dokumen baru (status DRAFT)
      */
-    async createDocument(data: CreateDocumentData): Promise<Document> {
+    async createDocument(data: CreateDocumentData | FormData): Promise<Document> {
         const response = await api.post<SingleDocumentResponse>('/documents', data);
         return response.data.data;
     },
@@ -134,7 +147,14 @@ export const documentService = {
     /**
      * Update dokumen (hanya untuk DRAFT atau REVISED)
      */
-    async updateDocument(id: number, data: UpdateDocumentData): Promise<Document> {
+    async updateDocument(id: number, data: UpdateDocumentData | FormData): Promise<Document> {
+        // Laravel PUT doesn't handle FormData well, use POST with _method=PUT
+        if (data instanceof FormData) {
+            data.append('_method', 'PUT');
+            const response = await api.post<SingleDocumentResponse>(`/documents/${id}`, data);
+            return response.data.data;
+        }
+
         const response = await api.put<SingleDocumentResponse>(`/documents/${id}`, data);
         return response.data.data;
     },

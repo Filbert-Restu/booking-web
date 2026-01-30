@@ -23,13 +23,29 @@ import {
 } from '@/shared/components/ui/table';
 import { roomService, type Room, type RoomBooking } from '@/services/room.service';
 import { documentService } from '@/services/document.service';
+import { useBookingContext } from '@/contexts/BookingContext';
 
 export const Route = createFileRoute('/peminjam/reservasi')({
 	component: RouteComponent,
+	validateSearch: (search: Record<string, unknown>) => {
+		return {
+			roomId: search.roomId as number | undefined,
+			roomCode: search.roomCode as string | undefined,
+			bookingDate: search.bookingDate as string | undefined,
+			startTime: search.startTime as string | undefined,
+			endTime: search.endTime as string | undefined,
+			purpose: search.purpose as string | undefined,
+			ketuaNama: search.ketuaNama as string | undefined,
+			ketuaNim: search.ketuaNim as string | undefined,
+			ketuaHp: search.ketuaHp as string | undefined,
+		};
+	},
 });
 
 function RouteComponent() {
 	const navigate = useNavigate();
+	const searchParams = Route.useSearch();
+	const { updateFormData } = useBookingContext();
 	const [rooms, setRooms] = useState<Room[]>([]);
 	const [selectedRoomId, setSelectedRoomId] = useState<number | null>(null);
 	const [selectedRoom, setSelectedRoom] = useState<Room | null>(null);
@@ -49,6 +65,38 @@ function RouteComponent() {
 		return tomorrow.toISOString().split('T')[0];
 	});
 	const [activity, setActivity] = useState('');
+	const [ketuaPelaksanaNama, setKetuaPelaksanaNama] = useState('');
+	const [ketuaPelaksanaNim, setKetuaPelaksanaNim] = useState('');
+	const [ketuaPelaksanaHp, setKetuaPelaksanaHp] = useState('');
+
+	// Auto-fill form from query params (from Riwayat Pengajuan)
+	useEffect(() => {
+		if (searchParams.roomId) {
+			setSelectedRoomId(searchParams.roomId);
+			setShowRoomDetails(true);
+		}
+		if (searchParams.bookingDate) {
+			setBookingDate(searchParams.bookingDate);
+		}
+		if (searchParams.startTime) {
+			setStartTime(searchParams.startTime);
+		}
+		if (searchParams.endTime) {
+			setEndTime(searchParams.endTime);
+		}
+		if (searchParams.purpose) {
+			setActivity(searchParams.purpose);
+		}
+		if (searchParams.ketuaNama) {
+			setKetuaPelaksanaNama(searchParams.ketuaNama);
+		}
+		if (searchParams.ketuaNim) {
+			setKetuaPelaksanaNim(searchParams.ketuaNim);
+		}
+		if (searchParams.ketuaHp) {
+			setKetuaPelaksanaHp(searchParams.ketuaHp);
+		}
+	}, [searchParams]);
 
 	// Fetch rooms on mount
 	useEffect(() => {
@@ -126,12 +174,26 @@ function RouteComponent() {
 			setCheckingAvailability(true);
 			setAvailabilityMessage(null);
 
+			console.log('🔍 Checking availability:', {
+				roomId: selectedRoomId,
+				date: bookingDate,
+				start_time: startTime,
+				end_time: endTime
+			});
+
 			const result = await roomService.checkAvailability(
 				selectedRoomId,
 				bookingDate,
 				startTime,
 				endTime
 			);
+
+			console.log('📊 API Response:', result);
+			console.log('📊 Detailed Response:', {
+				available: result.available,
+				conflictCount: result.conflicts?.length || 0,
+				conflicts: result.conflicts
+			});
 
 			if (result.available) {
 				setAvailabilityMessage('✓ Ruangan tersedia pada waktu yang dipilih');
@@ -156,14 +218,22 @@ function RouteComponent() {
 				checkAvailability();
 			}, 500);
 			return () => clearTimeout(timeoutId);
+		} else {
+			// Reset message when room details hidden
+			setAvailabilityMessage(null);
 		}
-	}, [selectedRoomId, bookingDate, startTime, endTime]);
+	}, [selectedRoomId, bookingDate, startTime, endTime, showRoomDetails]);
 
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
 
 		if (!selectedRoomId || !bookingDate || !startTime || !endTime || !activity) {
-			alert('Mohon lengkapi semua field');
+			alert('Mohon lengkapi semua field wajib');
+			return;
+		}
+
+		if (!ketuaPelaksanaNama || !ketuaPelaksanaNim || !ketuaPelaksanaHp) {
+			alert('Mohon lengkapi data Ketua Pelaksana');
 			return;
 		}
 
@@ -190,19 +260,38 @@ function RouteComponent() {
 				title: `Peminjaman ${selectedRoom?.name || 'Ruangan'} - ${bookingDate}`,
 				content: {
 					room_id: selectedRoomId,
+					room_code: selectedRoom?.code,
+					room_name: selectedRoom?.name,
 					booking_date: bookingDate,
 					start_time: startTime,
 					end_time: endTime,
 					purpose: activity,
+					ketua_pelaksana_nama: ketuaPelaksanaNama,
+					ketua_pelaksana_nim: ketuaPelaksanaNim,
+					ketua_pelaksana_hp: ketuaPelaksanaHp,
+					peminjam_nama: localStorage.getItem('userName') || 'Pemohon',
 				},
 				meta_data: {
 					type: 'room_reservation',
+					step: 'reservation',
 				},
 			});
 
-			alert('Reservasi berhasil dibuat! Dokumen sedang menunggu persetujuan.');
+			// Save reservation data to context for stepper flow
+			updateFormData({
+				document_id: document.id,
+				room_id: selectedRoomId,
+				room_code: selectedRoom?.code,
+				booking_date: bookingDate,
+				start_time: startTime,
+				end_time: endTime,
+				purpose: activity,
+				ketua_pelaksana_nama: ketuaPelaksanaNama,
+				ketua_pelaksana_nim: ketuaPelaksanaNim,
+				ketua_pelaksana_hp: ketuaPelaksanaHp,
+			});
 
-			// Navigate to peminjaman page
+			// Navigate to peminjaman list
 			navigate({ to: '/peminjam/pinjam' });
 		} catch (err) {
 			console.error('Failed to create reservation:', err);
@@ -304,6 +393,48 @@ function RouteComponent() {
 						</div>
 
 						<form onSubmit={handleSubmit} className='space-y-5'>
+							{/* Data Ketua Pelaksana */}
+							<div className='space-y-3'>
+								<p className='text-sm font-medium text-gray-700'>Data Ketua Pelaksana</p>
+
+								<div className='space-y-2'>
+									<label className='block text-sm text-gray-600'>
+										Nama Ketua Pelaksana *
+									</label>
+									<Input
+										placeholder='Masukkan nama ketua pelaksana'
+										value={ketuaPelaksanaNama}
+										onChange={(e) => setKetuaPelaksanaNama(e.target.value)}
+										required
+									/>
+								</div>
+
+								<div className='space-y-2'>
+									<label className='block text-sm text-gray-600'>
+										NIM *
+									</label>
+									<Input
+										placeholder='Masukkan NIM'
+										value={ketuaPelaksanaNim}
+										onChange={(e) => setKetuaPelaksanaNim(e.target.value)}
+										required
+									/>
+								</div>
+
+								<div className='space-y-2'>
+									<label className='block text-sm text-gray-600'>
+										No HP *
+									</label>
+									<Input
+										type='tel'
+										placeholder='Masukkan nomor HP'
+										value={ketuaPelaksanaHp}
+										onChange={(e) => setKetuaPelaksanaHp(e.target.value)}
+										required
+									/>
+								</div>
+							</div>
+
 							<div className='space-y-3'>
 								<p className='text-sm font-medium text-gray-700'>Waktu & Tanggal</p>
 

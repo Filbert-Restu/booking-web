@@ -10,6 +10,7 @@ import {
   History,
   DoorOpen,
   PlusCircle,
+  FileText,
 } from 'lucide-react';
 
 import type { MenuSection, SidebarFooterLink } from './SideBar';
@@ -175,6 +176,16 @@ export const menuConfigurations: Record<UserRole, MenuConfig> = {
             title: 'Riwayat Persetujuan',
             url: '/kemahasiswaan/riwayat-persetujuan',
             icon: History,
+          },
+        ],
+      },
+      {
+        label: 'Dokumen',
+        items: [
+          {
+            title: 'Template Dokumen',
+            url: '/kemahasiswaan/template-dokumen',
+            icon: FileText,
           },
         ],
       },
