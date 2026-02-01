@@ -5,9 +5,16 @@ import { AxiosError } from 'axios';
 import { StatCard } from '@/shared/components/common/StatCard';
 import { Approval } from '@/features/approvals';
 import type { ActorRole } from '@/features/approvals';
-import type { ApprovalDocType, ApprovalModeType } from '../_shared/approval-mock';
+import type {
+  ApprovalDocType,
+  ApprovalModeType,
+} from '../_shared/approval-mock';
 import { documentService } from '@/services/document.service';
-import { mapDocumentsToApprovalItems, type ApprovalItem } from '@/features/approvals/approval-utils';
+import { signatureService } from '@/services/signature.service';
+import {
+  mapDocumentsToApprovalItems,
+  type ApprovalItem,
+} from '@/features/approvals/approval-utils';
 import { Button } from '@/shared/components/ui/button/button';
 
 export const Route = createFileRoute('/ketua-ormawa/')({
@@ -50,7 +57,7 @@ function RouteComponent() {
   const stats = [
     {
       title: 'Antrean Approval',
-      value: String(approvalItems.filter(b => b.status === 'waiting').length),
+      value: String(approvalItems.filter((b) => b.status === 'waiting').length),
       icon: Clock,
       textColor: 'text-yellow-600',
       bgLight: 'bg-yellow-50',
@@ -64,7 +71,9 @@ function RouteComponent() {
     },
     {
       title: 'Total Diapprove',
-      value: String(approvalItems.filter(b => b.status === 'approved').length),
+      value: String(
+        approvalItems.filter((b) => b.status === 'approved').length,
+      ),
       icon: CheckCircle,
       textColor: 'text-green-600',
       bgLight: 'bg-green-50',
@@ -73,8 +82,43 @@ function RouteComponent() {
 
   const handleApprove = async (id: number) => {
     try {
-      await documentService.approveDocument(id, 'Disetujui oleh Ketua Ormawa');
-      alert('Dokumen berhasil disetujui!');
+      // Check if user has signature
+      const signature = await signatureService.getSignature();
+      if (!signature) {
+        const confirmSetup = confirm(
+          'Anda belum mengatur tanda tangan digital. Apakah Anda ingin mengaturnya sekarang?',
+        );
+        if (confirmSetup) {
+          navigate({
+            to: '/tanda-tangan',
+            search: {
+              return: '/ketua-ormawa',
+            },
+          });
+        }
+        return;
+      }
+
+      // Get signature file as base64
+      const signatureBlob = await signatureService.getSignatureFileUrl();
+      if (!signatureBlob) {
+        alert('Gagal memuat tanda tangan. Silakan coba lagi.');
+        return;
+      }
+
+      // Convert blob URL to base64
+      const response = await fetch(signatureBlob);
+      const blob = await response.blob();
+      const base64 = await new Promise<string>((resolve) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result as string);
+        reader.readAsDataURL(blob);
+      });
+
+      const note = prompt('Masukkan catatan (opsional):') || '';
+
+      await documentService.approveDocument(id, base64, note);
+      alert('Dokumen berhasil disetujui dan diteruskan ke step berikutnya!');
       // Refresh data
       await fetchDocuments();
     } catch (err) {
@@ -115,12 +159,20 @@ function RouteComponent() {
     if (payload.mode === 'preview') {
       navigate({
         to: '/preview-dokumen',
-        search: { doc: payload.doc, id: payload.booking.id, return: '/ketua-ormawa' } as any
+        search: {
+          doc: payload.doc,
+          id: payload.booking.id,
+          return: '/ketua-ormawa',
+        } as any,
       });
     } else if (payload.mode === 'sign') {
       navigate({
         to: '/tanda-tangan',
-        search: { doc: payload.doc, id: payload.booking.id, return: '/ketua-ormawa' } as any
+        search: {
+          doc: payload.doc,
+          id: payload.booking.id,
+          return: '/ketua-ormawa',
+        } as any,
       });
     }
   };
@@ -129,7 +181,9 @@ function RouteComponent() {
     return (
       <div className='p-6 flex justify-center items-center min-h-screen'>
         <div className='text-center'>
-          <div className='text-lg font-semibold text-gray-700'>Memuat data...</div>
+          <div className='text-lg font-semibold text-gray-700'>
+            Memuat data...
+          </div>
         </div>
       </div>
     );
@@ -148,12 +202,16 @@ function RouteComponent() {
 
   return (
     <>
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Dashboard Ketua Ormawa</h1>
-        <p className="text-gray-600 mt-1">Ringkasan aktivitas organisasi Anda</p>
+      <div className='mb-6'>
+        <h1 className='text-2xl font-bold text-gray-900'>
+          Dashboard Ketua Ormawa
+        </h1>
+        <p className='text-gray-600 mt-1'>
+          Ringkasan aktivitas organisasi Anda
+        </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+      <div className='grid grid-cols-1 md:grid-cols-3 gap-4 mb-6'>
         {stats.map((stat, index) => (
           <StatCard
             key={index}
@@ -170,7 +228,9 @@ function RouteComponent() {
         <h2 className='text-lg font-semibold mb-4'>Persetujuan Peminjaman</h2>
         {approvalItems.length === 0 ? (
           <div className='bg-white rounded-lg border border-gray-200 p-8 text-center'>
-            <p className='text-gray-500'>Tidak ada dokumen yang menunggu persetujuan</p>
+            <p className='text-gray-500'>
+              Tidak ada dokumen yang menunggu persetujuan
+            </p>
           </div>
         ) : (
           <Approval

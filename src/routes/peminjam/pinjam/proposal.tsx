@@ -17,6 +17,12 @@ function RouteComponent() {
 
   // Redirect if no document_id (user skipped step 1)
   useEffect(() => {
+    // ====== DEBUG: CEK FORMDATA SAAT MOUNT ======
+    console.log(
+      '🎬 [DEBUG] Proposal mounted, formData:',
+      JSON.stringify(formData, null, 2),
+    );
+
     if (!formData.document_id) {
       navigate({
         to: '/peminjam/pinjam/detail-tempat',
@@ -70,6 +76,17 @@ function RouteComponent() {
       return;
     }
 
+    // ====== DEBUG: CEK FORMDATA DARI CONTEXT ======
+    console.log(
+      '🔍 [DEBUG] formData dari context:',
+      JSON.stringify(formData, null, 2),
+    );
+    console.log(
+      '🔍 [DEBUG] formData.ketua_pelaksana_nama:',
+      formData.ketua_pelaksana_nama,
+    );
+    console.log('🔍 [DEBUG] formData.room_id:', formData.room_id);
+
     try {
       setLoading(true);
 
@@ -77,31 +94,100 @@ function RouteComponent() {
       const data = new FormData();
       data.append('title', namaKegiatan);
 
-      // Content fields
-      const contentData: any = {
-        ...formData,
-        event_name: namaKegiatan,
-        event_nature: sifat,
-        event_form: bentuk,
-        objectives: tujuan,
-        benefits: manfaat,
-        target_audience: sasaran,
-        schedule: waktu,
-        location: tempat,
-        equipment: alat,
-        committee_head: ketuaPanitia,
-        invitations: undangan,
-        peminjam_nama: localStorage.getItem('userName') || 'Pemohon',
-      };
+      // Content fields - kirim yang ada valuenya (termasuk angka 0)
+      const contentData: any = {};
+
+      // Ambil data dari step sebelumnya (detail tempat)
+      if (
+        formData.ketua_pelaksana_nama !== undefined &&
+        formData.ketua_pelaksana_nama !== null &&
+        formData.ketua_pelaksana_nama !== ''
+      ) {
+        contentData.ketua_pelaksana_nama = formData.ketua_pelaksana_nama;
+      }
+      if (
+        formData.ketua_pelaksana_nim !== undefined &&
+        formData.ketua_pelaksana_nim !== null &&
+        formData.ketua_pelaksana_nim !== ''
+      ) {
+        contentData.ketua_pelaksana_nim = formData.ketua_pelaksana_nim;
+      }
+      if (
+        formData.ketua_pelaksana_hp !== undefined &&
+        formData.ketua_pelaksana_hp !== null &&
+        formData.ketua_pelaksana_hp !== ''
+      ) {
+        contentData.ketua_pelaksana_hp = formData.ketua_pelaksana_hp;
+      }
+      if (formData.room_id !== undefined && formData.room_id !== null) {
+        contentData.room_id = formData.room_id;
+      }
+      if (
+        formData.room_code !== undefined &&
+        formData.room_code !== null &&
+        formData.room_code !== ''
+      ) {
+        contentData.room_code = formData.room_code;
+      }
+      if (
+        formData.booking_date !== undefined &&
+        formData.booking_date !== null &&
+        formData.booking_date !== ''
+      ) {
+        contentData.booking_date = formData.booking_date;
+      }
+      if (
+        formData.start_time !== undefined &&
+        formData.start_time !== null &&
+        formData.start_time !== ''
+      ) {
+        contentData.start_time = formData.start_time;
+      }
+      if (
+        formData.end_time !== undefined &&
+        formData.end_time !== null &&
+        formData.end_time !== ''
+      ) {
+        contentData.end_time = formData.end_time;
+      }
+      if (
+        formData.purpose !== undefined &&
+        formData.purpose !== null &&
+        formData.purpose !== ''
+      ) {
+        contentData.purpose = formData.purpose;
+      }
+
+      // Tambah data proposal (step 2) - HANYA yang tidak kosong
+      if (namaKegiatan.trim()) contentData.event_name = namaKegiatan;
+      if (sifat.trim()) contentData.event_nature = sifat;
+      if (bentuk.trim()) contentData.event_form = bentuk;
+      if (tujuan.trim()) contentData.objectives = tujuan;
+      if (manfaat.trim()) contentData.benefits = manfaat;
+      if (sasaran.trim()) contentData.target_audience = sasaran;
+      if (waktu.trim()) contentData.schedule = waktu;
+      if (tempat.trim()) contentData.location = tempat;
+      if (alat.trim()) contentData.equipment = alat;
+      if (ketuaPanitia.trim()) contentData.committee_head = ketuaPanitia;
+      if (undangan.trim()) contentData.invitations = undangan;
+
+      // Tambah info peminjam
+      const userName = localStorage.getItem('userName');
+      if (userName) contentData.peminjam_nama = userName;
+
+      // ====== DEBUG: CEK CONTENTDATA SEBELUM APPEND ======
+      console.log(
+        '📦 [DEBUG] contentData yang akan dikirim:',
+        JSON.stringify(contentData, null, 2),
+      );
+      console.log(
+        '📦 [DEBUG] Jumlah keys contentData:',
+        Object.keys(contentData).length,
+      );
 
       // Append content fields to FormData
       Object.keys(contentData).forEach((key) => {
-        if (contentData[key] !== undefined && contentData[key] !== null) {
-          // Don't append the file again if it's already in the proposal field
-          if (key !== 'proposal_file') {
-            data.append(`content[${key}]`, contentData[key]);
-          }
-        }
+        data.append(`content[${key}]`, contentData[key]);
       });
 
       // Append proposal file if exists
@@ -113,6 +199,12 @@ function RouteComponent() {
       // Meta data
       data.append('meta_data[type]', 'room_reservation');
       data.append('meta_data[step]', 'proposal');
+
+      // ====== DEBUG: CEK SEMUA FORMDATA ENTRIES SEBELUM KIRIM ======
+      console.log('🚀 [DEBUG] FormData entries yang akan dikirim ke backend:');
+      for (const [key, value] of data.entries()) {
+        console.log(`   ${key}:`, value);
+      }
 
       await documentService.updateDocument(formData.document_id!, data);
 
