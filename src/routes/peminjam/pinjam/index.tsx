@@ -12,6 +12,7 @@ import {
 } from '@/shared/components/ui/table';
 import { documentService, type Document } from '@/services/document.service';
 import { AxiosError } from 'axios';
+import api from '@/lib/axios';
 
 export const Route = createFileRoute('/peminjam/pinjam/')({
   component: RouteComponent,
@@ -25,12 +26,12 @@ function RouteComponent() {
 
   useEffect(() => {
     fetchDocuments();
-    
+
     // Auto-refresh setiap 30 detik
     const interval = setInterval(() => {
       fetchDocuments();
     }, 30000);
-    
+
     return () => clearInterval(interval);
   }, []);
 
@@ -101,11 +102,13 @@ function RouteComponent() {
       // RESERVASI: from halaman reservasi (step = 'reservation')
       // DRAFT: from button Ajukan Pinjam (step = 'detail_tempat' or other)
       const isReservation = metaData?.step === 'reservation';
-      
+
       return (
         <span
           className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-            isReservation ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800'
+            isReservation
+              ? 'bg-blue-100 text-blue-800'
+              : 'bg-gray-100 text-gray-800'
           }`}
         >
           {isReservation ? 'Reservasi' : 'Draft'}
@@ -196,6 +199,40 @@ function RouteComponent() {
     return content?.purpose || doc.title;
   };
 
+  // Fetch file securely with authentication and open in new tab
+  const openSecureFile = async (
+    docId: number,
+    fileType: 'proposal' | 'executive-summary' | 'approval-sheet',
+  ) => {
+    try {
+      // Gunakan axios instance yang sudah dikonfigurasi dengan auth interceptor
+      const response = await api.get(`/documents/${docId}/file/${fileType}`, {
+        responseType: 'blob', // Penting: untuk download file sebagai blob
+      });
+
+      const blob = response.data;
+      const url = URL.createObjectURL(blob);
+      window.open(url, '_blank');
+
+      // Clean up blob URL after a delay
+      setTimeout(() => URL.revokeObjectURL(url), 100);
+    } catch (err) {
+      console.error('Error opening file:', err);
+      if (err instanceof AxiosError) {
+        const status = err.response?.status;
+        if (status === 403) {
+          alert('Gagal membuka file: Akses ditolak');
+        } else if (status === 404) {
+          alert('Gagal membuka file: File tidak ditemukan');
+        } else {
+          alert('Terjadi kesalahan saat membuka file');
+        }
+      } else {
+        alert('Terjadi kesalahan saat membuka file');
+      }
+    }
+  };
+
   if (loading) {
     return (
       <div className='space-y-6'>
@@ -235,7 +272,9 @@ function RouteComponent() {
     <div className='space-y-4 md:space-y-6 p-2 md:p-0'>
       {/* Header dengan Button */}
       <div className='flex justify-between items-center gap-3'>
-        <h1 className='text-xl md:text-2xl font-bold text-gray-900'>Riwayat Pengajuan</h1>
+        <h1 className='text-xl md:text-2xl font-bold text-gray-900'>
+          Riwayat Pengajuan
+        </h1>
         <Button onClick={handleAjukanPinjam} size='lg' className='gap-2'>
           <Plus className='w-4 h-4 md:w-5 md:h-5' />
           <span className='text-sm md:text-base'>Ajukan Pinjam</span>
@@ -281,82 +320,104 @@ function RouteComponent() {
                   </TableCell>
                 </TableRow>
               ) : (
-                documents
-                  .map((doc, index) => (
-                    <TableRow key={doc.id}>
-                      <TableCell className='text-center'>{index + 1}</TableCell>
-                      <TableCell>
-                        {new Date(doc.created_at).toLocaleDateString('id-ID', {
-                          day: '2-digit',
-                          month: '2-digit',
-                          year: 'numeric'
-                        })}
-                      </TableCell>
-                      <TableCell className='font-medium'>
-                        <div className='line-clamp-2'>{getEventName(doc)}</div>
-                      </TableCell>
-                      <TableCell>
-                        <div className='line-clamp-1'>{getKetuaPelaksanaNama(doc)}</div>
-                      </TableCell>
-                      <TableCell>{getKetuaPelaksanaNim(doc)}</TableCell>
-                      <TableCell>{getKetuaPelaksanaHp(doc)}</TableCell>
-                      <TableCell>{getBookingDate(doc)}</TableCell>
-                      <TableCell>{getRoomInfo(doc)}</TableCell>
-                      <TableCell>{getStatusBadge(doc.status, doc)}</TableCell>
-                      <TableCell>
-                        <div className='flex gap-1 items-center justify-center'>
-                          {doc.file_proposal && (
-                            <button
-                              onClick={() => window.open(doc.file_proposal, '_blank')}
-                              className='p-1 hover:bg-gray-100 rounded transition-colors'
-                              title='Lihat Proposal'
-                            >
-                              <File className='w-4 h-4 text-blue-600' />
-                            </button>
-                          )}
-                          {doc.file_executive_summary && (
-                            <button
-                              onClick={() => window.open(doc.file_executive_summary, '_blank')}
-                              className='p-1 hover:bg-gray-100 rounded transition-colors'
-                              title='Lihat Executive Summary'
-                            >
-                              <FileText className='w-4 h-4 text-green-600' />
-                            </button>
-                          )}
-                          {doc.file_approval_sheet && (
-                            <button
-                              onClick={() => window.open(doc.file_approval_sheet, '_blank')}
-                              className='p-1 hover:bg-gray-100 rounded transition-colors'
-                              title='Lihat Lembar Pengesahan'
-                            >
-                              <FilePlus className='w-4 h-4 text-purple-600' />
-                            </button>
-                          )}
-                          {!doc.file_proposal && !doc.file_executive_summary && !doc.file_approval_sheet && (
+                documents.map((doc, index) => (
+                  <TableRow key={doc.id}>
+                    <TableCell className='text-center'>{index + 1}</TableCell>
+                    <TableCell>
+                      {new Date(doc.created_at).toLocaleDateString('id-ID', {
+                        day: '2-digit',
+                        month: '2-digit',
+                        year: 'numeric',
+                      })}
+                    </TableCell>
+                    <TableCell className='font-medium'>
+                      <div className='line-clamp-2'>{getEventName(doc)}</div>
+                    </TableCell>
+                    <TableCell>
+                      <div className='line-clamp-1'>
+                        {getKetuaPelaksanaNama(doc)}
+                      </div>
+                    </TableCell>
+                    <TableCell>{getKetuaPelaksanaNim(doc)}</TableCell>
+                    <TableCell>{getKetuaPelaksanaHp(doc)}</TableCell>
+                    <TableCell>{getBookingDate(doc)}</TableCell>
+                    <TableCell>{getRoomInfo(doc)}</TableCell>
+                    <TableCell>{getStatusBadge(doc.status, doc)}</TableCell>
+                    <TableCell>
+                      <div className='flex gap-1 items-center justify-center'>
+                        {(() => {
+                          // Use API endpoints for secure file access (files stored in private disk)
+                          const hasProposal = doc.file_proposal;
+                          const hasExecSummary = doc.file_executive_summary;
+                          const hasApproval = doc.file_approval_sheet;
+
+                          return (
+                            <>
+                              {hasProposal && (
+                                <button
+                                  onClick={() =>
+                                    openSecureFile(doc.id, 'proposal')
+                                  }
+                                  className='p-1 hover:bg-gray-100 rounded transition-colors'
+                                  title='Lihat Proposal'
+                                >
+                                  <File className='w-4 h-4 text-blue-600' />
+                                </button>
+                              )}
+                              {hasExecSummary && (
+                                <button
+                                  onClick={() =>
+                                    openSecureFile(doc.id, 'executive-summary')
+                                  }
+                                  className='p-1 hover:bg-gray-100 rounded transition-colors'
+                                  title='Lihat Executive Summary'
+                                >
+                                  <FileText className='w-4 h-4 text-green-600' />
+                                </button>
+                              )}
+                              {hasApproval && (
+                                <button
+                                  onClick={() =>
+                                    openSecureFile(doc.id, 'approval-sheet')
+                                  }
+                                  className='p-1 hover:bg-gray-100 rounded transition-colors'
+                                  title='Lihat Lembar Pengesahan'
+                                >
+                                  <FilePlus className='w-4 h-4 text-purple-600' />
+                                </button>
+                              )}
+                            </>
+                          );
+                        })()}
+                        {!doc.file_proposal &&
+                          !doc.file_executive_summary &&
+                          !doc.file_approval_sheet && (
                             <span className='text-xs text-gray-400'>-</span>
                           )}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        {doc.status === 'IN_PROGRESS' ? (
-                          <span className='text-sm text-gray-700'>
-                            {getCurrentHolder(doc)}
-                          </span>
-                        ) : doc.status === 'DRAFT' ? (
-                          <button
-                            onClick={() => handleAjukanPinjamWithData(doc)}
-                            className='text-sm text-blue-600 hover:text-blue-800 hover:underline font-medium'
-                          >
-                            Ajukan Pinjam
-                          </button>
-                        ) : doc.status === 'REVISED' ? (
-                          <span className='text-sm text-orange-600'>Perlu revisi</span>
-                        ) : (
-                          <span className='text-sm text-gray-400'>-</span>
-                        )}
-                      </TableCell>
-                    </TableRow>
-                  ))
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      {doc.status === 'IN_PROGRESS' ? (
+                        <span className='text-sm text-gray-700'>
+                          {getCurrentHolder(doc)}
+                        </span>
+                      ) : doc.status === 'DRAFT' ? (
+                        <button
+                          onClick={() => handleAjukanPinjamWithData(doc)}
+                          className='text-sm text-blue-600 hover:text-blue-800 hover:underline font-medium'
+                        >
+                          Ajukan Pinjam
+                        </button>
+                      ) : doc.status === 'REVISED' ? (
+                        <span className='text-sm text-orange-600'>
+                          Perlu revisi
+                        </span>
+                      ) : (
+                        <span className='text-sm text-gray-400'>-</span>
+                      )}
+                    </TableCell>
+                  </TableRow>
+                ))
               )}
             </TableBody>
           </Table>

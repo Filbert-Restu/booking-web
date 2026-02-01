@@ -6,7 +6,6 @@ const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL,
   headers: {
     Accept: 'application/json',
-    'Content-Type': 'application/json',
   },
 });
 
@@ -20,6 +19,10 @@ api.interceptors.request.use(
 
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
+    }
+    // If sending FormData, let the browser set Content-Type (including boundary)
+    if (config.data instanceof FormData) {
+      delete config.headers['Content-Type'];
     }
     return config;
   },
