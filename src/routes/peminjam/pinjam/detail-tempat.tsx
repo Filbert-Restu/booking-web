@@ -63,23 +63,26 @@ function RouteComponent() {
 	const [checkingAvailability, setCheckingAvailability] = useState(false);
 	const [availabilityMessage, setAvailabilityMessage] = useState<string | null>(null);
 
-	// Auto-fill dari searchParams (dari link Ajukan Pinjam)
+	// Auto-fill dari searchParams (dari link Ajukan Pinjam di kolom RESERVASI)
 	useEffect(() => {
-		// Check apakah ada data auto-fill dari link
-		const hasAutoFillData = searchParams.roomId || searchParams.purpose;
+		// HANYA auto-fill jika ada roomId DAN bookingDate (dari reservasi)
+		const isReservationLink = searchParams.roomId && searchParams.bookingDate;
 		
-		if (hasAutoFillData) {
+		if (isReservationLink) {
 			setIsFromReservation(true);
+			// Auto-fill semua field dari reservation
+			if (searchParams.roomId) setSelectedRoomId(searchParams.roomId);
+			if (searchParams.bookingDate) setBookingDate(searchParams.bookingDate);
+			if (searchParams.startTime) setStartTime(searchParams.startTime);
+			if (searchParams.endTime) setEndTime(searchParams.endTime);
+			if (searchParams.purpose) setActivity(searchParams.purpose);
+			if (searchParams.ketuaNama) setKetuaPelaksanaNama(searchParams.ketuaNama);
+			if (searchParams.ketuaNim) setKetuaPelaksanaNim(searchParams.ketuaNim);
+			if (searchParams.ketuaHp) setKetuaPelaksanaHp(searchParams.ketuaHp);
+		} else {
+			// Button biru - form kosong
+			setIsFromReservation(false);
 		}
-		
-		if (searchParams.roomId) setSelectedRoomId(searchParams.roomId);
-		if (searchParams.bookingDate) setBookingDate(searchParams.bookingDate);
-		if (searchParams.startTime) setStartTime(searchParams.startTime);
-		if (searchParams.endTime) setEndTime(searchParams.endTime);
-		if (searchParams.purpose) setActivity(searchParams.purpose);
-		if (searchParams.ketuaNama) setKetuaPelaksanaNama(searchParams.ketuaNama);
-		if (searchParams.ketuaNim) setKetuaPelaksanaNim(searchParams.ketuaNim);
-		if (searchParams.ketuaHp) setKetuaPelaksanaHp(searchParams.ketuaHp);
 	}, [searchParams]);
 
 	const steps = [
@@ -213,6 +216,18 @@ function RouteComponent() {
 
 		if (!ketuaPelaksanaNama || !ketuaPelaksanaNim || !ketuaPelaksanaHp) {
 			alert('Mohon lengkapi data Ketua Pelaksana');
+			return;
+		}
+
+		// Validasi NIM - harus 14 digit angka
+		if (!/^\d{14}$/.test(ketuaPelaksanaNim)) {
+			alert('NIM harus 14 digit angka');
+			return;
+		}
+
+		// Validasi HP - harus 12-13 digit angka
+		if (!/^\d{12,13}$/.test(ketuaPelaksanaHp)) {
+			alert('Nomor HP harus 12-13 digit angka');
 			return;
 		}
 
@@ -370,33 +385,40 @@ function RouteComponent() {
 
 							<div className='space-y-2'>
 								<label className='block text-sm text-gray-600'>
-									NIM *
-								</label>
-								<Input
-									placeholder='Masukkan NIM'
-									value={ketuaPelaksanaNim}
-									onChange={(e) => setKetuaPelaksanaNim(e.target.value)}
-									disabled={isFromReservation}
-									required
-								/>
-							</div>
+							NIM (14 digit) *
+						</label>
+						<Input
+							placeholder='Contoh: 20210801012345'
+							value={ketuaPelaksanaNim}
+							onChange={(e) => {
+								const value = e.target.value.replace(/\D/g, ''); // Hanya angka
+								if (value.length <= 14) setKetuaPelaksanaNim(value);
+							}}
+							disabled={isFromReservation}
+							maxLength={14}
+							required
+						/>
+						<p className='text-xs text-gray-500'>Hanya angka, 14 digit</p>
+					</div>
 
-							<div className='space-y-2'>
-								<label className='block text-sm text-gray-600'>
-									No HP *
-								</label>
-								<Input
-									type='tel'
-									placeholder='Masukkan nomor HP'
-									value={ketuaPelaksanaHp}
-									onChange={(e) => setKetuaPelaksanaHp(e.target.value)}
-									disabled={isFromReservation}
-									required
-								/>
-							</div>
-						</div>
-
-						<div className='space-y-3'>
+					<div className='space-y-2'>
+						<label className='block text-sm text-gray-600'>
+							No HP (12-13 digit) *
+						</label>
+						<Input
+							type='tel'
+							placeholder='Contoh: 081234567890'
+							value={ketuaPelaksanaHp}
+							onChange={(e) => {
+								const value = e.target.value.replace(/\D/g, ''); // Hanya angka
+								if (value.length <= 13) setKetuaPelaksanaHp(value);
+							}}
+							disabled={isFromReservation}
+							maxLength={13}
+							required
+						/>
+						<p className='text-xs text-gray-500'>Hanya angka, 12-13 digit</p>
+					</div>
 							<p className='text-sm font-medium text-gray-700'>Waktu & Tanggal</p>
 
 							<div className='space-y-3'>

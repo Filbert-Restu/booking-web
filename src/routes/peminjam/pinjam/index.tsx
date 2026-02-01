@@ -94,15 +94,33 @@ function RouteComponent() {
     });
   };
 
-  const getStatusBadge = (status: Document['status']) => {
+  const getStatusBadge = (status: Document['status'], doc: Document) => {
+    // Check if this is a DRAFT document
+    if (status === 'DRAFT') {
+      const metaData = doc.meta_data as any;
+      // RESERVASI: from halaman reservasi (step = 'reservation')
+      // DRAFT: from button Ajukan Pinjam (step = 'detail_tempat' or other)
+      const isReservation = metaData?.step === 'reservation';
+      
+      return (
+        <span
+          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+            isReservation ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800'
+          }`}
+        >
+          {isReservation ? 'Reservasi' : 'Draft'}
+        </span>
+      );
+    }
+
     const statusConfig: Record<
       Document['status'],
       { bg: string; text: string; label: string }
     > = {
       DRAFT: {
-        bg: 'bg-blue-100',
-        text: 'text-blue-800',
-        label: 'Reservasi',
+        bg: 'bg-gray-100',
+        text: 'text-gray-800',
+        label: 'Draft',
       },
       IN_PROGRESS: {
         bg: 'bg-yellow-100',
@@ -284,7 +302,7 @@ function RouteComponent() {
                       <TableCell>{getKetuaPelaksanaHp(doc)}</TableCell>
                       <TableCell>{getBookingDate(doc)}</TableCell>
                       <TableCell>{getRoomInfo(doc)}</TableCell>
-                      <TableCell>{getStatusBadge(doc.status)}</TableCell>
+                      <TableCell>{getStatusBadge(doc.status, doc)}</TableCell>
                       <TableCell>
                         <div className='flex gap-1 items-center justify-center'>
                           {doc.file_proposal && (

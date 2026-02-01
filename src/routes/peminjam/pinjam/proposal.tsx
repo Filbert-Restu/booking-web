@@ -3,7 +3,6 @@ import { useState, useEffect } from 'react';
 import { AxiosError } from 'axios';
 import { Stepper } from '@/shared/components/common/Stepper';
 import { Input } from '@/shared/components/ui/input';
-import { Textarea } from '@/shared/components/ui/textarea';
 import { Button } from '@/shared/components/ui/button/button';
 import { documentService } from '@/services/document.service';
 import { useBookingContext } from '@/contexts/BookingContext';
@@ -37,7 +36,8 @@ function RouteComponent() {
 		}
 	}, [formData.document_id, navigate]);
 
-	const [namaKegiatan, setNamaKegiatan] = useState(formData.event_name || '');
+	// Nama kegiatan TIDAK auto-fill (user harus isi manual)
+	const [namaKegiatan, setNamaKegiatan] = useState('');
 	const [sifat, setSifat] = useState(formData.event_nature || '');
 	const [bentuk, setBentuk] = useState(formData.event_form || '');
 	const [tujuan, setTujuan] = useState(formData.objectives || '');
@@ -225,11 +225,10 @@ function RouteComponent() {
 								<label className='block text-sm font-medium text-gray-700 mb-1'>
 									Tujuan <span className='text-red-500'>*</span>
 								</label>
-								<Textarea
+								<Input
 									value={tujuan}
 									onChange={(e) => setTujuan(e.target.value)}
 									placeholder='Masukkan tujuan kegiatan'
-									rows={3}
 									required
 								/>
 							</div>
@@ -238,11 +237,10 @@ function RouteComponent() {
 								<label className='block text-sm font-medium text-gray-700 mb-1'>
 									Manfaat
 								</label>
-								<Textarea
+								<Input
 									value={manfaat}
 									onChange={(e) => setManfaat(e.target.value)}
 									placeholder='Masukkan manfaat kegiatan'
-									rows={3}
 								/>
 							</div>
 
@@ -321,16 +319,34 @@ function RouteComponent() {
 							<Input
 								type='file'
 								accept='.pdf,.doc,.docx'
-								onChange={(e) =>
-									setProposalFile(e.target.files ? e.target.files[0] : null)
-								}
+								onChange={(e) => {
+									const file = e.target.files ? e.target.files[0] : null;
+									if (file) {
+										// Validasi ukuran file (max 10MB)
+										if (file.size > 10 * 1024 * 1024) {
+											alert('Ukuran file maksimal 10MB');
+											e.target.value = '';
+											return;
+										}
+										// Validasi format file
+										const validFormats = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+										if (!validFormats.includes(file.type)) {
+											alert('Format file harus PDF, DOC, atau DOCX');
+											e.target.value = '';
+											return;
+										}
+										setProposalFile(file);
+									} else {
+										setProposalFile(null);
+									}
+								}}
 							/>
 							<p className='text-xs text-gray-500'>
 								Format: PDF, DOC, DOCX (Max 10MB)
 							</p>
 							{proposalFile && (
 								<p className='text-sm text-green-600'>
-									File terpilih: {proposalFile.name}
+									✓ File terpilih: {proposalFile.name} ({(proposalFile.size / 1024 / 1024).toFixed(2)} MB)
 								</p>
 							)}
 						</div>

@@ -22,7 +22,18 @@ function RouteComponent() {
 		if (!formData.document_id) {
 			navigate({
 				to: '/peminjam/pinjam/detail-tempat',
-				search: { editId: undefined },
+				search: {
+					editId: undefined,
+					roomId: undefined,
+					roomCode: undefined,
+					bookingDate: undefined,
+					startTime: undefined,
+					endTime: undefined,
+					purpose: undefined,
+					ketuaNama: undefined,
+					ketuaNim: undefined,
+					ketuaHp: undefined,
+				},
 			});
 		}
 	}, [formData.document_id, navigate]);

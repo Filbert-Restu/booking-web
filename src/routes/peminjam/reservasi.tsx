@@ -237,6 +237,18 @@ function RouteComponent() {
 			return;
 		}
 
+		// Validasi NIM - harus 14 digit angka
+		if (!/^\d{14}$/.test(ketuaPelaksanaNim)) {
+			alert('NIM harus 14 digit angka');
+			return;
+		}
+
+		// Validasi HP - harus 12-13 digit angka
+		if (!/^\d{12,13}$/.test(ketuaPelaksanaHp)) {
+			alert('Nomor HP harus 12-13 digit angka');
+			return;
+		}
+
 		// Check availability first
 		try {
 			const availabilityResult = await roomService.checkAvailability(
@@ -411,27 +423,37 @@ function RouteComponent() {
 
 								<div className='space-y-2'>
 									<label className='block text-sm text-gray-600'>
-										NIM *
+										NIM (14 digit) *
 									</label>
 									<Input
-										placeholder='Masukkan NIM'
+										placeholder='Contoh: 20210801012345'
 										value={ketuaPelaksanaNim}
-										onChange={(e) => setKetuaPelaksanaNim(e.target.value)}
+										onChange={(e) => {
+											const value = e.target.value.replace(/\D/g, '');
+											if (value.length <= 14) setKetuaPelaksanaNim(value);
+										}}
+										maxLength={14}
 										required
 									/>
+									<p className='text-xs text-gray-500'>Hanya angka, 14 digit</p>
 								</div>
 
 								<div className='space-y-2'>
 									<label className='block text-sm text-gray-600'>
-										No HP *
+										No HP (12-13 digit) *
 									</label>
 									<Input
 										type='tel'
-										placeholder='Masukkan nomor HP'
+										placeholder='Contoh: 081234567890'
 										value={ketuaPelaksanaHp}
-										onChange={(e) => setKetuaPelaksanaHp(e.target.value)}
+										onChange={(e) => {
+											const value = e.target.value.replace(/\D/g, '');
+											if (value.length <= 13) setKetuaPelaksanaHp(value);
+										}}
+										maxLength={13}
 										required
 									/>
+									<p className='text-xs text-gray-500'>Hanya angka, 12-13 digit</p>
 								</div>
 							</div>
 
