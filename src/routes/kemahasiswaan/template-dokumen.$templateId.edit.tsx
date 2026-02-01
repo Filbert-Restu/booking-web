@@ -351,6 +351,7 @@ function RouteComponent() {
                 selectedFile ||
                 documentTemplateService.getDownloadUrl(template.id)
               }
+              templateId={template.id}
               onDownload={handleDownload}
               onPlaceholdersDetected={setDetectedPlaceholders}
             />

@@ -1,75 +1,108 @@
 import { useState, useEffect } from 'react';
 import mammoth from 'mammoth';
-import { FileText, Download, AlertCircle } from 'lucide-react';
+import { FileText, Download, AlertCircle, FileType, Eye } from 'lucide-react';
 import { Button } from '@/shared/components/ui/button/button';
 import api from '@/lib/axios';
 
 interface TemplatePreviewProps {
   file: File | string; // File object atau URL
+  templateId?: number; // Template ID for PDF conversion
   onDownload?: () => void;
   onPlaceholdersDetected?: (placeholders: string[]) => void;
 }
 
-export function TemplatePreview({ file, onDownload, onPlaceholdersDetected }: TemplatePreviewProps) {
-  const [htmlContent, setHtmlContent] = useState<string>('');
+export function TemplatePreview({ file, templateId, onDownload, onPlaceholdersDetected }: TemplatePreviewProps) {
+  const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const [placeholders, setPlaceholders] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [useFallback, setUseFallback] = useState(false);
 
   useEffect(() => {
-    loadDocxContent();
-  }, [file]);
+    loadPreview();
+    return () => {
+      // Cleanup PDF URL
+      if (pdfUrl) {
+        URL.revokeObjectURL(pdfUrl);
+      }
+    };
+  }, [file, templateId]);
 
-  const loadDocxContent = async () => {
+  const loadPreview = async () => {
     try {
       setIsLoading(true);
       setError(null);
 
+      // First, try to get PDF preview from backend if templateId is provided
+      if (templateId && !useFallback) {
+        try {
+          const response = await api.get(`/document-templates/${templateId}/preview-pdf`, {
+            responseType: 'blob',
+          });
+
+          // Create blob URL for PDF
+          const blob = new Blob([response.data], { type: 'application/pdf' });
+          const url = URL.createObjectURL(blob);
+          setPdfUrl(url);
+
+          // Still extract placeholders from DOCX for info
+          await extractPlaceholders();
+          setIsLoading(false);
+          return;
+        } catch (pdfError: any) {
+          console.warn('PDF preview not available, falling back:', pdfError);
+          // If PDF conversion fails, fall back
+          setUseFallback(true);
+        }
+      }
+
+      // Fallback: show message that PDF preview is not available
+      await extractPlaceholders();
+      
+    } catch (err) {
+      console.error('Failed to load preview:', err);
+      setError(err instanceof Error ? err.message : 'Gagal memuat preview');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const extractPlaceholders = async () => {
+    try {
       let arrayBuffer: ArrayBuffer;
 
       if (file instanceof File) {
-        // File object from input
         arrayBuffer = await file.arrayBuffer();
       } else {
-        // URL string - fetch the file using axios with auth
         const response = await api.get(file, {
           responseType: 'arraybuffer',
         });
         arrayBuffer = response.data;
       }
 
-      // Convert DOCX to HTML using mammoth
-      const result = await mammoth.convertToHtml({ arrayBuffer });
-      setHtmlContent(result.value);
-
-      // Extract placeholders (format: {{placeholder}})
+      // Extract placeholders using mammoth
+      const result = await mammoth.extractRawText({ arrayBuffer });
       const placeholderRegex = /\{\{([^}]+)\}\}/g;
       const matches = result.value.match(placeholderRegex) || [];
       const uniquePlaceholders = Array.from(new Set(matches));
       setPlaceholders(uniquePlaceholders);
 
-      // Notify parent component
       if (onPlaceholdersDetected) {
         onPlaceholdersDetected(uniquePlaceholders);
       }
-
-      if (result.messages.length > 0) {
-        console.warn('Mammoth conversion warnings:', result.messages);
-      }
     } catch (err) {
-      console.error('Failed to load DOCX:', err);
-      setError(err instanceof Error ? err.message : 'Gagal memuat template');
-    } finally {
-      setIsLoading(false);
+      console.warn('Failed to extract placeholders:', err);
     }
   };
 
+
   if (isLoading) {
     return (
-      <div className='flex items-center justify-center h-64 bg-gray-50 rounded-lg'>
+      <div className='flex items-center justify-center h-[800px] bg-gray-50 rounded-lg border-2'>
         <div className='text-center'>
           <FileText className='w-12 h-12 text-gray-400 mx-auto mb-2 animate-pulse' />
-          <p className='text-gray-500'>Memuat preview...</p>
+          <p className='text-gray-500'>Memuat preview dokumen...</p>
+          <p className='text-xs text-gray-400 mt-1'>Sedang mengkonversi DOCX ke PDF...</p>
         </div>
       </div>
     );
@@ -77,69 +110,145 @@ export function TemplatePreview({ file, onDownload, onPlaceholdersDetected }: Te
 
   if (error) {
     return (
-      <div className='flex items-center justify-center h-64 bg-red-50 rounded-lg'>
-        <div className='text-center'>
+      <div className='flex items-center justify-center h-[800px] bg-red-50 rounded-lg border-2 border-red-200'>
+        <div className='text-center max-w-md'>
           <AlertCircle className='w-12 h-12 text-red-400 mx-auto mb-2' />
-          <p className='text-red-600'>{error}</p>
+          <p className='text-red-600 font-medium mb-1'>Gagal Memuat Preview</p>
+          <p className='text-sm text-red-500'>{error}</p>
         </div>
       </div>
     );
   }
 
+  // If PDF conversion is not available
+  if (useFallback || !pdfUrl) {
+    return (
+      <div className='space-y-4'>
+        <div className='bg-yellow-50 border border-yellow-200 rounded-lg p-4'>
+          <div className='flex items-start gap-3'>
+            <AlertCircle className='w-5 h-5 text-yellow-600 mt-0.5' />
+            <div>
+              <p className='text-sm font-medium text-yellow-900'>Preview PDF Tidak Tersedia</p>
+              <p className='text-xs text-yellow-700 mt-1'>
+                Server belum dikonfigurasi untuk konversi PDF. Silakan download file DOCX untuk melihat template.
+              </p>
+            </div>
+          </div>
+        </div>
+        
+        {placeholders.length > 0 && (
+          <div className='bg-blue-50 border border-blue-200 rounded-lg p-4'>
+            <div className='flex items-start gap-3'>
+              <FileType className='w-5 h-5 text-blue-600 mt-0.5' />
+              <div className='flex-1'>
+                <h3 className='text-sm font-semibold text-blue-900 mb-2'>
+                  Placeholders Terdeteksi ({placeholders.length})
+                </h3>
+                <div className='flex flex-wrap gap-2'>
+                  {placeholders.map((placeholder, index) => (
+                    <span
+                      key={index}
+                      className='inline-flex items-center px-2.5 py-1 rounded-md text-xs font-mono bg-white text-blue-700 border border-blue-300'
+                    >
+                      {placeholder}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        <div className='flex justify-center'>
+          {onDownload && (
+            <Button onClick={onDownload} size='lg'>
+              <Download className='w-5 h-5 mr-2' />
+              Download Template DOCX
+            </Button>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  // Show PDF Preview
   return (
     <div className='space-y-4'>
-      {/* Placeholders Info */}
+      {/* Placeholders Info Banner */}
       {placeholders.length > 0 && (
-        <div className='bg-blue-50 border border-blue-200 rounded-lg p-4'>
-          <h3 className='text-sm font-semibold text-blue-900 mb-2'>
-            Placeholders Terdeteksi ({placeholders.length})
-          </h3>
-          <div className='flex flex-wrap gap-2'>
-            {placeholders.map((placeholder, index) => (
-              <span
-                key={index}
-                className='inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-mono bg-blue-100 text-blue-800 border border-blue-300'
-              >
-                {placeholder}
-              </span>
-            ))}
+        <div className='bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-4 shadow-sm'>
+          <div className='flex items-start gap-3'>
+            <FileType className='w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0' />
+            <div className='flex-1'>
+              <h3 className='text-sm font-semibold text-blue-900 mb-2'>
+                🏷️ Placeholders Terdeteksi ({placeholders.length})
+              </h3>
+              <div className='flex flex-wrap gap-2 mb-2'>
+                {placeholders.map((placeholder, index) => (
+                  <span
+                    key={index}
+                    className='inline-flex items-center px-2.5 py-1 rounded-md text-xs font-mono bg-white text-blue-700 border border-blue-300 shadow-sm'
+                  >
+                    {placeholder}
+                  </span>
+                ))}
+              </div>
+              <p className='text-xs text-blue-700'>
+                💡 Placeholder ini akan otomatis diganti dengan data peminjam saat dokumen di-generate
+              </p>
+            </div>
           </div>
-          <p className='text-xs text-blue-700 mt-2'>
-            Placeholder ini akan diganti dengan data peminjam saat generate dokumen
-          </p>
         </div>
       )}
 
-      {/* Preview Container */}
-      <div className='bg-white border rounded-lg'>
-        <div className='border-b px-4 py-3 flex items-center justify-between'>
-          <div className='flex items-center gap-2'>
-            <FileText className='w-5 h-5 text-blue-600' />
-            <h3 className='font-semibold text-gray-900'>Preview Template</h3>
+      {/* PDF Preview Container */}
+      <div className='bg-gray-100 rounded-lg border-2 border-gray-300 shadow-lg overflow-hidden'>
+        <div className='border-b bg-white px-4 py-3 flex items-center justify-between shadow-sm'>
+          <div className='flex items-center gap-3'>
+            <div className='w-10 h-10 bg-gradient-to-br from-red-500 to-red-600 rounded-lg flex items-center justify-center shadow-md'>
+              <FileText className='w-6 h-6 text-white' />
+            </div>
+            <div>
+              <h3 className='font-semibold text-gray-900'>Preview Template (PDF)</h3>
+              <p className='text-xs text-gray-500'>Dokumen telah dikonversi ke PDF</p>
+            </div>
           </div>
           {onDownload && (
-            <Button variant='outline' size='sm' onClick={onDownload}>
+            <Button variant='outline' size='sm' onClick={onDownload} className='shadow-sm'>
               <Download className='w-4 h-4 mr-2' />
-              Download
+              Download DOCX
             </Button>
           )}
         </div>
 
-        {/* DOCX Content */}
-        <div
-          className='p-6 prose prose-sm max-w-none overflow-auto'
-          style={{ maxHeight: '600px' }}
-          dangerouslySetInnerHTML={{ __html: htmlContent }}
-        />
+        {/* PDF Viewer */}
+        <div className='bg-gray-200 p-4'>
+          <iframe
+            src={pdfUrl}
+            className='w-full bg-white shadow-xl rounded'
+            style={{
+              height: '800px',
+              border: 'none',
+            }}
+            title='PDF Preview'
+          />
+        </div>
       </div>
 
-      {/* Info */}
-      <div className='bg-gray-50 border rounded-lg p-4'>
-        <p className='text-xs text-gray-600'>
-          <strong>Catatan:</strong> Preview ini adalah representasi dari file DOCX.
-          Tampilan mungkin sedikit berbeda dengan file asli. Untuk melihat tampilan
-          yang akurat, silakan download template.
-        </p>
+      {/* Info Footer */}
+      <div className='bg-green-50 border border-green-200 rounded-lg p-4'>
+        <div className='flex items-start gap-2'>
+          <Eye className='w-4 h-4 text-green-600 mt-0.5 flex-shrink-0' />
+          <div>
+            <p className='text-xs text-green-700 leading-relaxed'>
+              <strong>✅ Preview PDF:</strong> Dokumen template telah dikonversi dari DOCX ke PDF untuk preview yang akurat.
+              Ini adalah tampilan yang sama dengan hasil akhir dokumen yang akan di-generate.
+            </p>
+            <p className='text-xs text-green-600 mt-1'>
+              Placeholder akan diganti otomatis dengan data peminjam saat dokumen dibuat.
+            </p>
+          </div>
+        </div>
       </div>
     </div>
   );
