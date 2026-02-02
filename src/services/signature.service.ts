@@ -3,8 +3,10 @@ import api from '@/lib/axios';
 export interface Signature {
   id: number;
   user_id: number;
-  signature: string; // path to signature file
-  signed_at: string;
+  signature: string; // path to signature file in storage
+  signed_at: string | null;
+  created_at: string;
+  updated_at: string;
   user?: {
     id: number;
     name: string;
@@ -23,8 +25,19 @@ class SignatureService {
    * Get authenticated user's signature
    */
   async getSignature(): Promise<Signature | null> {
-    const response = await api.get<SignatureResponse>('/signs');
-    return response.data.data || null;
+    try {
+      console.log('🔍 [SignatureService] Fetching user signature...');
+      const response = await api.get<SignatureResponse>('/signs');
+      console.log('✅ [SignatureService] Response:', response.data);
+      return response.data.data || null;
+    } catch (error: any) {
+      console.error('❌ [SignatureService] Error fetching signature:', error);
+      if (error.response?.status === 404) {
+        console.log('ℹ️ [SignatureService] No signature found (404)');
+        return null;
+      }
+      throw error;
+    }
   }
 
   /**

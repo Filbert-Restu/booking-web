@@ -38,6 +38,7 @@ import { Route as SumberDayaTambahPeminjamanRouteImport } from './routes/sumber-
 import { Route as SumberDayaRiwayatPersetujuanRouteImport } from './routes/sumber-daya/riwayat-persetujuan'
 import { Route as SumberDayaManajemenRuangRouteImport } from './routes/sumber-daya/manajemen-ruang'
 import { Route as SenatRiwayatPersetujuanRouteImport } from './routes/senat/riwayat-persetujuan'
+import { Route as PeminjamTestTemplateRouteImport } from './routes/peminjam/test-template'
 import { Route as PeminjamReservasiRouteImport } from './routes/peminjam/reservasi'
 import { Route as KetuaOrmawaSignRouteImport } from './routes/ketua-ormawa/sign'
 import { Route as KetuaOrmawaRiwayatPersetujuanRouteImport } from './routes/ketua-ormawa/riwayat-persetujuan'
@@ -216,6 +217,11 @@ const SenatRiwayatPersetujuanRoute = SenatRiwayatPersetujuanRouteImport.update({
   path: '/riwayat-persetujuan',
   getParentRoute: () => SenatRouteRoute,
 } as any)
+const PeminjamTestTemplateRoute = PeminjamTestTemplateRouteImport.update({
+  id: '/test-template',
+  path: '/test-template',
+  getParentRoute: () => PeminjamRouteRoute,
+} as any)
 const PeminjamReservasiRoute = PeminjamReservasiRouteImport.update({
   id: '/reservasi',
   path: '/reservasi',
@@ -391,6 +397,7 @@ export interface FileRoutesByFullPath {
   '/ketua-ormawa/riwayat-persetujuan': typeof KetuaOrmawaRiwayatPersetujuanRoute
   '/ketua-ormawa/sign': typeof KetuaOrmawaSignRoute
   '/peminjam/reservasi': typeof PeminjamReservasiRoute
+  '/peminjam/test-template': typeof PeminjamTestTemplateRoute
   '/senat/riwayat-persetujuan': typeof SenatRiwayatPersetujuanRoute
   '/sumber-daya/manajemen-ruang': typeof SumberDayaManajemenRuangRoute
   '/sumber-daya/riwayat-persetujuan': typeof SumberDayaRiwayatPersetujuanRoute
@@ -441,6 +448,7 @@ export interface FileRoutesByTo {
   '/ketua-ormawa/riwayat-persetujuan': typeof KetuaOrmawaRiwayatPersetujuanRoute
   '/ketua-ormawa/sign': typeof KetuaOrmawaSignRoute
   '/peminjam/reservasi': typeof PeminjamReservasiRoute
+  '/peminjam/test-template': typeof PeminjamTestTemplateRoute
   '/senat/riwayat-persetujuan': typeof SenatRiwayatPersetujuanRoute
   '/sumber-daya/manajemen-ruang': typeof SumberDayaManajemenRuangRoute
   '/sumber-daya/riwayat-persetujuan': typeof SumberDayaRiwayatPersetujuanRoute
@@ -501,6 +509,7 @@ export interface FileRoutesById {
   '/ketua-ormawa/riwayat-persetujuan': typeof KetuaOrmawaRiwayatPersetujuanRoute
   '/ketua-ormawa/sign': typeof KetuaOrmawaSignRoute
   '/peminjam/reservasi': typeof PeminjamReservasiRoute
+  '/peminjam/test-template': typeof PeminjamTestTemplateRoute
   '/senat/riwayat-persetujuan': typeof SenatRiwayatPersetujuanRoute
   '/sumber-daya/manajemen-ruang': typeof SumberDayaManajemenRuangRoute
   '/sumber-daya/riwayat-persetujuan': typeof SumberDayaRiwayatPersetujuanRoute
@@ -562,6 +571,7 @@ export interface FileRouteTypes {
     | '/ketua-ormawa/riwayat-persetujuan'
     | '/ketua-ormawa/sign'
     | '/peminjam/reservasi'
+    | '/peminjam/test-template'
     | '/senat/riwayat-persetujuan'
     | '/sumber-daya/manajemen-ruang'
     | '/sumber-daya/riwayat-persetujuan'
@@ -612,6 +622,7 @@ export interface FileRouteTypes {
     | '/ketua-ormawa/riwayat-persetujuan'
     | '/ketua-ormawa/sign'
     | '/peminjam/reservasi'
+    | '/peminjam/test-template'
     | '/senat/riwayat-persetujuan'
     | '/sumber-daya/manajemen-ruang'
     | '/sumber-daya/riwayat-persetujuan'
@@ -671,6 +682,7 @@ export interface FileRouteTypes {
     | '/ketua-ormawa/riwayat-persetujuan'
     | '/ketua-ormawa/sign'
     | '/peminjam/reservasi'
+    | '/peminjam/test-template'
     | '/senat/riwayat-persetujuan'
     | '/sumber-daya/manajemen-ruang'
     | '/sumber-daya/riwayat-persetujuan'
@@ -930,6 +942,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/senat/riwayat-persetujuan'
       preLoaderRoute: typeof SenatRiwayatPersetujuanRouteImport
       parentRoute: typeof SenatRouteRoute
+    }
+    '/peminjam/test-template': {
+      id: '/peminjam/test-template'
+      path: '/test-template'
+      fullPath: '/peminjam/test-template'
+      preLoaderRoute: typeof PeminjamTestTemplateRouteImport
+      parentRoute: typeof PeminjamRouteRoute
     }
     '/peminjam/reservasi': {
       id: '/peminjam/reservasi'
@@ -1232,6 +1251,7 @@ const KetuaOrmawaRouteRouteWithChildren =
 
 interface PeminjamRouteRouteChildren {
   PeminjamReservasiRoute: typeof PeminjamReservasiRoute
+  PeminjamTestTemplateRoute: typeof PeminjamTestTemplateRoute
   PeminjamIndexRoute: typeof PeminjamIndexRoute
   PeminjamPinjamDetailTempatRoute: typeof PeminjamPinjamDetailTempatRoute
   PeminjamPinjamEditDokumenRoute: typeof PeminjamPinjamEditDokumenRoute
@@ -1244,6 +1264,7 @@ interface PeminjamRouteRouteChildren {
 
 const PeminjamRouteRouteChildren: PeminjamRouteRouteChildren = {
   PeminjamReservasiRoute: PeminjamReservasiRoute,
+  PeminjamTestTemplateRoute: PeminjamTestTemplateRoute,
   PeminjamIndexRoute: PeminjamIndexRoute,
   PeminjamPinjamDetailTempatRoute: PeminjamPinjamDetailTempatRoute,
   PeminjamPinjamEditDokumenRoute: PeminjamPinjamEditDokumenRoute,

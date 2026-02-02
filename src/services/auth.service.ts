@@ -28,8 +28,10 @@ interface LoginResponse {
     unit?: {
       id: number;
       name: string;
+      category?: string;
     };
   };
+  unit_category?: string; // Untuk dynamic workflow selection
 }
 
 interface LogoutResponse {
@@ -87,6 +89,13 @@ export const authService = {
       localStorage.setItem('userUnit', data.user.unit.name);
       localStorage.setItem('unitId', data.user.unit.id.toString());
     }
+
+    // Simpan unit category untuk dynamic workflow selection
+    if (data.unit_category) {
+      localStorage.setItem('userUnitCategory', data.unit_category);
+    } else if (data.user.unit?.category) {
+      localStorage.setItem('userUnitCategory', data.user.unit.category);
+    }
   },
 
   /**
@@ -123,11 +132,11 @@ export const authService = {
   redirectByRole(role: string): void {
     const roleRoutes: Record<string, string> = {
       // Admin & Pimpinan
-      'Admin': '/admin/',
+      Admin: '/admin/',
       'Wakil Dekan 1': '/wadek1/',
 
       // Staff Fakultas
-      'Kemahasiswaan': '/kemahasiswaan/',
+      Kemahasiswaan: '/kemahasiswaan/',
       'Sumber Daya': '/sumber-daya/',
 
       // Dosen & Ketua Departemen (approval only, tapi kalau login redirect ke dashboard)
@@ -136,13 +145,13 @@ export const authService = {
 
       // Ketua Organisasi (BEM, HIMA, UKM ke ketua-ormawa)
       'Ketua Ormawa': '/ketua-ormawa/',
-      
+
       // Senat punya route sendiri
-      'Senat': '/senat/',
+      Senat: '/senat/',
 
       // Sekretaris & Mahasiswa -> Peminjam
-      'Sekretaris': '/peminjam/',
-      'Peminjam': '/peminjam/',
+      Sekretaris: '/peminjam/',
+      Peminjam: '/peminjam/',
     };
 
     const path = roleRoutes[role] || '/peminjam/'; // Default ke peminjam

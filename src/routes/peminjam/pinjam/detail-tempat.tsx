@@ -287,8 +287,25 @@ function RouteComponent() {
 
       // Create draft document
       const selectedRoom = rooms.find((r) => r.id === selectedRoomId);
+
+      // Determine workflow_id based on user's unit category
+      // Get unit category from localStorage (set during login)
+      const userUnitCategory =
+        localStorage.getItem('userUnitCategory') || 'HMD'; // Default HMD
+
+      // Map category to workflow_id (from WorkflowSeeder.php)
+      // 1 = HMD (7 steps), 2 = BEM (6 steps), 3 = Senat (5 steps), 4 = UKM (6 steps)
+      const workflowMap: Record<string, number> = {
+        HMD: 1,
+        BEM: 2,
+        SENAT: 3,
+        UKM: 4,
+      };
+
+      const workflowId = workflowMap[userUnitCategory] || 1; // Default to HMD if not found
+
       const document = await documentService.createDocument({
-        workflow_id: 1, // Assuming workflow_id 1 is for room booking
+        workflow_id: workflowId,
         title: `Peminjaman ${selectedRoom?.name || 'Ruangan'} - ${bookingDate}`,
         content: {
           room_id: selectedRoomId,

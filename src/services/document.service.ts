@@ -218,4 +218,28 @@ export const documentService = {
     );
     return response.data.data;
   },
+
+  /**
+   * Generate executive summary dari template
+   */
+  async generateExecutiveSummary(
+    documentId: number,
+  ): Promise<{ file_path: string; download_url: string }> {
+    const response = await api.post(
+      `/documents/${documentId}/generate/executive-summary`,
+    );
+    return response.data.data;
+  },
+
+  /**
+   * Generate lembar pengesahan dari template
+   */
+  async generateApprovalSheet(
+    documentId: number,
+  ): Promise<{ file_path: string; download_url: string }> {
+    const response = await api.post(
+      `/documents/${documentId}/generate/approval-sheet`,
+    );
+    return response.data.data;
+  },
 };
