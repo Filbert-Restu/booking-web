@@ -5,9 +5,15 @@ import { AxiosError } from 'axios';
 import { StatCard } from '@/shared/components/common/StatCard';
 import { Approval } from '@/features/approvals';
 import type { ActorRole } from '@/features/approvals';
-import type { ApprovalDocType, ApprovalModeType } from '../_shared/approval-mock';
+import type {
+  ApprovalDocType,
+  ApprovalModeType,
+} from '../_shared/approval-mock';
 import { documentService } from '@/services/document.service';
-import { mapDocumentsToApprovalItems, type ApprovalItem } from '@/features/approvals/approval-utils';
+import {
+  mapDocumentsToApprovalItems,
+  type ApprovalItem,
+} from '@/features/approvals/approval-utils';
 import { Button } from '@/shared/components/ui/button/button';
 
 export const Route = createFileRoute('/kemahasiswaan/')({
@@ -48,7 +54,7 @@ function RouteComponent() {
   const stats = [
     {
       title: 'Antrean Approval',
-      value: String(approvalItems.filter(b => b.status === 'waiting').length),
+      value: String(approvalItems.filter((b) => b.status === 'waiting').length),
       icon: Clock,
       textColor: 'text-yellow-600',
       bgLight: 'bg-yellow-50',
@@ -62,7 +68,9 @@ function RouteComponent() {
     },
     {
       title: 'Total Diapprove',
-      value: String(approvalItems.filter(b => b.status === 'approved').length),
+      value: String(
+        approvalItems.filter((b) => b.status === 'approved').length,
+      ),
       icon: CheckCircle,
       textColor: 'text-green-600',
       bgLight: 'bg-green-50',
@@ -70,14 +78,26 @@ function RouteComponent() {
   ];
 
   const handleApprove = async (id: number) => {
+    const note = prompt('Masukkan catatan (opsional):') || '';
+
     try {
-      await documentService.approveDocument(id, 'Disetujui oleh Kemahasiswaan');
-      alert('Dokumen berhasil disetujui!');
+      // Kemahasiswaan tidak memerlukan tanda tangan untuk approval
+      await documentService.approveDocument(
+        id,
+        '',
+        note || 'Disetujui oleh Kemahasiswaan',
+      );
+      alert(
+        '✅ Dokumen berhasil disetujui!\n\nDokumen telah diteruskan ke step berikutnya.',
+      );
       await fetchDocuments();
     } catch (err) {
       console.error('Failed to approve document:', err);
       if (err instanceof AxiosError) {
-        alert(err.response?.data?.message || 'Gagal menyetujui dokumen');
+        alert(
+          '❌ Gagal menyetujui dokumen\n\n' +
+            (err.response?.data?.message || err.message),
+        );
       } else {
         alert('Terjadi kesalahan saat menyetujui dokumen');
       }
@@ -111,12 +131,20 @@ function RouteComponent() {
     if (payload.mode === 'preview') {
       navigate({
         to: '/preview-dokumen',
-        search: { doc: payload.doc, id: payload.booking.id, return: '/kemahasiswaan' } as any
+        search: {
+          doc: payload.doc,
+          id: payload.booking.id,
+          return: '/kemahasiswaan',
+        } as any,
       });
     } else if (payload.mode === 'sign') {
       navigate({
         to: '/tanda-tangan',
-        search: { doc: payload.doc, id: payload.booking.id, return: '/kemahasiswaan' } as any
+        search: {
+          doc: payload.doc,
+          id: payload.booking.id,
+          return: '/kemahasiswaan',
+        } as any,
       });
     }
   };
@@ -125,7 +153,9 @@ function RouteComponent() {
     return (
       <div className='p-6 flex justify-center items-center min-h-screen'>
         <div className='text-center'>
-          <div className='text-lg font-semibold text-gray-700'>Memuat data...</div>
+          <div className='text-lg font-semibold text-gray-700'>
+            Memuat data...
+          </div>
         </div>
       </div>
     );
@@ -170,7 +200,9 @@ function RouteComponent() {
         <h2 className='text-lg font-semibold mb-4'>Persetujuan Peminjaman</h2>
         {approvalItems.length === 0 ? (
           <div className='bg-white rounded-lg border border-gray-200 p-8 text-center'>
-            <p className='text-gray-500'>Tidak ada dokumen yang menunggu persetujuan</p>
+            <p className='text-gray-500'>
+              Tidak ada dokumen yang menunggu persetujuan
+            </p>
           </div>
         ) : (
           <Approval

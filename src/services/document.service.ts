@@ -1,162 +1,64 @@
 import api from '@/lib/axios';
 
-export interface Document {
-  id: number;
-  workflow_id: number;
-  title: string;
-  content?: Record<string, any>;
-  attachment_path?: string;
-  meta_data?: Record<string, any>;
-  unit_id: number;
-  creator_id: number;
-  current_holder_id?: number;
-  status: 'DRAFT' | 'IN_PROGRESS' | 'APPROVED' | 'REJECTED' | 'REVISED';
-  current_step_order: number;
-  file_executive_summary?: string;
-  file_approval_sheet?: string;
-  file_proposal?: string;
-  completed_at?: string;
-  created_at: string;
-  updated_at: string;
-  workflow?: {
-    id: number;
-    name: string;
-    description?: string;
-  };
-  currentHolder?: {
-    id: number;
-    name: string;
-    email: string;
-    role?: {
-      id: number;
-      name: string;
-      slug: string;
-    };
-  };
-  creator?: {
-    id: number;
-    name: string;
-    email: string;
-    role?: {
-      id: number;
-      name: string;
-      slug: string;
-    };
-  };
-  unit?: {
-    id: number;
-    name: string;
-    code: string;
-  };
-  logs?: DocumentLog[];
-}
-
-export interface DocumentLog {
-  id: number;
-  document_id: number;
-  user_id: number;
-  action: 'CREATED' | 'SUBMITTED' | 'APPROVED' | 'REJECTED' | 'REVISED';
-  note?: string;
-  step_snapshot?: number;
-  created_at: string;
-  user?: {
-    id: number;
-    name: string;
-    email: string;
-    role?: {
-      id: number;
-      name: string;
-      slug: string;
-    };
-  };
-}
-
-export interface DocumentsResponse {
-  success: boolean;
-  data: {
-    my_documents?: Document[];
-    pending_documents?: Document[];
-    processed_documents?: Document[];
-    all_documents?: Document[];
-  };
-}
-
-export interface SingleDocumentResponse {
-  success: boolean;
-  data: Document;
-}
-
-export interface CreateDocumentData {
-  workflow_id: number;
-  title: string;
-  content?: Record<string, any>;
-  attachment_path?: string;
-  meta_data?: Record<string, any>;
-}
-
-export interface UpdateDocumentData {
-  title?: string;
-  content?: Record<string, any>;
-  attachment_path?: string;
-  meta_data?: Record<string, any>;
-}
+// Import Types dan Interface dari file terpisah
+import type {
+  Document,
+  DocumentsResponse,
+  SingleDocumentResponse,
+  CreateDocumentData,
+  UpdateDocumentData,
+} from '@/types/document';
 
 export const documentService = {
   /**
    * Get list dokumen user
-   * - my_documents: Dokumen yang dibuat user
-   * - pending_documents: Dokumen yang menunggu action dari user
-   * - processed_documents: Dokumen yang sudah diproses user
+   * Axios otomatis meng-handle query params object
    */
-  async getDocuments(filters?: {
-    status?: string;
-    workflow_id?: number;
-  }): Promise<DocumentsResponse['data']> {
-    const params = new URLSearchParams();
-
-    if (filters?.status) {
-      params.append('status', filters.status);
-    }
-
-    if (filters?.workflow_id) {
-      params.append('workflow_id', String(filters.workflow_id));
-    }
-
-    const response = await api.get<DocumentsResponse>(
-      `/documents${params.toString() ? `?${params.toString()}` : ''}`,
-    );
+  async getDocuments(filters?: { status?: string; workflow_id?: number }) {
+    // Optimasi: Gunakan opsi 'params' milik Axios, tidak perlu URLSearchParams manual
+    const response = await api.get<DocumentsResponse>('/documents', {
+      params: filters,
+    });
     return response.data.data;
   },
 
-  /**
-   * Get detail dokumen dengan logs
-   */
-  async getDocument(id: number): Promise<Document> {
+  async getDocument(id: number) {
     const response = await api.get<SingleDocumentResponse>(`/documents/${id}`);
     return response.data.data;
   },
 
   /**
-   * Buat dokumen baru (status DRAFT)
+   * Buat dokumen baru
+   * Mendukung JSON biasa atau FormData (file upload)
    */
   async createDocument(data: CreateDocumentData | FormData): Promise<Document> {
-    const response = await api.post<SingleDocumentResponse>('/documents', data);
+    const headers =
+      data instanceof FormData ? { 'Content-Type': 'multipart/form-data' } : {};
+
+    const response = await api.post<SingleDocumentResponse>(
+      '/documents',
+      data,
+      { headers },
+    );
     return response.data.data;
   },
 
   /**
-   * Update dokumen (hanya untuk DRAFT atau REVISED)
+   * Update dokumen
+   * Menangani logika '_method: PUT' untuk FormData di Laravel
    */
   async updateDocument(
     id: number,
     data: UpdateDocumentData | FormData,
   ): Promise<Document> {
-    // Laravel PUT doesn't handle FormData well, use POST with _method=PUT
     if (data instanceof FormData) {
       data.append('_method', 'PUT');
       const response = await api.post<SingleDocumentResponse>(
         `/documents/${id}`,
         data,
+        {
+          headers: { 'Content-Type': 'multipart/form-data' },
+        },
       );
       return response.data.data;
     }
@@ -168,9 +70,8 @@ export const documentService = {
     return response.data.data;
   },
 
-  /**
-   * Submit dokumen untuk memulai workflow
-   */
+  // --- WORKFLOW ACTIONS ---
+
   async submitDocument(id: number): Promise<Document> {
     const response = await api.post<SingleDocumentResponse>(
       `/documents/${id}/submit`,
@@ -178,9 +79,6 @@ export const documentService = {
     return response.data.data;
   },
 
-  /**
-   * Approve dokumen (untuk approver)
-   */
   async approveDocument(
     id: number,
     signature: string,
@@ -193,9 +91,6 @@ export const documentService = {
     return response.data.data;
   },
 
-  /**
-   * Reject dokumen (untuk approver)
-   */
   async rejectDocument(id: number, note: string): Promise<Document> {
     const response = await api.post<SingleDocumentResponse>(
       `/documents/${id}/reject`,
@@ -204,9 +99,6 @@ export const documentService = {
     return response.data.data;
   },
 
-  /**
-   * Kembalikan dokumen untuk revisi (untuk approver)
-   */
   async reviseDocument(
     id: number,
     targetUserId: number,
@@ -214,32 +106,62 @@ export const documentService = {
   ): Promise<Document> {
     const response = await api.post<SingleDocumentResponse>(
       `/documents/${id}/revise`,
-      { target_user_id: targetUserId, note },
+      {
+        target_user_id: targetUserId,
+        note,
+      },
     );
     return response.data.data;
   },
 
-  /**
-   * Generate executive summary dari template
-   */
-  async generateExecutiveSummary(
-    documentId: number,
-  ): Promise<{ file_path: string; download_url: string }> {
-    const response = await api.post(
-      `/documents/${documentId}/generate/executive-summary`,
-    );
+  // --- GENERATE FILES ---
+
+  async generateExecutiveSummary(documentId: number) {
+    const response = await api.post<{
+      data: { file_path: string; download_url: string };
+    }>(`/documents/${documentId}/generate/executive-summary`);
     return response.data.data;
   },
 
-  /**
-   * Generate lembar pengesahan dari template
-   */
-  async generateApprovalSheet(
-    documentId: number,
-  ): Promise<{ file_path: string; download_url: string }> {
-    const response = await api.post(
-      `/documents/${documentId}/generate/approval-sheet`,
-    );
+  async generateApprovalSheet(documentId: number) {
+    const response = await api.post<{
+      data: { file_path: string; download_url: string };
+    }>(`/documents/${documentId}/generate/approval-sheet`);
     return response.data.data;
+  },
+
+  // --- UTILITIES ---
+
+  /**
+   * Helper untuk mendownload file binary (PDF/Docx)
+   * Menangani Blob creation dan revocation untuk mencegah memory leak
+   */
+  async downloadFileBlob(url: string, filename: string) {
+    try {
+      const response = await api.get(url, { responseType: 'blob' });
+
+      // Cek apakah server mengembalikan JSON error alih-alih file (Edge case)
+      if (response.data.type === 'application/json') {
+        throw new Error('Gagal mengunduh: File tidak ditemukan atau rusak.');
+      }
+
+      const href = URL.createObjectURL(response.data);
+
+      // Buat elemen anchor invisible
+      const link = document.createElement('a');
+      link.href = href;
+      link.setAttribute('download', filename);
+      document.body.appendChild(link);
+
+      // Trigger click
+      link.click();
+
+      // Cleanup DOM & Memory
+      document.body.removeChild(link);
+      URL.revokeObjectURL(href);
+    } catch (error) {
+      console.error('Download error:', error);
+      throw error; // Lempar error agar bisa ditangkap UI (Toast notif)
+    }
   },
 };

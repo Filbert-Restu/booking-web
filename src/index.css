@@ -1,6 +1,36 @@
 @import 'tailwindcss';
 @import 'tw-animate-css';
 
+/* Docx Preview Styles */
+.docx-wrapper {
+  padding: 30px;
+  background: white;
+  min-height: 100%;
+}
+
+.docx-wrapper section.docx {
+  background: white;
+  margin-bottom: 30px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  padding: 20mm;
+}
+
+.docx-wrapper table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+.docx-wrapper table td,
+.docx-wrapper table th {
+  border: 1px solid #ddd;
+  padding: 8px;
+}
+
+.docx-wrapper img {
+  max-width: 100%;
+  height: auto;
+}
+
 /* --- 1. Konfigurasi Varian Dark Mode --- */
 @custom-variant dark (&:is(.dark *));
 

@@ -11,12 +11,22 @@ import type { Signature } from '@/services/signature.service';
 
 export const Route = createFileRoute('/tanda-tangan')({
   component: RouteComponent,
+  validateSearch: (search: Record<string, unknown>) => {
+    return {
+      return: search.return as string | undefined,
+      documentId: search.documentId as number | undefined,
+      autoApprove: search.autoApprove as boolean | undefined,
+    };
+  },
 });
 
 function RouteComponent() {
   const navigate = useNavigate();
-  const searchParams = useSearch({ from: '/tanda-tangan' });
-  const returnPath = (searchParams as any)?.return || '/';
+  const {
+    return: returnPath = '/',
+    documentId,
+    autoApprove,
+  } = Route.useSearch();
 
   const [signature, setSignature] = useState<Signature | null>(null);
   const [hasChanges, setHasChanges] = useState(false);
@@ -28,8 +38,14 @@ function RouteComponent() {
 
   const handleSaveAndReturn = () => {
     if (signature) {
-      // Navigate back with success
-      navigate({ to: returnPath as any });
+      // Navigate back with success, passing documentId and autoApprove if they exist
+      navigate({
+        to: returnPath as any,
+        search: {
+          documentId,
+          autoApprove,
+        },
+      });
     }
   };
 
@@ -48,9 +64,13 @@ function RouteComponent() {
         </div>
 
         {signature && hasChanges && (
-          <Button onClick={handleSaveAndReturn} size='sm' className='gap-2'>
+          <Button
+            onClick={handleSaveAndReturn}
+            size='sm'
+            className='gap-2 bg-green-600 hover:bg-green-700'
+          >
             <CheckCircle className='h-4 w-4' />
-            Simpan & Kembali
+            {autoApprove ? 'Simpan & Approve Dokumen' : 'Simpan & Kembali'}
           </Button>
         )}
       </div>
@@ -64,27 +84,48 @@ function RouteComponent() {
 
       <div className='space-y-6'>
         {/* Info Box */}
-        <div className='bg-blue-50 border border-blue-200 rounded-lg p-4'>
-          <div className='text-sm text-blue-900'>
-            <p className='font-medium mb-2'>
-              📝 Informasi Tanda Tangan Digital
-            </p>
-            <ul className='list-disc list-inside space-y-1 text-xs'>
-              <li>
-                Tanda tangan ini akan digunakan untuk semua dokumen yang
-                memerlukan persetujuan Anda
-              </li>
-              <li>
-                Anda dapat menggambar tanda tangan atau mengupload file gambar
-              </li>
-              <li>Format yang didukung: PNG, JPG, JPEG (Max 2MB)</li>
-              <li>
-                Pastikan tanda tangan Anda jelas dan sesuai dengan tanda tangan
-                resmi
-              </li>
-            </ul>
+        {autoApprove && documentId ? (
+          <div className='bg-green-50 border border-green-200 rounded-lg p-4'>
+            <div className='text-sm text-green-900'>
+              <p className='font-medium mb-2'>✅ Mode Approval Otomatis</p>
+              <ul className='list-disc list-inside space-y-1 text-xs'>
+                <li>
+                  Setelah Anda mengupload tanda tangan, dokumen akan{' '}
+                  <strong>otomatis diapprove</strong>
+                </li>
+                <li>
+                  Tanda tangan Anda akan tertanam di dokumen yang digenerate
+                </li>
+                <li>Dokumen akan diteruskan ke step persetujuan berikutnya</li>
+                <li className='font-medium text-green-700'>
+                  Klik "Simpan & Kembali" setelah upload untuk approve dokumen
+                </li>
+              </ul>
+            </div>
           </div>
-        </div>
+        ) : (
+          <div className='bg-blue-50 border border-blue-200 rounded-lg p-4'>
+            <div className='text-sm text-blue-900'>
+              <p className='font-medium mb-2'>
+                📝 Informasi Tanda Tangan Digital
+              </p>
+              <ul className='list-disc list-inside space-y-1 text-xs'>
+                <li>
+                  Tanda tangan ini akan digunakan untuk semua dokumen yang
+                  memerlukan persetujuan Anda
+                </li>
+                <li>
+                  Anda dapat menggambar tanda tangan atau mengupload file gambar
+                </li>
+                <li>Format yang didukung: PNG, JPG, JPEG (Max 2MB)</li>
+                <li>
+                  Pastikan tanda tangan Anda jelas dan sesuai dengan tanda
+                  tangan resmi
+                </li>
+              </ul>
+            </div>
+          </div>
+        )}
 
         {/* Signature Upload Component */}
         <SignatureUpload onSignatureUploaded={handleSignatureUploaded} />
@@ -96,12 +137,15 @@ function RouteComponent() {
             onClick={() => navigate({ to: returnPath as any })}
             className='flex-1'
           >
-            Kembali
+            Batal
           </Button>
           {signature && (
-            <Button onClick={handleSaveAndReturn} className='flex-1 gap-2'>
+            <Button
+              onClick={handleSaveAndReturn}
+              className={`flex-1 gap-2 ${autoApprove ? 'bg-green-600 hover:bg-green-700' : ''}`}
+            >
               <Save className='h-4 w-4' />
-              Simpan Perubahan
+              {autoApprove ? 'Simpan & Approve' : 'Simpan Perubahan'}
             </Button>
           )}
         </div>

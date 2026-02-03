@@ -1,0 +1,240 @@
+import { useState, useEffect } from 'react';
+import { useMutation } from '@tanstack/react-query';
+import { useNavigate } from '@tanstack/react-router';
+// ERROR FIX: Gunakan 'import type' untuk interface/type
+import { roomService, type Room } from '@/services/room.service';
+import { documentService } from '@/services/document.service';
+import { useBookingContext } from '@/contexts/BookingContext';
+import type { ReservationContent, BookingFormState } from '@/types/booking';
+
+interface UseBookingFormProps {
+  initialData?: ReservationContent;
+  // ERROR FIX: Hindari 'any', gunakan Record atau interface spesifik jika ada
+  searchParams: Record<string, unknown>;
+  editId?: number;
+  rooms: Room[];
+}
+
+export function useBookingForm({
+  initialData,
+  searchParams,
+  editId,
+  rooms,
+}: UseBookingFormProps) {
+  const navigate = useNavigate();
+  const { updateFormData, formData: contextData } = useBookingContext();
+
+  // --- 1. STATE ---
+  const [form, setForm] = useState<BookingFormState>(() => {
+    // ERROR FIX: Ganti 'any' dengan helper type-safe
+    const val = (
+      key: keyof ReservationContent,
+      contextKey: string,
+      paramKey: string,
+    ): string | number | null => {
+      // 1. Cek Initial Data (DB)
+      if (initialData) {
+        return initialData[key] ?? null;
+      }
+      // 2. Cek Search Params (URL)
+      if (paramKey && searchParams[paramKey] !== undefined) {
+        return String(searchParams[paramKey]);
+      }
+      // 3. Cek Context (State)
+      // Casting contextData ke Record<string, any> aman di sini untuk akses dynamic key
+      const ctx = contextData as Record<string, unknown>;
+      if (contextKey && ctx[contextKey] !== undefined) {
+        return ctx[contextKey] as string | number;
+      }
+      return null;
+    };
+
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const defaultDate = tomorrow.toISOString().split('T')[0];
+
+    return {
+      roomId: Number(val('room_id', 'room_id', 'roomId')) || null,
+      bookingDate: String(
+        val('booking_date', 'booking_date', 'bookingDate') || defaultDate,
+      ),
+      startTime: String(
+        val('start_time', 'start_time', 'startTime') || '09:00',
+      ),
+      endTime: String(val('end_time', 'end_time', 'endTime') || '11:00'),
+      activity: String(val('purpose', 'purpose', 'purpose') || ''),
+      ketua: {
+        nama: String(
+          val('ketua_pelaksana_nama', 'ketua_pelaksana_nama', 'ketuaNama') ||
+            '',
+        ),
+        nim: String(
+          val('ketua_pelaksana_nim', 'ketua_pelaksana_nim', 'ketuaNim') || '',
+        ),
+        hp: String(
+          val('ketua_pelaksana_hp', 'ketua_pelaksana_hp', 'ketuaHp') || '',
+        ),
+      },
+    };
+  });
+
+  // --- 2. HANDLERS ---
+  // ERROR FIX: Hindari 'any' pada value
+  const handleChange = (
+    field: keyof BookingFormState,
+    value: string | number | null,
+  ) => {
+    setForm((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const handleKetuaChange = (field: string, value: string) => {
+    setForm((prev) => ({
+      ...prev,
+      ketua: { ...prev.ketua, [field]: value },
+    }));
+  };
+
+  // --- 3. MUTATIONS (Availability) ---
+  const [availabilityMsg, setAvailabilityMsg] = useState<{
+    msg: string;
+    isError: boolean;
+  } | null>(null);
+
+  const checkAvailabilityMutation = useMutation({
+    mutationFn: async () => {
+      if (!form.roomId || !form.bookingDate) return;
+      return await roomService.checkAvailability(
+        form.roomId,
+        form.bookingDate,
+        form.startTime,
+        form.endTime,
+      );
+    },
+    onSuccess: (res) => {
+      if (res) {
+        setAvailabilityMsg(
+          res.available
+            ? { msg: '✓ Ruangan tersedia', isError: false }
+            : {
+                msg: `✗ Tidak tersedia (${res.conflicts?.length || 0} bentrok)`,
+                isError: true,
+              },
+        );
+      }
+    },
+  });
+
+  // Effect untuk auto-check availability
+  useEffect(() => {
+    if (form.roomId && form.bookingDate && form.startTime && form.endTime) {
+      const timer = setTimeout(() => checkAvailabilityMutation.mutate(), 500);
+      return () => clearTimeout(timer);
+    }
+    // ERROR FIX: Tambahkan checkAvailabilityMutation ke dependency (atau abaikan warning jika yakin stabil)
+  }, [
+    form.roomId,
+    form.bookingDate,
+    form.startTime,
+    form.endTime,
+    checkAvailabilityMutation,
+  ]);
+
+  // --- 4. MUTATION (Submit) ---
+  const submitMutation = useMutation({
+    mutationFn: async () => {
+      // 1. Validasi Availability (Skip jika Edit Mode)
+      // ERROR FIX: Menggunakan 'editId' agar tidak unused
+      if (!editId) {
+        const avail = await roomService.checkAvailability(
+          form.roomId!,
+          form.bookingDate,
+          form.startTime,
+          form.endTime,
+        );
+        if (!avail.available) {
+          throw new Error('Ruangan tidak tersedia pada jam tersebut.');
+        }
+      }
+
+      // 2. Siapkan Data
+      // ERROR FIX: Menggunakan 'rooms' agar tidak unused
+      const selectedRoom = rooms.find((r) => r.id === form.roomId);
+
+      const contentPayload = {
+        room_id: form.roomId!,
+        room_code: selectedRoom?.code || null,
+        room_name: selectedRoom?.name || null,
+        booking_date: form.bookingDate,
+        start_time: form.startTime,
+        end_time: form.endTime,
+        purpose: form.activity,
+        ketua_pelaksana_nama: form.ketua.nama,
+        ketua_pelaksana_nim: form.ketua.nim,
+        ketua_pelaksana_hp: form.ketua.hp,
+        peminjam_nama: localStorage.getItem('userName') || 'Pemohon',
+      };
+
+      // 3. Create or Update Logic
+      // ERROR FIX: Menggunakan 'documentService' agar tidak unused
+      if (editId) {
+        // UPDATE
+        return await documentService.updateDocument(editId, {
+          title: `Peminjaman ${selectedRoom?.name || 'Ruang'} - ${form.bookingDate}`,
+          content: contentPayload,
+        });
+      } else {
+        // CREATE
+        const userUnitCategory =
+          localStorage.getItem('userUnitCategory') || 'HMD';
+        const workflowMap: Record<string, number> = {
+          HMD: 1,
+          BEM: 2,
+          SENAT: 3,
+          UKM: 4,
+        };
+        const workflowId = workflowMap[userUnitCategory] || 1;
+
+        return await documentService.createDocument({
+          workflow_id: workflowId,
+          title: `Peminjaman ${selectedRoom?.name || 'Ruang'} - ${form.bookingDate}`,
+          content: contentPayload,
+          meta_data: { type: 'room_reservation', step: 'detail_tempat' },
+        });
+      }
+    },
+    onSuccess: (doc) => {
+      // ERROR FIX: Type assertion ke ReservationContent
+      const content = doc.content as unknown as ReservationContent;
+
+      // Update Context
+      updateFormData({
+        document_id: doc.id,
+        room_id: content.room_id,
+        room_code: content.room_code,
+        booking_date: content.booking_date,
+        start_time: content.start_time,
+        end_time: content.end_time,
+        purpose: content.purpose,
+        ketua_pelaksana_nama: content.ketua_pelaksana_nama,
+        ketua_pelaksana_nim: content.ketua_pelaksana_nim,
+        ketua_pelaksana_hp: content.ketua_pelaksana_hp,
+      });
+
+      // Navigate
+      navigate({ to: '/peminjam/pinjam/proposal' });
+    },
+    onError: (err: Error) => {
+      // ERROR FIX: Spesifikkan tipe Error
+      alert(err.message || 'Gagal menyimpan data');
+    },
+  });
+
+  return {
+    form,
+    handleChange,
+    handleKetuaChange,
+    availabilityMsg,
+    submitMutation,
+    checkAvailabilityMutation,
+  };
+}

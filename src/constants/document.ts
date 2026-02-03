@@ -1,0 +1,17 @@
+// src/constants/document.ts
+
+export const DOCUMENT_STATUS = {
+  DRAFT: 'DRAFT',
+  IN_PROGRESS: 'IN_PROGRESS',
+  APPROVED: 'APPROVED',
+  REJECTED: 'REJECTED',
+  REVISED: 'REVISED',
+} as const;
+
+export const DOCUMENT_ACTIONS = {
+  CREATED: 'CREATED',
+  SUBMITTED: 'SUBMITTED',
+  APPROVED: 'APPROVED',
+  REJECTED: 'REJECTED',
+  REVISED: 'REVISED',
+} as const;
