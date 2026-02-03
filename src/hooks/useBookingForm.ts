@@ -219,7 +219,7 @@ export function useBookingForm({
         ketua_pelaksana_nim: content.ketua_pelaksana_nim,
         ketua_pelaksana_hp: content.ketua_pelaksana_hp,
       });
-
+      console.log('Saved content:', content);
       // Navigate
       navigate({ to: '/peminjam/pinjam/proposal' });
     },

@@ -9,7 +9,7 @@ import { documentService } from '@/services/document.service';
 import FileActions from '@/components/FileActions';
 import { DocumentStatusBadge } from '@/components/DocumentStatusBadge';
 import { documentHelpers } from '@/utils/documentUtils';
-import type { Document } from '@/types/document';
+import type { BookingContent, Document } from '@/types/document';
 
 // --- IMPORT TABLE BARU ---
 import { DataTable, type ColumnDef } from '@/shared/components/ui/data-table';
@@ -47,7 +47,6 @@ function RouteComponent() {
       search: {
         editId: undefined,
         roomId: undefined,
-        roomCode: undefined,
         bookingDate: undefined,
         startTime: undefined,
         endTime: undefined,
@@ -60,14 +59,13 @@ function RouteComponent() {
   };
 
   const handleAjukanPinjamWithData = useCallback(
-    (doc: Document) => {
-      const content = doc.content as any;
+    (doc: Document<BookingContent>) => {
+      const content = doc.content;
       navigate({
         to: '/peminjam/pinjam/detail-tempat',
         search: {
           editId: undefined,
           roomId: content?.room_id,
-          roomCode: content?.room_code,
           bookingDate: content?.booking_date,
           startTime: content?.start_time,
           endTime: content?.end_time,

@@ -29,7 +29,6 @@ function RouteComponent() {
         search: {
           editId: undefined,
           roomId: undefined,
-          roomCode: undefined,
           bookingDate: undefined,
           startTime: undefined,
           endTime: undefined,

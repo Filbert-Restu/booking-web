@@ -18,6 +18,21 @@ export interface UserShort {
   };
 }
 
+export interface BookingContent {
+  room_id?: number;
+  booking_date?: string;
+  start_time?: string;
+  end_time?: string;
+  purpose?: string;
+  event_name?: string;
+  ketua_pelaksana_nama?: string;
+  ketua_pelaksana_nim?: string;
+  ketua_pelaksana_hp?: string;
+
+  // Index signature agar tetap kompatibel jika ada field tambahan lain
+  [key: string]: string | number | boolean | null | undefined;
+}
+
 // Log Interface
 export interface DocumentLog {
   id: number;
