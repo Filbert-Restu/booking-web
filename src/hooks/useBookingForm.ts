@@ -174,6 +174,8 @@ export function useBookingForm({
         peminjam_nama: localStorage.getItem('userName') || 'Pemohon',
       };
 
+      console.log('📤 [SAVE] Content payload:', contentPayload);
+
       // 3. Create or Update Logic
       // ERROR FIX: Menggunakan 'documentService' agar tidak unused
       if (editId) {

@@ -213,6 +213,51 @@ function RouteComponent() {
       console.log('⏰ [SUBMIT] start_time:', formData.start_time);
       console.log('⏰ [SUBMIT] end_time:', formData.end_time);
 
+      // CRITICAL: Get booking data from document content if not in formData
+      let bookingData;
+      if (!formData.room_id || !formData.booking_date) {
+        console.warn(
+          '⚠️ [SUBMIT] Booking data not in context, fetching from document...',
+        );
+        const documentDetail = await documentService.getDocument(
+          formData.document_id!,
+        );
+        const content = documentDetail.content as any;
+
+        console.log('📄 [SUBMIT] Document content:', content);
+
+        bookingData = {
+          document_id: formData.document_id!,
+          room_id: content.room_id || formData.room_id!,
+          booking_date: content.booking_date || formData.booking_date!,
+          start_time: content.start_time || formData.start_time!,
+          end_time: content.end_time || formData.end_time!,
+          purpose:
+            content.purpose ||
+            formData.purpose ||
+            formData.event_name ||
+            'Peminjaman Ruangan',
+          special_requirements: content.equipment || formData.equipment,
+          expected_participants: undefined,
+        };
+      } else {
+        bookingData = {
+          document_id: formData.document_id!,
+          room_id: formData.room_id!,
+          booking_date: formData.booking_date!,
+          start_time: formData.start_time!,
+          end_time: formData.end_time!,
+          purpose:
+            formData.purpose || formData.event_name || 'Peminjaman Ruangan',
+          special_requirements: formData.equipment,
+          expected_participants: undefined,
+        };
+      }
+
+      console.log('📤 [SUBMIT] Final booking data:', bookingData);
+
+      console.log('📤 [SUBMIT] Final booking data:', bookingData);
+
       // 1. Check document status first
       console.log('🔍 [SUBMIT] Checking document status...');
       const documentDetail = await documentService.getDocument(
@@ -231,19 +276,7 @@ function RouteComponent() {
         );
       }
 
-      // 2. Create room booking
-      const bookingData = {
-        document_id: formData.document_id!,
-        room_id: formData.room_id!,
-        booking_date: formData.booking_date!,
-        start_time: formData.start_time!,
-        end_time: formData.end_time!,
-        purpose:
-          formData.purpose || formData.event_name || 'Peminjaman Ruangan',
-        special_requirements: formData.equipment,
-        expected_participants: undefined, // Could be added to form if needed
-      };
-
+      // 2. Create room booking with data from document content
       console.log('📤 [SUBMIT] Creating booking with data:', bookingData);
       await bookingService.createBooking(bookingData);
       console.log('✅ [SUBMIT] Booking created successfully');

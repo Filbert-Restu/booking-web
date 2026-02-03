@@ -5,6 +5,8 @@ import type {
   UpdateTemplateDTO,
   ActiveTemplates,
   TemplateType,
+  AvailableField,
+  PlaceholderMetadata,
 } from '@/types/template.types';
 
 interface ApiResponse<T> {
@@ -24,7 +26,7 @@ export const documentTemplateService = {
   }): Promise<DocumentTemplate[]> {
     const response = await api.get<ApiResponse<DocumentTemplate[]>>(
       '/document-templates',
-      { params }
+      { params },
     );
     return response.data.data;
   },
@@ -34,7 +36,7 @@ export const documentTemplateService = {
    */
   async getTemplate(id: number): Promise<DocumentTemplate> {
     const response = await api.get<ApiResponse<DocumentTemplate>>(
-      `/document-templates/${id}`
+      `/document-templates/${id}`,
     );
     return response.data.data;
   },
@@ -44,7 +46,7 @@ export const documentTemplateService = {
    */
   async getActiveTemplates(): Promise<ActiveTemplates> {
     const response = await api.get<ApiResponse<ActiveTemplates>>(
-      '/document-templates/active'
+      '/document-templates/active',
     );
     return response.data.data;
   },
@@ -57,11 +59,11 @@ export const documentTemplateService = {
     formData.append('template_type', data.template_type);
     formData.append('template_name', data.template_name);
     formData.append('file', data.file);
-    
+
     if (data.description) {
       formData.append('description', data.description);
     }
-    
+
     if (data.set_as_active !== undefined) {
       formData.append('set_as_active', data.set_as_active ? '1' : '0');
     }
@@ -73,7 +75,7 @@ export const documentTemplateService = {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
-      }
+      },
     );
     return response.data.data;
   },
@@ -83,18 +85,18 @@ export const documentTemplateService = {
    */
   async updateTemplate(
     id: number,
-    data: UpdateTemplateDTO
+    data: UpdateTemplateDTO,
   ): Promise<DocumentTemplate> {
     const formData = new FormData();
-    
+
     if (data.template_name) {
       formData.append('template_name', data.template_name);
     }
-    
+
     if (data.file) {
       formData.append('file', data.file);
     }
-    
+
     if (data.description !== undefined) {
       formData.append('description', data.description);
     }
@@ -106,7 +108,7 @@ export const documentTemplateService = {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
-      }
+      },
     );
     return response.data.data;
   },
@@ -123,7 +125,7 @@ export const documentTemplateService = {
    */
   async activateTemplate(id: number): Promise<DocumentTemplate> {
     const response = await api.patch<ApiResponse<DocumentTemplate>>(
-      `/document-templates/${id}/activate`
+      `/document-templates/${id}/activate`,
     );
     return response.data.data;
   },
@@ -152,5 +154,33 @@ export const documentTemplateService = {
    */
   getDownloadUrl(id: number): string {
     return `${api.defaults.baseURL}/document-templates/${id}/download`;
+  },
+
+  /**
+   * Get all available fields for placeholders
+   */
+  async getAvailableFields(): Promise<Record<string, AvailableField>> {
+    const response = await api.get<
+      ApiResponse<{
+        all: Record<string, AvailableField>;
+        grouped: any;
+        total: number;
+      }>
+    >('/document-templates/available-fields');
+    return response.data.data.all;
+  },
+
+  /**
+   * Update placeholder metadata for a template
+   */
+  async updatePlaceholderMetadata(
+    id: number,
+    metadata: Record<string, PlaceholderMetadata>,
+  ): Promise<DocumentTemplate> {
+    const response = await api.put<ApiResponse<DocumentTemplate>>(
+      `/document-templates/${id}/placeholder-metadata`,
+      { metadata },
+    );
+    return response.data.data;
   },
 };

@@ -1,6 +1,24 @@
 export type TemplateType = 'executive_summary' | 'lembar_pengesahan';
 export type OrganizationType = 'hmd' | 'bem_ukm' | 'senat';
 
+export interface PlaceholderMetadata {
+  label: string;
+  available: boolean;
+  example?: string | null;
+  category: string;
+  type: string;
+  source?: string | null;
+}
+
+export interface AvailableField {
+  key: string;
+  label: string;
+  source: string;
+  example: string;
+  category: string;
+  type?: string;
+}
+
 export interface DocumentTemplate {
   id: number;
   template_type: TemplateType;
@@ -12,6 +30,8 @@ export interface DocumentTemplate {
   is_active: boolean;
   uploaded_by: number;
   description: string | null;
+  detected_placeholders?: string[] | null;
+  placeholder_metadata?: Record<string, PlaceholderMetadata> | null;
   created_at: string;
   updated_at: string;
   deleted_at: string | null;

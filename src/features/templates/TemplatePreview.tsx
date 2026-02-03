@@ -5,13 +5,18 @@ import { Button } from '@/shared/components/ui/button/button';
 import api from '@/lib/axios';
 
 interface TemplatePreviewProps {
-  file: File | string; // File object atau URL
-  templateId?: number; // Template ID for PDF conversion
+  file: File | null; // File object (for newly selected files)
+  templateId?: number; // Template ID for PDF conversion from existing template
   onDownload?: () => void;
   onPlaceholdersDetected?: (placeholders: string[]) => void;
 }
 
-export function TemplatePreview({ file, templateId, onDownload, onPlaceholdersDetected }: TemplatePreviewProps) {
+export function TemplatePreview({
+  file,
+  templateId,
+  onDownload,
+  onPlaceholdersDetected,
+}: TemplatePreviewProps) {
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const [placeholders, setPlaceholders] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -33,12 +38,22 @@ export function TemplatePreview({ file, templateId, onDownload, onPlaceholdersDe
       setIsLoading(true);
       setError(null);
 
-      // First, try to get PDF preview from backend if templateId is provided
+      // If new file is selected, preview that
+      if (file) {
+        await extractPlaceholders();
+        setIsLoading(false);
+        return;
+      }
+
+      // Otherwise, try to get PDF preview from backend if templateId is provided
       if (templateId && !useFallback) {
         try {
-          const response = await api.get(`/document-templates/${templateId}/preview-pdf`, {
-            responseType: 'blob',
-          });
+          const response = await api.get(
+            `/document-templates/${templateId}/preview-pdf`,
+            {
+              responseType: 'blob',
+            },
+          );
 
           // Create blob URL for PDF
           const blob = new Blob([response.data], { type: 'application/pdf' });
@@ -58,7 +73,6 @@ export function TemplatePreview({ file, templateId, onDownload, onPlaceholdersDe
 
       // Fallback: show message that PDF preview is not available
       await extractPlaceholders();
-      
     } catch (err) {
       console.error('Failed to load preview:', err);
       setError(err instanceof Error ? err.message : 'Gagal memuat preview');
@@ -82,9 +96,9 @@ export function TemplatePreview({ file, templateId, onDownload, onPlaceholdersDe
 
       // Extract placeholders using mammoth
       const result = await mammoth.extractRawText({ arrayBuffer });
-      const placeholderRegex = /\{\{([^}]+)\}\}/g;
-      const matches = result.value.match(placeholderRegex) || [];
-      const uniquePlaceholders = Array.from(new Set(matches));
+      const placeholderRegex = /\$\{([a-zA-Z0-9_]+)\}/g;
+      const matches = [...result.value.matchAll(placeholderRegex)];
+      const uniquePlaceholders = Array.from(new Set(matches.map((m) => m[1])));
       setPlaceholders(uniquePlaceholders);
 
       if (onPlaceholdersDetected) {
@@ -95,14 +109,15 @@ export function TemplatePreview({ file, templateId, onDownload, onPlaceholdersDe
     }
   };
 
-
   if (isLoading) {
     return (
       <div className='flex items-center justify-center h-[800px] bg-gray-50 rounded-lg border-2'>
         <div className='text-center'>
           <FileText className='w-12 h-12 text-gray-400 mx-auto mb-2 animate-pulse' />
           <p className='text-gray-500'>Memuat preview dokumen...</p>
-          <p className='text-xs text-gray-400 mt-1'>Sedang mengkonversi DOCX ke PDF...</p>
+          <p className='text-xs text-gray-400 mt-1'>
+            Sedang mengkonversi DOCX ke PDF...
+          </p>
         </div>
       </div>
     );
@@ -128,14 +143,17 @@ export function TemplatePreview({ file, templateId, onDownload, onPlaceholdersDe
           <div className='flex items-start gap-3'>
             <AlertCircle className='w-5 h-5 text-yellow-600 mt-0.5' />
             <div>
-              <p className='text-sm font-medium text-yellow-900'>Preview PDF Tidak Tersedia</p>
+              <p className='text-sm font-medium text-yellow-900'>
+                Preview PDF Tidak Tersedia
+              </p>
               <p className='text-xs text-yellow-700 mt-1'>
-                Server belum dikonfigurasi untuk konversi PDF. Silakan download file DOCX untuk melihat template.
+                Server belum dikonfigurasi untuk konversi PDF. Silakan download
+                file DOCX untuk melihat template.
               </p>
             </div>
           </div>
         </div>
-        
+
         {placeholders.length > 0 && (
           <div className='bg-blue-50 border border-blue-200 rounded-lg p-4'>
             <div className='flex items-start gap-3'>
@@ -194,7 +212,8 @@ export function TemplatePreview({ file, templateId, onDownload, onPlaceholdersDe
                 ))}
               </div>
               <p className='text-xs text-blue-700'>
-                💡 Placeholder ini akan otomatis diganti dengan data peminjam saat dokumen di-generate
+                💡 Placeholder ini akan otomatis diganti dengan data peminjam
+                saat dokumen di-generate
               </p>
             </div>
           </div>
@@ -209,12 +228,21 @@ export function TemplatePreview({ file, templateId, onDownload, onPlaceholdersDe
               <FileText className='w-6 h-6 text-white' />
             </div>
             <div>
-              <h3 className='font-semibold text-gray-900'>Preview Template (PDF)</h3>
-              <p className='text-xs text-gray-500'>Dokumen telah dikonversi ke PDF</p>
+              <h3 className='font-semibold text-gray-900'>
+                Preview Template (PDF)
+              </h3>
+              <p className='text-xs text-gray-500'>
+                Dokumen telah dikonversi ke PDF
+              </p>
             </div>
           </div>
           {onDownload && (
-            <Button variant='outline' size='sm' onClick={onDownload} className='shadow-sm'>
+            <Button
+              variant='outline'
+              size='sm'
+              onClick={onDownload}
+              className='shadow-sm'
+            >
               <Download className='w-4 h-4 mr-2' />
               Download DOCX
             </Button>
@@ -241,11 +269,13 @@ export function TemplatePreview({ file, templateId, onDownload, onPlaceholdersDe
           <Eye className='w-4 h-4 text-green-600 mt-0.5 flex-shrink-0' />
           <div>
             <p className='text-xs text-green-700 leading-relaxed'>
-              <strong>✅ Preview PDF:</strong> Dokumen template telah dikonversi dari DOCX ke PDF untuk preview yang akurat.
-              Ini adalah tampilan yang sama dengan hasil akhir dokumen yang akan di-generate.
+              <strong>✅ Preview PDF:</strong> Dokumen template telah dikonversi
+              dari DOCX ke PDF untuk preview yang akurat. Ini adalah tampilan
+              yang sama dengan hasil akhir dokumen yang akan di-generate.
             </p>
             <p className='text-xs text-green-600 mt-1'>
-              Placeholder akan diganti otomatis dengan data peminjam saat dokumen dibuat.
+              Placeholder akan diganti otomatis dengan data peminjam saat
+              dokumen dibuat.
             </p>
           </div>
         </div>

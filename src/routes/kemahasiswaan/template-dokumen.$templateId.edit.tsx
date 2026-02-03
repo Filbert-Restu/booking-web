@@ -1,7 +1,6 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { AxiosError } from 'axios';
-import mammoth from 'mammoth';
 import {
   FileText,
   Download,
@@ -14,12 +13,12 @@ import { Button } from '@/shared/components/ui/button/button';
 import { Input } from '@/shared/components/ui/input';
 import { Textarea } from '@/shared/components/ui/textarea';
 import { TemplatePreview } from '@/features/templates/TemplatePreview';
-import { PlaceholderManager } from '@/features/templates/PlaceholderManager';
+import { PlaceholderStatus } from '@/features/templates/PlaceholderStatus';
 import { documentTemplateService } from '@/services/document-template.service';
 import type { DocumentTemplate } from '@/types/template.types';
 
 export const Route = createFileRoute(
-  '/kemahasiswaan/template-dokumen/$templateId/edit'
+  '/kemahasiswaan/template-dokumen/$templateId/edit',
 )({
   component: RouteComponent,
 });
@@ -27,19 +26,22 @@ export const Route = createFileRoute(
 function RouteComponent() {
   const navigate = useNavigate();
   const { templateId } = Route.useParams();
-  
+
   const [template, setTemplate] = useState<DocumentTemplate | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  
+
   // Form states
   const [formData, setFormData] = useState({
     template_name: '',
     description: '',
   });
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [detectedPlaceholders, setDetectedPlaceholders] = useState<string[]>([]);
-  
+  const [detectedPlaceholders, setDetectedPlaceholders] = useState<string[]>(
+    [],
+  );
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   // Save states
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
@@ -53,7 +55,9 @@ function RouteComponent() {
     try {
       setIsLoading(true);
       setError(null);
-      const data = await documentTemplateService.getTemplate(Number(templateId));
+      const data = await documentTemplateService.getTemplate(
+        Number(templateId),
+      );
       setTemplate(data);
       setFormData({
         template_name: data.template_name,
@@ -78,7 +82,7 @@ function RouteComponent() {
         'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
         'application/msword',
       ];
-      
+
       if (!validTypes.includes(file.type)) {
         setSaveError('File harus berformat .docx atau .doc');
         setSelectedFile(null);
@@ -116,16 +120,17 @@ function RouteComponent() {
       });
 
       setSaveSuccess(true);
-      
+
       // Refresh template data
       await fetchTemplate();
-      
+
       // Clear file input if file was uploaded
       if (selectedFile) {
         setSelectedFile(null);
-        // Reset file input
-        const fileInput = document.getElementById('file-input') as HTMLInputElement;
-        if (fileInput) fileInput.value = '';
+        // Reset file input using ref
+        if (fileInputRef.current) {
+          fileInputRef.current.value = '';
+        }
       }
 
       // Auto-hide success message after 3 seconds
@@ -137,7 +142,9 @@ function RouteComponent() {
         if (errors) {
           setSaveError(Object.values(errors).flat().join(', '));
         } else {
-          setSaveError(err.response?.data?.message || 'Gagal menyimpan perubahan');
+          setSaveError(
+            err.response?.data?.message || 'Gagal menyimpan perubahan',
+          );
         }
       } else {
         setSaveError('Gagal menyimpan perubahan');
@@ -165,7 +172,7 @@ function RouteComponent() {
     try {
       await documentTemplateService.downloadTemplate(
         template.id,
-        `${template.template_name}.docx`
+        `${template.template_name}.docx`,
       );
     } catch (err) {
       console.error('Download failed:', err);
@@ -178,7 +185,9 @@ function RouteComponent() {
   };
 
   const getTemplateTypeLabel = (type: string) => {
-    return type === 'executive_summary' ? 'Executive Summary' : 'Lembar Pengesahan';
+    return type === 'executive_summary'
+      ? 'Executive Summary'
+      : 'Lembar Pengesahan';
   };
 
   if (isLoading) {
@@ -196,7 +205,9 @@ function RouteComponent() {
     return (
       <div className='flex items-center justify-center h-64'>
         <div className='text-center'>
-          <p className='text-red-500 mb-4'>{error || 'Template tidak ditemukan'}</p>
+          <p className='text-red-500 mb-4'>
+            {error || 'Template tidak ditemukan'}
+          </p>
           <Button onClick={handleBack}>
             <ArrowLeft className='w-4 h-4 mr-2' />
             Kembali
@@ -218,11 +229,12 @@ function RouteComponent() {
           <div>
             <h1 className='text-2xl font-bold text-gray-900'>Edit Template</h1>
             <p className='text-gray-600 mt-1'>
-              {getTemplateTypeLabel(template.template_type)} • v{template.version}
+              {getTemplateTypeLabel(template.template_type)} • v
+              {template.version}
             </p>
           </div>
         </div>
-        
+
         <div className='flex items-center gap-2'>
           {!template.is_active && (
             <Button variant='outline' onClick={handleActivate}>
@@ -269,7 +281,7 @@ function RouteComponent() {
           {/* Basic Info */}
           <div className='bg-white border rounded-lg p-6'>
             <h2 className='text-lg font-semibold mb-4'>Informasi Template</h2>
-            
+
             <div className='space-y-4'>
               <div>
                 <label className='text-sm font-medium mb-2 block'>
@@ -285,7 +297,9 @@ function RouteComponent() {
               </div>
 
               <div>
-                <label className='text-sm font-medium mb-2 block'>Deskripsi</label>
+                <label className='text-sm font-medium mb-2 block'>
+                  Deskripsi
+                </label>
                 <Textarea
                   value={formData.description}
                   onChange={(e) =>
@@ -301,6 +315,7 @@ function RouteComponent() {
                   Ganti File Template
                 </label>
                 <Input
+                  ref={fileInputRef}
                   id='file-input'
                   type='file'
                   accept='.doc,.docx,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document'
@@ -319,23 +334,25 @@ function RouteComponent() {
 
               <div className='pt-4 border-t'>
                 <div className='text-xs text-gray-500 space-y-1'>
-                  <p><strong>Diupload oleh:</strong> {template.uploader?.name}</p>
-                  <p><strong>Tanggal upload:</strong> {new Date(template.created_at).toLocaleDateString('id-ID')}</p>
-                  <p><strong>Terakhir diupdate:</strong> {new Date(template.updated_at).toLocaleDateString('id-ID')}</p>
+                  <p>
+                    <strong>Diupload oleh:</strong> {template.uploader?.name}
+                  </p>
+                  <p>
+                    <strong>Tanggal upload:</strong>{' '}
+                    {new Date(template.created_at).toLocaleDateString('id-ID')}
+                  </p>
+                  <p>
+                    <strong>Terakhir diupdate:</strong>{' '}
+                    {new Date(template.updated_at).toLocaleDateString('id-ID')}
+                  </p>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Placeholder Manager */}
+          {/* Placeholder Status */}
           <div className='bg-white border rounded-lg p-6'>
-            <PlaceholderManager
-              placeholders={detectedPlaceholders}
-              onSave={(mappings) => {
-                console.log('Placeholder mappings saved:', mappings);
-                alert('Dokumentasi placeholder berhasil disimpan!');
-              }}
-            />
+            <PlaceholderStatus template={template} onUpdate={fetchTemplate} />
           </div>
         </div>
 
@@ -345,12 +362,9 @@ function RouteComponent() {
             <div className='flex items-center justify-between mb-4'>
               <h2 className='text-lg font-semibold'>Preview Template</h2>
             </div>
-            
+
             <TemplatePreview
-              file={
-                selectedFile ||
-                documentTemplateService.getDownloadUrl(template.id)
-              }
+              file={selectedFile}
               templateId={template.id}
               onDownload={handleDownload}
               onPlaceholdersDetected={setDetectedPlaceholders}
