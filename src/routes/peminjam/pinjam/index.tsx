@@ -37,6 +37,7 @@ function RouteComponent() {
     refetchInterval: 30000,
     select: (res) => {
       const myDocs = res.my_documents || [];
+      console.log('📄 My documents from API:', myDocs);
       
       // Deduplicate berdasarkan kombinasi unique: room_id + booking_date + start_time + end_time
       // Prioritas: IN_PROGRESS > DRAFT (status reservasi)
@@ -62,7 +63,9 @@ function RouteComponent() {
         }
       });
       
-      return Array.from(uniqueMap.values());
+      const result = Array.from(uniqueMap.values());
+      console.log('📄 After deduplication:', result);
+      return result;
     },
   });
 
@@ -190,9 +193,14 @@ function RouteComponent() {
         className: 'w-[11%]',
         cell: (doc) => {
           if (doc.status === 'IN_PROGRESS') {
+            console.log('🔍 IN_PROGRESS doc:', doc);
+            console.log('🔍 currentHolder:', doc.currentHolder);
+            console.log('🔍 role:', doc.currentHolder?.role);
+            const holderName = documentHelpers.getCurrentHolder(doc);
+            console.log('🔍 holderName from helper:', holderName);
             return (
               <span className='text-sm text-gray-700'>
-                {documentHelpers.getCurrentHolder(doc)}
+                Dokumen sedang di <span className='font-semibold'>{holderName}</span>
               </span>
             );
           }
@@ -206,9 +214,17 @@ function RouteComponent() {
               </button>
             );
           }
-          if (doc.status === 'REVISED') {
+          if (doc.status === 'REVISED' || doc.status === 'REJECTED') {
             return (
-              <span className='text-sm text-orange-600'>Perlu revisi</span>
+              <div className='flex flex-col gap-1'>
+                <span className='text-sm text-orange-600'>Perlu revisi</span>
+                <button
+                  onClick={() => handleAjukanPinjamWithData(doc)}
+                  className='text-sm text-blue-600 hover:text-blue-800 hover:underline font-medium'
+                >
+                  Ajukan Kembali
+                </button>
+              </div>
             );
           }
           return <span className='text-sm text-gray-400'>-</span>;
