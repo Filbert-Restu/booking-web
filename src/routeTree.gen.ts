@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as TandaTanganRouteImport } from './routes/tanda-tangan'
+import { Route as SignDocumentRouteImport } from './routes/sign-document'
 import { Route as RegisterRouteImport } from './routes/register'
 import { Route as PreviewDokumenRouteImport } from './routes/preview-dokumen'
 import { Route as LoginOptionRouteImport } from './routes/login-option'
@@ -71,6 +72,11 @@ import { Route as KemahasiswaanTemplateDokumenTemplateIdEditRouteImport } from '
 const TandaTanganRoute = TandaTanganRouteImport.update({
   id: '/tanda-tangan',
   path: '/tanda-tangan',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SignDocumentRoute = SignDocumentRouteImport.update({
+  id: '/sign-document',
+  path: '/sign-document',
   getParentRoute: () => rootRouteImport,
 } as any)
 const RegisterRoute = RegisterRouteImport.update({
@@ -389,6 +395,7 @@ export interface FileRoutesByFullPath {
   '/login-option': typeof LoginOptionRoute
   '/preview-dokumen': typeof PreviewDokumenRoute
   '/register': typeof RegisterRoute
+  '/sign-document': typeof SignDocumentRoute
   '/tanda-tangan': typeof TandaTanganRoute
   '/dosen-pendamping/riwayat-persetujuan': typeof DosenPendampingRiwayatPersetujuanRoute
   '/kemahasiswaan/riwayat-persetujuan': typeof KemahasiswaanRiwayatPersetujuanRoute
@@ -440,6 +447,7 @@ export interface FileRoutesByTo {
   '/login-option': typeof LoginOptionRoute
   '/preview-dokumen': typeof PreviewDokumenRoute
   '/register': typeof RegisterRoute
+  '/sign-document': typeof SignDocumentRoute
   '/tanda-tangan': typeof TandaTanganRoute
   '/dosen-pendamping/riwayat-persetujuan': typeof DosenPendampingRiwayatPersetujuanRoute
   '/kemahasiswaan/riwayat-persetujuan': typeof KemahasiswaanRiwayatPersetujuanRoute
@@ -501,6 +509,7 @@ export interface FileRoutesById {
   '/login-option': typeof LoginOptionRoute
   '/preview-dokumen': typeof PreviewDokumenRoute
   '/register': typeof RegisterRoute
+  '/sign-document': typeof SignDocumentRoute
   '/tanda-tangan': typeof TandaTanganRoute
   '/dosen-pendamping/riwayat-persetujuan': typeof DosenPendampingRiwayatPersetujuanRoute
   '/kemahasiswaan/riwayat-persetujuan': typeof KemahasiswaanRiwayatPersetujuanRoute
@@ -563,6 +572,7 @@ export interface FileRouteTypes {
     | '/login-option'
     | '/preview-dokumen'
     | '/register'
+    | '/sign-document'
     | '/tanda-tangan'
     | '/dosen-pendamping/riwayat-persetujuan'
     | '/kemahasiswaan/riwayat-persetujuan'
@@ -614,6 +624,7 @@ export interface FileRouteTypes {
     | '/login-option'
     | '/preview-dokumen'
     | '/register'
+    | '/sign-document'
     | '/tanda-tangan'
     | '/dosen-pendamping/riwayat-persetujuan'
     | '/kemahasiswaan/riwayat-persetujuan'
@@ -674,6 +685,7 @@ export interface FileRouteTypes {
     | '/login-option'
     | '/preview-dokumen'
     | '/register'
+    | '/sign-document'
     | '/tanda-tangan'
     | '/dosen-pendamping/riwayat-persetujuan'
     | '/kemahasiswaan/riwayat-persetujuan'
@@ -735,6 +747,7 @@ export interface RootRouteChildren {
   LoginOptionRoute: typeof LoginOptionRoute
   PreviewDokumenRoute: typeof PreviewDokumenRoute
   RegisterRoute: typeof RegisterRoute
+  SignDocumentRoute: typeof SignDocumentRoute
   TandaTanganRoute: typeof TandaTanganRoute
 }
 
@@ -745,6 +758,13 @@ declare module '@tanstack/react-router' {
       path: '/tanda-tangan'
       fullPath: '/tanda-tangan'
       preLoaderRoute: typeof TandaTanganRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sign-document': {
+      id: '/sign-document'
+      path: '/sign-document'
+      fullPath: '/sign-document'
+      preLoaderRoute: typeof SignDocumentRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/register': {
@@ -1340,6 +1360,7 @@ const rootRouteChildren: RootRouteChildren = {
   LoginOptionRoute: LoginOptionRoute,
   PreviewDokumenRoute: PreviewDokumenRoute,
   RegisterRoute: RegisterRoute,
+  SignDocumentRoute: SignDocumentRoute,
   TandaTanganRoute: TandaTanganRoute,
 }
 export const routeTree = rootRouteImport

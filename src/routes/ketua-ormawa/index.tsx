@@ -155,9 +155,8 @@ function RouteComponent() {
             to: '/tanda-tangan',
             search: {
               return: '/ketua-ormawa',
-              documentId: id,
               autoApprove: false,
-            },
+            } as any,
           });
         }
         return;
@@ -208,6 +207,19 @@ function RouteComponent() {
 
   const handleOpenDoc = async (payload: DocActionPayload) => {
     console.log('handleOpenDoc called with:', payload);
+
+    if (payload.mode === 'sign') {
+      // Navigate to sign document page
+      navigate({
+        to: '/sign-document',
+        search: {
+          documentId: payload.booking.id,
+          return: '/ketua-ormawa',
+          autoApprove: true,
+        },
+      });
+      return;
+    }
 
     if (payload.mode === 'preview') {
       // Preview: open PDF in modal - always use approval-sheet for ketua-ormawa

@@ -30,7 +30,7 @@ const rolePathMap: Record<string, string> = {
   'Wakil Dekan 1': '/wadek1/',
   'Kemahasiswaan': '/kemahasiswaan/',
   'Sumber Daya': '/sumber-daya/',
-  'Dosen Pendamping Himpunan': '/ketua-departemen/',
+  'Dosen Pendamping Himpunan': '/dosen-pendamping/',
   'Ketua Departemen': '/ketua-departemen/',
   'Ketua Ormawa': '/ketua-ormawa/',
   'Senat': '/senat/', // Senat punya route sendiri

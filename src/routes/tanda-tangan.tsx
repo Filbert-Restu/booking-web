@@ -1,9 +1,8 @@
 import {
   createFileRoute,
   useNavigate,
-  useSearch,
 } from '@tanstack/react-router';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { ArrowLeft, Save, CheckCircle } from 'lucide-react';
 import { Button } from '@/shared/components/ui/button/button';
 import { SignatureUpload } from '@/shared/components/common/SignatureUpload';
@@ -14,7 +13,6 @@ export const Route = createFileRoute('/tanda-tangan')({
   validateSearch: (search: Record<string, unknown>) => {
     return {
       return: search.return as string | undefined,
-      documentId: search.documentId as number | undefined,
       autoApprove: search.autoApprove as boolean | undefined,
     };
   },
@@ -24,7 +22,6 @@ function RouteComponent() {
   const navigate = useNavigate();
   const {
     return: returnPath = '/',
-    documentId,
     autoApprove,
   } = Route.useSearch();
 
@@ -38,13 +35,12 @@ function RouteComponent() {
 
   const handleSaveAndReturn = () => {
     if (signature) {
-      // Navigate back with success, passing documentId and autoApprove if they exist
+      // Navigate back with success
       navigate({
         to: returnPath as any,
         search: {
-          documentId,
           autoApprove,
-        },
+        } as any,
       });
     }
   };
@@ -84,7 +80,7 @@ function RouteComponent() {
 
       <div className='space-y-6'>
         {/* Info Box */}
-        {autoApprove && documentId ? (
+        {autoApprove ? (
           <div className='bg-green-50 border border-green-200 rounded-lg p-4'>
             <div className='text-sm text-green-900'>
               <p className='font-medium mb-2'>✅ Mode Approval Otomatis</p>
