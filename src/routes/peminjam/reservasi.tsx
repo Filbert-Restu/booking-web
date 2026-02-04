@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Clock, Calendar, AlertCircle } from 'lucide-react';
 import { AxiosError } from 'axios';
 
@@ -56,18 +56,22 @@ function RouteComponent() {
 	const [error, setError] = useState<string | null>(null);
 	const [checkingAvailability, setCheckingAvailability] = useState(false);
 	const [availabilityMessage, setAvailabilityMessage] = useState<string | null>(null);
+	const [dateValidationMsg, setDateValidationMsg] = useState<string | null>(null);
 
-	const [startTime, setStartTime] = useState('09:00');
-	const [endTime, setEndTime] = useState('11:00');
-	const [bookingDate, setBookingDate] = useState(() => {
-		const tomorrow = new Date();
-		tomorrow.setDate(tomorrow.getDate() + 1);
-		return tomorrow.toISOString().split('T')[0];
-	});
+	const [startTime, setStartTime] = useState('');
+	const [endTime, setEndTime] = useState('');
+	const [bookingDate, setBookingDate] = useState('');
 	const [activity, setActivity] = useState('');
 	const [ketuaPelaksanaNama, setKetuaPelaksanaNama] = useState('');
 	const [ketuaPelaksanaNim, setKetuaPelaksanaNim] = useState('');
 	const [ketuaPelaksanaHp, setKetuaPelaksanaHp] = useState('');
+
+	// Check if selected date is Saturday
+	const isSaturday = useMemo(() => {
+		if (!bookingDate) return false;
+		const d = new Date(bookingDate + 'T00:00:00');
+		return d.getDay() === 6; // Saturday === 6
+	}, [bookingDate]);
 
 	// Auto-fill form from query params (from Riwayat Pengajuan)
 	useEffect(() => {
@@ -97,6 +101,17 @@ function RouteComponent() {
 			setKetuaPelaksanaHp(searchParams.ketuaHp);
 		}
 	}, [searchParams]);
+
+	// Update validation message when date changes
+	useEffect(() => {
+		if (!bookingDate) {
+			setDateValidationMsg(null);
+		} else if (!isSaturday) {
+			setDateValidationMsg('Peminjaman hanya diperbolehkan pada hari Sabtu');
+		} else {
+			setDateValidationMsg(null);
+		}
+	}, [bookingDate, isSaturday]);
 
 	// Fetch rooms on mount
 	useEffect(() => {
@@ -272,8 +287,8 @@ function RouteComponent() {
 				title: `Peminjaman ${selectedRoom?.name || 'Ruangan'} - ${bookingDate}`,
 				content: {
 					room_id: selectedRoomId,
-					room_code: selectedRoom?.code,
-					room_name: selectedRoom?.name,
+				room_code: selectedRoom?.code || '',
+				room_name: selectedRoom?.name || '',
 					booking_date: bookingDate,
 					start_time: startTime,
 					end_time: endTime,
@@ -293,7 +308,7 @@ function RouteComponent() {
 			updateFormData({
 				document_id: document.id,
 				room_id: selectedRoomId,
-				room_code: selectedRoom?.code,
+				room_code: selectedRoom?.code || '',
 				booking_date: bookingDate,
 				start_time: startTime,
 				end_time: endTime,
@@ -473,13 +488,11 @@ function RouteComponent() {
 											min={new Date().toISOString().split('T')[0]}
 											required
 										/>
-									</div>
-
-									<div className='flex flex-col gap-2'>
-										<div className='flex items-center gap-2 text-sm text-gray-600'>
-											<Clock className='w-4 h-4' />
-											<span>Waktu</span>
-										</div>
+							{dateValidationMsg && (
+								<div className='text-sm text-red-600 mt-1'>
+									{dateValidationMsg}
+								</div>
+							)}
 										<div className='flex items-center gap-2 w-full'>
 											<Input
 												type='time'
@@ -488,7 +501,7 @@ function RouteComponent() {
 												className='flex-1 min-w-0'
 												required
 											/>
-											<span className='text-sm text-gray-500 flex-shrink-0'>-</span>
+											<span className='text-sm text-gray-500 shrink-0'>-</span>
 											<Input
 												type='time'
 												value={endTime}
@@ -534,7 +547,7 @@ function RouteComponent() {
 								<Button
 									type='submit'
 									className='mt-2'
-									disabled={loading || checkingAvailability || availabilityMessage?.startsWith('✗')}
+									disabled={loading || checkingAvailability || availabilityMessage?.startsWith('✗') || !isSaturday}
 								>
 									{loading ? 'Memproses...' : 'Reservasi'}
 								</Button>

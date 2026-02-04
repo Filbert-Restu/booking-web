@@ -49,19 +49,15 @@ export function useBookingForm({
       return null;
     };
 
-    const tomorrow = new Date();
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    const defaultDate = tomorrow.toISOString().split('T')[0];
-
     return {
       roomId: Number(val('room_id', 'room_id', 'roomId')) || null,
       bookingDate: String(
-        val('booking_date', 'booking_date', 'bookingDate') || defaultDate,
+        val('booking_date', 'booking_date', 'bookingDate') || '',
       ),
       startTime: String(
-        val('start_time', 'start_time', 'startTime') || '09:00',
+        val('start_time', 'start_time', 'startTime') || '',
       ),
-      endTime: String(val('end_time', 'end_time', 'endTime') || '11:00'),
+      endTime: String(val('end_time', 'end_time', 'endTime') || ''),
       activity: String(val('purpose', 'purpose', 'purpose') || ''),
       ketua: {
         nama: String(
