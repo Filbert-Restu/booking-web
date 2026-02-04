@@ -11,9 +11,19 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/shared/components/ui/select';
-import { AlertCircle } from 'lucide-react';
+import { AlertCircle, CalendarIcon } from 'lucide-react';
+import { Calendar } from '@/shared/components/ui/calendar';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/shared/components/ui/popover';
+import { format } from 'date-fns';
+import { id } from 'date-fns/locale';
+import { cn } from '@/shared/lib/utils';
 
 // --- IMPORTS BARU ---
+import React, { useMemo, useState } from 'react';
 import { roomService, type Room } from '@/services/room.service';
 import { documentService } from '@/services/document.service';
 import { useBookingForm } from '@/hooks/useBookingForm';
@@ -119,6 +129,55 @@ function BookingForm(props: BookingFormProps) {
     submitMutation,
   } = useBookingForm(props);
 
+  const [dateValidationMsg, setDateValidationMsg] = useState<string | null>(
+    null,
+  );
+  const [timeValidationMsg, setTimeValidationMsg] = useState<string | null>(
+    null,
+  );
+
+  const isSaturday = useMemo(() => {
+    if (!form.bookingDate) return false;
+    const d = new Date(form.bookingDate + 'T00:00:00');
+    return d.getDay() === 6; // Saturday === 6
+  }, [form.bookingDate]);
+
+  const isTimeWindowValid = useMemo(() => {
+    if (!form.startTime || !form.endTime) return false;
+    const tRe = /^\d{2}:\d{2}$/;
+    if (!tRe.test(form.startTime) || !tRe.test(form.endTime)) return false;
+    const [sh, sm] = form.startTime.split(':').map(Number);
+    const [eh, em] = form.endTime.split(':').map(Number);
+    const start = sh * 60 + sm;
+    const end = eh * 60 + em;
+    const open = 9 * 60;
+    const close = 17 * 60;
+    return start >= open && end <= close && end > start;
+  }, [form.startTime, form.endTime]);
+
+  // Update validation messages
+  React.useEffect(() => {
+    if (!form.bookingDate) {
+      setDateValidationMsg(null);
+    } else if (!isSaturday) {
+      setDateValidationMsg('Peminjaman hanya diperbolehkan pada hari Sabtu');
+    } else {
+      setDateValidationMsg(null);
+    }
+  }, [form.bookingDate, isSaturday]);
+
+  React.useEffect(() => {
+    if (!form.startTime && !form.endTime) {
+      setTimeValidationMsg(null);
+    } else if (!isTimeWindowValid) {
+      setTimeValidationMsg(
+        'Waktu harus antara 09:00 dan 17:00 dan waktu selesai harus setelah mulai',
+      );
+    } else {
+      setTimeValidationMsg(null);
+    }
+  }, [form.startTime, form.endTime, isTimeWindowValid]);
+
   const selectedRoom = props.rooms.find((r) => r.id === form.roomId);
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -208,12 +267,69 @@ function BookingForm(props: BookingFormProps) {
           <div className='grid grid-cols-1 md:grid-cols-2 gap-4 border-t pt-3'>
             <div>
               <label className='text-sm'>Tanggal</label>
-              <Input
-                type='date'
-                value={form.bookingDate}
-                onChange={(e) => handleChange('bookingDate', e.target.value)}
-                required
-              />
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant={'outline'}
+                    className={cn(
+                      'w-full justify-start text-left font-normal',
+                      !form.bookingDate && 'text-muted-foreground',
+                    )}
+                  >
+                    <CalendarIcon className='mr-2 h-4 w-4' />
+                    {form.bookingDate ? (
+                      format(new Date(form.bookingDate), 'EEEE, dd MMMM yyyy', {
+                        locale: id,
+                      })
+                    ) : (
+                      <span>Pilih hari Sabtu...</span>
+                    )}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className='w-auto p-0' align='start'>
+                  <Calendar
+                    mode='single'
+                    selected={
+                      form.bookingDate ? new Date(form.bookingDate) : undefined
+                    }
+                    onSelect={(date: Date | undefined) => {
+                      if (date) {
+                        // Format date ke string 'YYYY-MM-DD' untuk disimpan di state
+                        // Perlu penyesuaian timezone agar tidak bergeser hari
+                        const offset = date.getTimezoneOffset();
+                        const adjustedDate = new Date(
+                          date.getTime() - offset * 60 * 1000,
+                        );
+                        const dateString = adjustedDate
+                          .toISOString()
+                          .split('T')[0];
+
+                        handleChange('bookingDate', dateString);
+                        setDateValidationMsg(null); // Reset error jika ada
+                      } else {
+                        handleChange('bookingDate', '');
+                      }
+                    }}
+                    // LOGIKA KUNCI DISINI:
+                    disabled={(date: Date) => {
+                      // 1. Disable jika BUKAN hari Sabtu (0=Minggu, 6=Sabtu)
+                      const isNotSaturday = date.getDay() !== 6;
+
+                      // 2. Disable jika tanggal sudah lewat (kemarin)
+                      const isPast =
+                        date < new Date(new Date().setHours(0, 0, 0, 0));
+
+                      return isNotSaturday || isPast;
+                    }}
+                    initialFocus
+                  />
+                </PopoverContent>
+              </Popover>
+              {dateValidationMsg && (
+                <div className='text-sm text-red-600 mt-1'>
+                  {dateValidationMsg}
+                </div>
+              )}
             </div>
             <div className='flex gap-2'>
               <div className='flex-1'>
@@ -222,6 +338,8 @@ function BookingForm(props: BookingFormProps) {
                   type='time'
                   value={form.startTime}
                   onChange={(e) => handleChange('startTime', e.target.value)}
+                  min='09:00'
+                  max='17:00'
                   required
                 />
               </div>
@@ -231,8 +349,15 @@ function BookingForm(props: BookingFormProps) {
                   type='time'
                   value={form.endTime}
                   onChange={(e) => handleChange('endTime', e.target.value)}
+                  min='09:00'
+                  max='17:00'
                   required
                 />
+                {timeValidationMsg && (
+                  <div className='text-sm text-red-600 mt-1'>
+                    {timeValidationMsg}
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -270,7 +395,9 @@ function BookingForm(props: BookingFormProps) {
               type='submit'
               disabled={
                 submitMutation.isPending ||
-                (availabilityMsg?.isError && !props.editId)
+                (availabilityMsg?.isError && !props.editId) ||
+                !isSaturday ||
+                !isTimeWindowValid
               }
             >
               {submitMutation.isPending ? 'Menyimpan...' : 'Selanjutnya'}
