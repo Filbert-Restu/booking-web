@@ -177,15 +177,17 @@ function RouteComponent() {
 			const roomData = await roomService.getRoom(selectedRoomId);
 			setSelectedRoom(roomData.room);
 
-			// Get room schedule for next 7 days
+			// Get room schedule (all future bookings)
 			const endDate = new Date();
-			endDate.setDate(endDate.getDate() + 7);
+			endDate.setFullYear(endDate.getFullYear() + 1); // 1 tahun ke depan
 
 			const scheduleData = await roomService.getRoomSchedule(
 				selectedRoomId,
 				new Date().toISOString().split('T')[0],
 				endDate.toISOString().split('T')[0]
 			);
+			console.log('📊 Bookings received from API:', scheduleData.bookings);
+			console.log('📊 Number of bookings:', scheduleData.bookings?.length);
 			setBookings(scheduleData.bookings);
 		} catch (err) {
 			console.error('Failed to fetch room details:', err);
@@ -406,6 +408,10 @@ function RouteComponent() {
 			.toLowerCase()
 			.includes(search.toLowerCase())
 	);
+
+	console.log('📋 Total bookings:', bookings.length);
+	console.log('📋 Filtered bookings:', filteredBookings.length);
+	console.log('🔍 Search term:', search);
 
 	if (loading && !showRoomDetails) {
 		return (
