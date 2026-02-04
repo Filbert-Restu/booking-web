@@ -88,6 +88,8 @@ function RouteComponent() {
           bookings={approvalItems}
           actorRole={actorRole}
           onOpenDoc={handleOpenDoc}
+          showOrganisasi={true}
+          showProposal={true}
         />
       )}
     </div>

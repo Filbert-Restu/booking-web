@@ -9,7 +9,6 @@ import {
 } from '@/shared/components/ui/table';
 import { Search } from 'lucide-react';
 import { Input } from '@/shared/components/ui/input';
-import { Button } from '@/shared/components/ui/button/button';
 import type { ApprovalItem, ActorRole } from './Approval';
 
 type DocumentType = 'executive-summary' | 'lembar-pengesahan';

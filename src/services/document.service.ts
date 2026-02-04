@@ -9,6 +9,9 @@ import type {
   UpdateDocumentData,
 } from '@/types/document';
 
+// Export Document type for use in other files
+export type { Document };
+
 export const documentService = {
   /**
    * Get list dokumen user
