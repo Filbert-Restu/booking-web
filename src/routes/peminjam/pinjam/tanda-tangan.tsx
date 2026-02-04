@@ -236,6 +236,32 @@ function RouteComponent() {
     try {
       setGeneratingDocs(true);
 
+      // 🔍 DEBUG: Check document content before generating
+      console.log('🔍 [DEBUG] Fetching document to check content...');
+      const documentDetail = await documentService.getDocument(
+        formData.document_id,
+      );
+      console.log(
+        '📄 [DEBUG] Document content:',
+        JSON.stringify(documentDetail.content, null, 2),
+      );
+      console.log(
+        '📊 [DEBUG] Content keys:',
+        Object.keys(documentDetail.content || {}),
+      );
+      console.log(
+        '🎯 [DEBUG] Event name in content:',
+        documentDetail.content?.event_name,
+      );
+      console.log(
+        '🎯 [DEBUG] Event nature in content:',
+        documentDetail.content?.event_nature,
+      );
+      console.log(
+        '🎯 [DEBUG] Objectives in content:',
+        documentDetail.content?.objectives,
+      );
+
       console.log('📄 [GENERATE] Generating documents from templates...');
       console.log('🔑 [GENERATE] User has signature:', signature.id);
 
