@@ -151,12 +151,12 @@ export const menuConfigurations: Record<UserRole, MenuConfig> = {
           {
             title: 'Dashboard',
             url: '/ketua-ormawa',
-            icon: Home,
+            icon: LayoutDashboard,
           },
           {
             title: 'Riwayat Persetujuan',
             url: '/ketua-ormawa/riwayat-persetujuan',
-            icon: ClipboardList,
+            icon: History,
           },
         ],
       },

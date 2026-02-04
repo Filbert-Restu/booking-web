@@ -5,10 +5,6 @@ import { AxiosError } from 'axios';
 import { StatCard } from '@/shared/components/common/StatCard';
 import { Approval } from '@/features/approvals';
 import type { ActorRole } from '@/features/approvals';
-import type {
-  ApprovalDocType,
-  ApprovalModeType,
-} from '../_shared/approval-mock';
 import { documentService } from '@/services/document.service';
 import {
   mapDocumentsToApprovalItems,
@@ -123,30 +119,11 @@ function RouteComponent() {
     }
   };
 
-  const handleOpenDoc = (payload: {
-    doc: ApprovalDocType;
-    mode: ApprovalModeType;
-    booking: { id: number };
-  }) => {
-    if (payload.mode === 'preview') {
-      navigate({
-        to: '/preview-dokumen',
-        search: {
-          doc: payload.doc,
-          id: payload.booking.id,
-          return: '/sumber-daya',
-        } as any,
-      });
-    } else if (payload.mode === 'sign') {
-      navigate({
-        to: '/tanda-tangan',
-        search: {
-          doc: payload.doc,
-          id: payload.booking.id,
-          return: '/sumber-daya',
-        } as any,
-      });
-    }
+  const handleOpenDoc = (documentId: number) => {
+    navigate({
+      to: '/sumber-daya/sign-document',
+      search: { documentId }
+    });
   };
 
   if (loading) {

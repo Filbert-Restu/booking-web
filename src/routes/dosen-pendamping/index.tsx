@@ -5,7 +5,6 @@ import { AxiosError } from 'axios';
 import { StatCard } from '@/shared/components/common/StatCard';
 import { Approval } from '@/features/approvals';
 import type { ActorRole } from '@/features/approvals';
-import type { ApprovalDocType, ApprovalModeType } from '../_shared/approval-mock';
 import { documentService } from '@/services/document.service';
 import { mapDocumentsToApprovalItems, type ApprovalItem } from '@/features/approvals/approval-utils';
 import { Button } from '@/shared/components/ui/button/button';
@@ -103,22 +102,11 @@ function RouteComponent() {
     }
   };
 
-  const handleOpenDoc = (payload: {
-    doc: ApprovalDocType;
-    mode: ApprovalModeType;
-    booking: { id: number };
-  }) => {
-    if (payload.mode === 'preview') {
-      navigate({
-        to: '/preview-dokumen',
-        search: { doc: payload.doc, id: payload.booking.id, return: '/dosen-pendamping' } as any
-      });
-    } else if (payload.mode === 'sign') {
-      navigate({
-        to: '/tanda-tangan',
-        search: { doc: payload.doc, id: payload.booking.id, return: '/dosen-pendamping' } as any
-      });
-    }
+  const handleOpenDoc = (documentId: number) => {
+    navigate({
+      to: '/dosen-pendamping/sign-document',
+      search: { documentId }
+    });
   };
 
   if (loading) {
@@ -180,7 +168,6 @@ function RouteComponent() {
             actorRole={actorRole}
             onOpenDoc={handleOpenDoc}
             showOrganisasi={true}
-            showProposal={true}
           />
         )}
       </div>

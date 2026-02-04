@@ -103,22 +103,11 @@ function RouteComponent() {
     }
   };
 
-  const handleOpenDoc = (payload: {
-    doc: ApprovalDocType;
-    mode: ApprovalModeType;
-    booking: { id: number };
-  }) => {
-    if (payload.mode === 'preview') {
-      navigate({
-        to: '/preview-dokumen',
-        search: { doc: payload.doc, id: payload.booking.id, return: '/wadek1' } as any
-      });
-    } else if (payload.mode === 'sign') {
-      navigate({
-        to: '/tanda-tangan',
-        search: { doc: payload.doc, id: payload.booking.id, return: '/wadek1' } as any
-      });
-    }
+  const handleOpenDoc = (documentId: number) => {
+    navigate({
+      to: '/wadek1/sign-document',
+      search: { documentId }
+    });
   };
 
   if (loading) {
@@ -180,7 +169,6 @@ function RouteComponent() {
             actorRole={actorRole}
             onOpenDoc={handleOpenDoc}
             showOrganisasi={true}
-            showProposal={true}
           />
         )}
       </div>

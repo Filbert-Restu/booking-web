@@ -71,9 +71,8 @@ interface ApprovalProps {
 	onApprove?: (id: number) => void;
 	onRevise?: (id: number) => void;
 	showOrganisasi?: boolean;
-	showProposal?: boolean;
 	actorRole: ActorRole;
-	onOpenDoc?: (payload: DocActionPayload) => void;
+	onOpenDoc?: (documentId: number) => void;
 }
 
 function statusBadge(status: ApprovalStatus) {
@@ -93,7 +92,6 @@ export function Approval({
 	onApprove,
 	onRevise,
 	showOrganisasi = true,
-	showProposal = true,
 	actorRole,
 	onOpenDoc,
 }: ApprovalProps) {
@@ -103,15 +101,13 @@ export function Approval({
 	const [revisiNotes, setRevisiNotes] = useState('');
 	const [currentRevisiId, setCurrentRevisiId] = useState<number | null>(null);
 	const isKemahasiswaan = actorRole === 'kemahasiswaan';
-	const canSignExecutiveSummary = actorRole === 'wadek1';
-	const canSignLembarPengesahan = actorRole !== 'kemahasiswaan' && actorRole !== 'sumber-daya';
 	const totalColumns = useMemo(() => {
 		const optionalColumns =
 			(showOrganisasi ? 1 : 0) +
-			(showProposal ? 1 : 0) +
 			(isKemahasiswaan ? 1 : 0);
-		return 10 + optionalColumns;
-	}, [isKemahasiswaan, showOrganisasi, showProposal]);
+		// Changed from 10 to 7 after consolidating all document columns into one
+		return 7 + optionalColumns;
+	}, [isKemahasiswaan, showOrganisasi]);
 
 	const handleApproveLocal = (id: number) => {
 		setItems((prev) =>
@@ -149,81 +145,6 @@ export function Approval({
 		}
 	};
 
-	const handleDocumentPreview = (booking: ApprovalItem, doc: DocumentType) => {
-		onOpenDoc?.({ booking, doc, role: actorRole, mode: 'preview' });
-	};
-
-	const handleDocumentSign = (booking: ApprovalItem, doc: DocumentType) => {
-		if (doc === 'executive-summary' && !canSignExecutiveSummary) {
-			return;
-		}
-		if (doc === 'lembar-pengesahan' && !canSignLembarPengesahan) {
-			return;
-		}
-
-		// Mark document as signed and approve
-		setItems((prev) =>
-			prev.map((item) => {
-				if (item.id === booking.id) {
-					const updated = {
-						...item,
-						status: 'approved' as ApprovalStatus,
-					};
-					if (doc === 'executive-summary') {
-						updated.executiveSummarySigned = true;
-					} else {
-						updated.lembarPengesahanSigned = true;
-					}
-					return updated;
-				}
-				return item;
-			}),
-		);
-
-		onOpenDoc?.({ booking, doc, role: actorRole, mode: 'sign' });
-		if (!isKemahasiswaan) {
-			onApprove?.(booking.id);
-		}
-	};
-
-	const renderDocActions = (
-		item: ApprovalItem,
-		docType: DocumentType,
-		canSign: boolean,
-	) => {
-		const isSigned = docType === 'executive-summary'
-			? item.executiveSummarySigned
-			: item.lembarPengesahanSigned;
-
-		return (
-			<div className='flex flex-col items-center justify-center gap-2'>
-				{canSign ? (
-					isSigned ? (
-						<span className='text-sm font-medium text-green-600'>
-							Sudah Ditandatangani
-						</span>
-					) : (
-						<Button
-							variant='default'
-							size='sm'
-							onClick={() => handleDocumentSign(item, docType)}
-							className='h-8'
-						>
-							Tanda Tangan
-						</Button>
-					)
-				) : (
-					<button
-						onClick={() => handleDocumentPreview(item, docType)}
-						className='text-blue-600 underline hover:text-blue-800'
-					>
-						Preview
-					</button>
-				)}
-			</div>
-		);
-	};
-
 	const filteredItems = items.filter(
 		(item) =>
 			item.kegiatan.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -259,9 +180,7 @@ export function Approval({
 							<TableHead>Ruang</TableHead>
 							<TableHead>Tanggal</TableHead>
 							<TableHead>Waktu</TableHead>
-							{showProposal && <TableHead>Proposal</TableHead>}
-							<TableHead className='text-center'>Executive Summary</TableHead>
-							<TableHead className='text-center'>Lembar Pengesahan</TableHead>
+							<TableHead className='text-center'>Dokumen</TableHead>
 							{isKemahasiswaan && <TableHead className='text-center'>Aksi</TableHead>}
 							{!isKemahasiswaan && <TableHead className='text-center'>Status</TableHead>}
 						</TableRow>
@@ -285,27 +204,13 @@ export function Approval({
 									<TableCell>{item.namaRuang}</TableCell>
 									<TableCell>{item.tanggal}</TableCell>
 									<TableCell>{item.waktu}</TableCell>
-									{showProposal && (
-										<TableCell>
-											{item.proposalUrl ? (
-												<a
-													href={item.proposalUrl}
-													target='_blank'
-													rel='noopener noreferrer'
-													className='text-blue-600 underline'
-												>
-													Lihat PDF
-												</a>
-											) : (
-												'-'
-											)}
-										</TableCell>
-									)}
-									<TableCell>
-										{renderDocActions(item, 'executive-summary', canSignExecutiveSummary)}
-									</TableCell>
-									<TableCell>
-										{renderDocActions(item, 'lembar-pengesahan', canSignLembarPengesahan)}
+									<TableCell className='text-center'>
+										<button
+											onClick={() => onOpenDoc?.(item.id)}
+											className='text-blue-600 hover:text-blue-800 underline font-medium'
+										>
+											Lihat Dokumen
+										</button>
 									</TableCell>
 									{isKemahasiswaan && (
 										<TableCell>

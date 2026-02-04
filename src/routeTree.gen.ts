@@ -12,7 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as TandaTanganRouteImport } from './routes/tanda-tangan'
 import { Route as SignDocumentRouteImport } from './routes/sign-document'
 import { Route as RegisterRouteImport } from './routes/register'
-import { Route as PreviewDokumenRouteImport } from './routes/preview-dokumen'
+import { Route as PreviewDocumentRouteImport } from './routes/preview-document'
 import { Route as LoginOptionRouteImport } from './routes/login-option'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as Wadek1RouteRouteImport } from './routes/wadek1/route'
@@ -34,19 +34,31 @@ import { Route as KetuaDepartemenIndexRouteImport } from './routes/ketua-departe
 import { Route as KemahasiswaanIndexRouteImport } from './routes/kemahasiswaan/index'
 import { Route as DosenPendampingIndexRouteImport } from './routes/dosen-pendamping/index'
 import { Route as AdminIndexRouteImport } from './routes/admin/index'
+import { Route as Wadek1SignDocumentRouteImport } from './routes/wadek1/sign-document'
 import { Route as Wadek1RiwayatPersetujuanRouteImport } from './routes/wadek1/riwayat-persetujuan'
+import { Route as Wadek1PreviewDocumentRouteImport } from './routes/wadek1/preview-document'
 import { Route as SumberDayaTambahPeminjamanRouteImport } from './routes/sumber-daya/tambah-peminjaman'
+import { Route as SumberDayaSignDocumentRouteImport } from './routes/sumber-daya/sign-document'
 import { Route as SumberDayaRiwayatPersetujuanRouteImport } from './routes/sumber-daya/riwayat-persetujuan'
+import { Route as SumberDayaPreviewDocumentRouteImport } from './routes/sumber-daya/preview-document'
 import { Route as SumberDayaManajemenRuangRouteImport } from './routes/sumber-daya/manajemen-ruang'
+import { Route as SenatSignDocumentRouteImport } from './routes/senat/sign-document'
 import { Route as SenatRiwayatPersetujuanRouteImport } from './routes/senat/riwayat-persetujuan'
+import { Route as SenatPreviewDocumentRouteImport } from './routes/senat/preview-document'
 import { Route as PeminjamTestTemplateRouteImport } from './routes/peminjam/test-template'
 import { Route as PeminjamReservasiRouteImport } from './routes/peminjam/reservasi'
+import { Route as KetuaOrmawaSignDocumentRouteImport } from './routes/ketua-ormawa/sign-document'
 import { Route as KetuaOrmawaSignRouteImport } from './routes/ketua-ormawa/sign'
 import { Route as KetuaOrmawaRiwayatPersetujuanRouteImport } from './routes/ketua-ormawa/riwayat-persetujuan'
+import { Route as KetuaOrmawaPreviewDocumentRouteImport } from './routes/ketua-ormawa/preview-document'
 import { Route as KetuaOrmawaPreviewRouteImport } from './routes/ketua-ormawa/preview'
+import { Route as KetuaDepartemenSignDocumentRouteImport } from './routes/ketua-departemen/sign-document'
 import { Route as KetuaDepartemenRiwayatPersetujuanRouteImport } from './routes/ketua-departemen/riwayat-persetujuan'
+import { Route as KetuaDepartemenPreviewDocumentRouteImport } from './routes/ketua-departemen/preview-document'
 import { Route as KemahasiswaanRiwayatPersetujuanRouteImport } from './routes/kemahasiswaan/riwayat-persetujuan'
+import { Route as DosenPendampingSignDocumentRouteImport } from './routes/dosen-pendamping/sign-document'
 import { Route as DosenPendampingRiwayatPersetujuanRouteImport } from './routes/dosen-pendamping/riwayat-persetujuan'
+import { Route as DosenPendampingPreviewDocumentRouteImport } from './routes/dosen-pendamping/preview-document'
 import { Route as PeminjamSignIndexRouteImport } from './routes/peminjam/sign/index'
 import { Route as PeminjamPinjamIndexRouteImport } from './routes/peminjam/pinjam/index'
 import { Route as KemahasiswaanTemplateDokumenIndexRouteImport } from './routes/kemahasiswaan/template-dokumen.index'
@@ -84,9 +96,9 @@ const RegisterRoute = RegisterRouteImport.update({
   path: '/register',
   getParentRoute: () => rootRouteImport,
 } as any)
-const PreviewDokumenRoute = PreviewDokumenRouteImport.update({
-  id: '/preview-dokumen',
-  path: '/preview-dokumen',
+const PreviewDocumentRoute = PreviewDocumentRouteImport.update({
+  id: '/preview-document',
+  path: '/preview-document',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LoginOptionRoute = LoginOptionRouteImport.update({
@@ -194,22 +206,43 @@ const AdminIndexRoute = AdminIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AdminRouteRoute,
 } as any)
+const Wadek1SignDocumentRoute = Wadek1SignDocumentRouteImport.update({
+  id: '/sign-document',
+  path: '/sign-document',
+  getParentRoute: () => Wadek1RouteRoute,
+} as any)
 const Wadek1RiwayatPersetujuanRoute =
   Wadek1RiwayatPersetujuanRouteImport.update({
     id: '/riwayat-persetujuan',
     path: '/riwayat-persetujuan',
     getParentRoute: () => Wadek1RouteRoute,
   } as any)
+const Wadek1PreviewDocumentRoute = Wadek1PreviewDocumentRouteImport.update({
+  id: '/preview-document',
+  path: '/preview-document',
+  getParentRoute: () => Wadek1RouteRoute,
+} as any)
 const SumberDayaTambahPeminjamanRoute =
   SumberDayaTambahPeminjamanRouteImport.update({
     id: '/tambah-peminjaman',
     path: '/tambah-peminjaman',
     getParentRoute: () => SumberDayaRouteRoute,
   } as any)
+const SumberDayaSignDocumentRoute = SumberDayaSignDocumentRouteImport.update({
+  id: '/sign-document',
+  path: '/sign-document',
+  getParentRoute: () => SumberDayaRouteRoute,
+} as any)
 const SumberDayaRiwayatPersetujuanRoute =
   SumberDayaRiwayatPersetujuanRouteImport.update({
     id: '/riwayat-persetujuan',
     path: '/riwayat-persetujuan',
+    getParentRoute: () => SumberDayaRouteRoute,
+  } as any)
+const SumberDayaPreviewDocumentRoute =
+  SumberDayaPreviewDocumentRouteImport.update({
+    id: '/preview-document',
+    path: '/preview-document',
     getParentRoute: () => SumberDayaRouteRoute,
   } as any)
 const SumberDayaManajemenRuangRoute =
@@ -218,9 +251,19 @@ const SumberDayaManajemenRuangRoute =
     path: '/manajemen-ruang',
     getParentRoute: () => SumberDayaRouteRoute,
   } as any)
+const SenatSignDocumentRoute = SenatSignDocumentRouteImport.update({
+  id: '/sign-document',
+  path: '/sign-document',
+  getParentRoute: () => SenatRouteRoute,
+} as any)
 const SenatRiwayatPersetujuanRoute = SenatRiwayatPersetujuanRouteImport.update({
   id: '/riwayat-persetujuan',
   path: '/riwayat-persetujuan',
+  getParentRoute: () => SenatRouteRoute,
+} as any)
+const SenatPreviewDocumentRoute = SenatPreviewDocumentRouteImport.update({
+  id: '/preview-document',
+  path: '/preview-document',
   getParentRoute: () => SenatRouteRoute,
 } as any)
 const PeminjamTestTemplateRoute = PeminjamTestTemplateRouteImport.update({
@@ -233,6 +276,11 @@ const PeminjamReservasiRoute = PeminjamReservasiRouteImport.update({
   path: '/reservasi',
   getParentRoute: () => PeminjamRouteRoute,
 } as any)
+const KetuaOrmawaSignDocumentRoute = KetuaOrmawaSignDocumentRouteImport.update({
+  id: '/sign-document',
+  path: '/sign-document',
+  getParentRoute: () => KetuaOrmawaRouteRoute,
+} as any)
 const KetuaOrmawaSignRoute = KetuaOrmawaSignRouteImport.update({
   id: '/sign',
   path: '/sign',
@@ -244,15 +292,33 @@ const KetuaOrmawaRiwayatPersetujuanRoute =
     path: '/riwayat-persetujuan',
     getParentRoute: () => KetuaOrmawaRouteRoute,
   } as any)
+const KetuaOrmawaPreviewDocumentRoute =
+  KetuaOrmawaPreviewDocumentRouteImport.update({
+    id: '/preview-document',
+    path: '/preview-document',
+    getParentRoute: () => KetuaOrmawaRouteRoute,
+  } as any)
 const KetuaOrmawaPreviewRoute = KetuaOrmawaPreviewRouteImport.update({
   id: '/preview',
   path: '/preview',
   getParentRoute: () => KetuaOrmawaRouteRoute,
 } as any)
+const KetuaDepartemenSignDocumentRoute =
+  KetuaDepartemenSignDocumentRouteImport.update({
+    id: '/sign-document',
+    path: '/sign-document',
+    getParentRoute: () => KetuaDepartemenRouteRoute,
+  } as any)
 const KetuaDepartemenRiwayatPersetujuanRoute =
   KetuaDepartemenRiwayatPersetujuanRouteImport.update({
     id: '/riwayat-persetujuan',
     path: '/riwayat-persetujuan',
+    getParentRoute: () => KetuaDepartemenRouteRoute,
+  } as any)
+const KetuaDepartemenPreviewDocumentRoute =
+  KetuaDepartemenPreviewDocumentRouteImport.update({
+    id: '/preview-document',
+    path: '/preview-document',
     getParentRoute: () => KetuaDepartemenRouteRoute,
   } as any)
 const KemahasiswaanRiwayatPersetujuanRoute =
@@ -261,10 +327,22 @@ const KemahasiswaanRiwayatPersetujuanRoute =
     path: '/riwayat-persetujuan',
     getParentRoute: () => KemahasiswaanRouteRoute,
   } as any)
+const DosenPendampingSignDocumentRoute =
+  DosenPendampingSignDocumentRouteImport.update({
+    id: '/sign-document',
+    path: '/sign-document',
+    getParentRoute: () => DosenPendampingRouteRoute,
+  } as any)
 const DosenPendampingRiwayatPersetujuanRoute =
   DosenPendampingRiwayatPersetujuanRouteImport.update({
     id: '/riwayat-persetujuan',
     path: '/riwayat-persetujuan',
+    getParentRoute: () => DosenPendampingRouteRoute,
+  } as any)
+const DosenPendampingPreviewDocumentRoute =
+  DosenPendampingPreviewDocumentRouteImport.update({
+    id: '/preview-document',
+    path: '/preview-document',
     getParentRoute: () => DosenPendampingRouteRoute,
   } as any)
 const PeminjamSignIndexRoute = PeminjamSignIndexRouteImport.update({
@@ -393,23 +471,35 @@ export interface FileRoutesByFullPath {
   '/wadek1': typeof Wadek1RouteRouteWithChildren
   '/login': typeof LoginRoute
   '/login-option': typeof LoginOptionRoute
-  '/preview-dokumen': typeof PreviewDokumenRoute
+  '/preview-document': typeof PreviewDocumentRoute
   '/register': typeof RegisterRoute
   '/sign-document': typeof SignDocumentRoute
   '/tanda-tangan': typeof TandaTanganRoute
+  '/dosen-pendamping/preview-document': typeof DosenPendampingPreviewDocumentRoute
   '/dosen-pendamping/riwayat-persetujuan': typeof DosenPendampingRiwayatPersetujuanRoute
+  '/dosen-pendamping/sign-document': typeof DosenPendampingSignDocumentRoute
   '/kemahasiswaan/riwayat-persetujuan': typeof KemahasiswaanRiwayatPersetujuanRoute
+  '/ketua-departemen/preview-document': typeof KetuaDepartemenPreviewDocumentRoute
   '/ketua-departemen/riwayat-persetujuan': typeof KetuaDepartemenRiwayatPersetujuanRoute
+  '/ketua-departemen/sign-document': typeof KetuaDepartemenSignDocumentRoute
   '/ketua-ormawa/preview': typeof KetuaOrmawaPreviewRoute
+  '/ketua-ormawa/preview-document': typeof KetuaOrmawaPreviewDocumentRoute
   '/ketua-ormawa/riwayat-persetujuan': typeof KetuaOrmawaRiwayatPersetujuanRoute
   '/ketua-ormawa/sign': typeof KetuaOrmawaSignRoute
+  '/ketua-ormawa/sign-document': typeof KetuaOrmawaSignDocumentRoute
   '/peminjam/reservasi': typeof PeminjamReservasiRoute
   '/peminjam/test-template': typeof PeminjamTestTemplateRoute
+  '/senat/preview-document': typeof SenatPreviewDocumentRoute
   '/senat/riwayat-persetujuan': typeof SenatRiwayatPersetujuanRoute
+  '/senat/sign-document': typeof SenatSignDocumentRoute
   '/sumber-daya/manajemen-ruang': typeof SumberDayaManajemenRuangRoute
+  '/sumber-daya/preview-document': typeof SumberDayaPreviewDocumentRoute
   '/sumber-daya/riwayat-persetujuan': typeof SumberDayaRiwayatPersetujuanRoute
+  '/sumber-daya/sign-document': typeof SumberDayaSignDocumentRoute
   '/sumber-daya/tambah-peminjaman': typeof SumberDayaTambahPeminjamanRoute
+  '/wadek1/preview-document': typeof Wadek1PreviewDocumentRoute
   '/wadek1/riwayat-persetujuan': typeof Wadek1RiwayatPersetujuanRoute
+  '/wadek1/sign-document': typeof Wadek1SignDocumentRoute
   '/admin/': typeof AdminIndexRoute
   '/dosen-pendamping/': typeof DosenPendampingIndexRoute
   '/kemahasiswaan/': typeof KemahasiswaanIndexRoute
@@ -445,23 +535,35 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/login-option': typeof LoginOptionRoute
-  '/preview-dokumen': typeof PreviewDokumenRoute
+  '/preview-document': typeof PreviewDocumentRoute
   '/register': typeof RegisterRoute
   '/sign-document': typeof SignDocumentRoute
   '/tanda-tangan': typeof TandaTanganRoute
+  '/dosen-pendamping/preview-document': typeof DosenPendampingPreviewDocumentRoute
   '/dosen-pendamping/riwayat-persetujuan': typeof DosenPendampingRiwayatPersetujuanRoute
+  '/dosen-pendamping/sign-document': typeof DosenPendampingSignDocumentRoute
   '/kemahasiswaan/riwayat-persetujuan': typeof KemahasiswaanRiwayatPersetujuanRoute
+  '/ketua-departemen/preview-document': typeof KetuaDepartemenPreviewDocumentRoute
   '/ketua-departemen/riwayat-persetujuan': typeof KetuaDepartemenRiwayatPersetujuanRoute
+  '/ketua-departemen/sign-document': typeof KetuaDepartemenSignDocumentRoute
   '/ketua-ormawa/preview': typeof KetuaOrmawaPreviewRoute
+  '/ketua-ormawa/preview-document': typeof KetuaOrmawaPreviewDocumentRoute
   '/ketua-ormawa/riwayat-persetujuan': typeof KetuaOrmawaRiwayatPersetujuanRoute
   '/ketua-ormawa/sign': typeof KetuaOrmawaSignRoute
+  '/ketua-ormawa/sign-document': typeof KetuaOrmawaSignDocumentRoute
   '/peminjam/reservasi': typeof PeminjamReservasiRoute
   '/peminjam/test-template': typeof PeminjamTestTemplateRoute
+  '/senat/preview-document': typeof SenatPreviewDocumentRoute
   '/senat/riwayat-persetujuan': typeof SenatRiwayatPersetujuanRoute
+  '/senat/sign-document': typeof SenatSignDocumentRoute
   '/sumber-daya/manajemen-ruang': typeof SumberDayaManajemenRuangRoute
+  '/sumber-daya/preview-document': typeof SumberDayaPreviewDocumentRoute
   '/sumber-daya/riwayat-persetujuan': typeof SumberDayaRiwayatPersetujuanRoute
+  '/sumber-daya/sign-document': typeof SumberDayaSignDocumentRoute
   '/sumber-daya/tambah-peminjaman': typeof SumberDayaTambahPeminjamanRoute
+  '/wadek1/preview-document': typeof Wadek1PreviewDocumentRoute
   '/wadek1/riwayat-persetujuan': typeof Wadek1RiwayatPersetujuanRoute
+  '/wadek1/sign-document': typeof Wadek1SignDocumentRoute
   '/admin': typeof AdminIndexRoute
   '/dosen-pendamping': typeof DosenPendampingIndexRoute
   '/kemahasiswaan': typeof KemahasiswaanIndexRoute
@@ -507,23 +609,35 @@ export interface FileRoutesById {
   '/wadek1': typeof Wadek1RouteRouteWithChildren
   '/login': typeof LoginRoute
   '/login-option': typeof LoginOptionRoute
-  '/preview-dokumen': typeof PreviewDokumenRoute
+  '/preview-document': typeof PreviewDocumentRoute
   '/register': typeof RegisterRoute
   '/sign-document': typeof SignDocumentRoute
   '/tanda-tangan': typeof TandaTanganRoute
+  '/dosen-pendamping/preview-document': typeof DosenPendampingPreviewDocumentRoute
   '/dosen-pendamping/riwayat-persetujuan': typeof DosenPendampingRiwayatPersetujuanRoute
+  '/dosen-pendamping/sign-document': typeof DosenPendampingSignDocumentRoute
   '/kemahasiswaan/riwayat-persetujuan': typeof KemahasiswaanRiwayatPersetujuanRoute
+  '/ketua-departemen/preview-document': typeof KetuaDepartemenPreviewDocumentRoute
   '/ketua-departemen/riwayat-persetujuan': typeof KetuaDepartemenRiwayatPersetujuanRoute
+  '/ketua-departemen/sign-document': typeof KetuaDepartemenSignDocumentRoute
   '/ketua-ormawa/preview': typeof KetuaOrmawaPreviewRoute
+  '/ketua-ormawa/preview-document': typeof KetuaOrmawaPreviewDocumentRoute
   '/ketua-ormawa/riwayat-persetujuan': typeof KetuaOrmawaRiwayatPersetujuanRoute
   '/ketua-ormawa/sign': typeof KetuaOrmawaSignRoute
+  '/ketua-ormawa/sign-document': typeof KetuaOrmawaSignDocumentRoute
   '/peminjam/reservasi': typeof PeminjamReservasiRoute
   '/peminjam/test-template': typeof PeminjamTestTemplateRoute
+  '/senat/preview-document': typeof SenatPreviewDocumentRoute
   '/senat/riwayat-persetujuan': typeof SenatRiwayatPersetujuanRoute
+  '/senat/sign-document': typeof SenatSignDocumentRoute
   '/sumber-daya/manajemen-ruang': typeof SumberDayaManajemenRuangRoute
+  '/sumber-daya/preview-document': typeof SumberDayaPreviewDocumentRoute
   '/sumber-daya/riwayat-persetujuan': typeof SumberDayaRiwayatPersetujuanRoute
+  '/sumber-daya/sign-document': typeof SumberDayaSignDocumentRoute
   '/sumber-daya/tambah-peminjaman': typeof SumberDayaTambahPeminjamanRoute
+  '/wadek1/preview-document': typeof Wadek1PreviewDocumentRoute
   '/wadek1/riwayat-persetujuan': typeof Wadek1RiwayatPersetujuanRoute
+  '/wadek1/sign-document': typeof Wadek1SignDocumentRoute
   '/admin/': typeof AdminIndexRoute
   '/dosen-pendamping/': typeof DosenPendampingIndexRoute
   '/kemahasiswaan/': typeof KemahasiswaanIndexRoute
@@ -570,23 +684,35 @@ export interface FileRouteTypes {
     | '/wadek1'
     | '/login'
     | '/login-option'
-    | '/preview-dokumen'
+    | '/preview-document'
     | '/register'
     | '/sign-document'
     | '/tanda-tangan'
+    | '/dosen-pendamping/preview-document'
     | '/dosen-pendamping/riwayat-persetujuan'
+    | '/dosen-pendamping/sign-document'
     | '/kemahasiswaan/riwayat-persetujuan'
+    | '/ketua-departemen/preview-document'
     | '/ketua-departemen/riwayat-persetujuan'
+    | '/ketua-departemen/sign-document'
     | '/ketua-ormawa/preview'
+    | '/ketua-ormawa/preview-document'
     | '/ketua-ormawa/riwayat-persetujuan'
     | '/ketua-ormawa/sign'
+    | '/ketua-ormawa/sign-document'
     | '/peminjam/reservasi'
     | '/peminjam/test-template'
+    | '/senat/preview-document'
     | '/senat/riwayat-persetujuan'
+    | '/senat/sign-document'
     | '/sumber-daya/manajemen-ruang'
+    | '/sumber-daya/preview-document'
     | '/sumber-daya/riwayat-persetujuan'
+    | '/sumber-daya/sign-document'
     | '/sumber-daya/tambah-peminjaman'
+    | '/wadek1/preview-document'
     | '/wadek1/riwayat-persetujuan'
+    | '/wadek1/sign-document'
     | '/admin/'
     | '/dosen-pendamping/'
     | '/kemahasiswaan/'
@@ -622,23 +748,35 @@ export interface FileRouteTypes {
     | '/'
     | '/login'
     | '/login-option'
-    | '/preview-dokumen'
+    | '/preview-document'
     | '/register'
     | '/sign-document'
     | '/tanda-tangan'
+    | '/dosen-pendamping/preview-document'
     | '/dosen-pendamping/riwayat-persetujuan'
+    | '/dosen-pendamping/sign-document'
     | '/kemahasiswaan/riwayat-persetujuan'
+    | '/ketua-departemen/preview-document'
     | '/ketua-departemen/riwayat-persetujuan'
+    | '/ketua-departemen/sign-document'
     | '/ketua-ormawa/preview'
+    | '/ketua-ormawa/preview-document'
     | '/ketua-ormawa/riwayat-persetujuan'
     | '/ketua-ormawa/sign'
+    | '/ketua-ormawa/sign-document'
     | '/peminjam/reservasi'
     | '/peminjam/test-template'
+    | '/senat/preview-document'
     | '/senat/riwayat-persetujuan'
+    | '/senat/sign-document'
     | '/sumber-daya/manajemen-ruang'
+    | '/sumber-daya/preview-document'
     | '/sumber-daya/riwayat-persetujuan'
+    | '/sumber-daya/sign-document'
     | '/sumber-daya/tambah-peminjaman'
+    | '/wadek1/preview-document'
     | '/wadek1/riwayat-persetujuan'
+    | '/wadek1/sign-document'
     | '/admin'
     | '/dosen-pendamping'
     | '/kemahasiswaan'
@@ -683,23 +821,35 @@ export interface FileRouteTypes {
     | '/wadek1'
     | '/login'
     | '/login-option'
-    | '/preview-dokumen'
+    | '/preview-document'
     | '/register'
     | '/sign-document'
     | '/tanda-tangan'
+    | '/dosen-pendamping/preview-document'
     | '/dosen-pendamping/riwayat-persetujuan'
+    | '/dosen-pendamping/sign-document'
     | '/kemahasiswaan/riwayat-persetujuan'
+    | '/ketua-departemen/preview-document'
     | '/ketua-departemen/riwayat-persetujuan'
+    | '/ketua-departemen/sign-document'
     | '/ketua-ormawa/preview'
+    | '/ketua-ormawa/preview-document'
     | '/ketua-ormawa/riwayat-persetujuan'
     | '/ketua-ormawa/sign'
+    | '/ketua-ormawa/sign-document'
     | '/peminjam/reservasi'
     | '/peminjam/test-template'
+    | '/senat/preview-document'
     | '/senat/riwayat-persetujuan'
+    | '/senat/sign-document'
     | '/sumber-daya/manajemen-ruang'
+    | '/sumber-daya/preview-document'
     | '/sumber-daya/riwayat-persetujuan'
+    | '/sumber-daya/sign-document'
     | '/sumber-daya/tambah-peminjaman'
+    | '/wadek1/preview-document'
     | '/wadek1/riwayat-persetujuan'
+    | '/wadek1/sign-document'
     | '/admin/'
     | '/dosen-pendamping/'
     | '/kemahasiswaan/'
@@ -745,7 +895,7 @@ export interface RootRouteChildren {
   Wadek1RouteRoute: typeof Wadek1RouteRouteWithChildren
   LoginRoute: typeof LoginRoute
   LoginOptionRoute: typeof LoginOptionRoute
-  PreviewDokumenRoute: typeof PreviewDokumenRoute
+  PreviewDocumentRoute: typeof PreviewDocumentRoute
   RegisterRoute: typeof RegisterRoute
   SignDocumentRoute: typeof SignDocumentRoute
   TandaTanganRoute: typeof TandaTanganRoute
@@ -774,11 +924,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof RegisterRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/preview-dokumen': {
-      id: '/preview-dokumen'
-      path: '/preview-dokumen'
-      fullPath: '/preview-dokumen'
-      preLoaderRoute: typeof PreviewDokumenRouteImport
+    '/preview-document': {
+      id: '/preview-document'
+      path: '/preview-document'
+      fullPath: '/preview-document'
+      preLoaderRoute: typeof PreviewDocumentRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/login-option': {
@@ -928,11 +1078,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminIndexRouteImport
       parentRoute: typeof AdminRouteRoute
     }
+    '/wadek1/sign-document': {
+      id: '/wadek1/sign-document'
+      path: '/sign-document'
+      fullPath: '/wadek1/sign-document'
+      preLoaderRoute: typeof Wadek1SignDocumentRouteImport
+      parentRoute: typeof Wadek1RouteRoute
+    }
     '/wadek1/riwayat-persetujuan': {
       id: '/wadek1/riwayat-persetujuan'
       path: '/riwayat-persetujuan'
       fullPath: '/wadek1/riwayat-persetujuan'
       preLoaderRoute: typeof Wadek1RiwayatPersetujuanRouteImport
+      parentRoute: typeof Wadek1RouteRoute
+    }
+    '/wadek1/preview-document': {
+      id: '/wadek1/preview-document'
+      path: '/preview-document'
+      fullPath: '/wadek1/preview-document'
+      preLoaderRoute: typeof Wadek1PreviewDocumentRouteImport
       parentRoute: typeof Wadek1RouteRoute
     }
     '/sumber-daya/tambah-peminjaman': {
@@ -942,11 +1106,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SumberDayaTambahPeminjamanRouteImport
       parentRoute: typeof SumberDayaRouteRoute
     }
+    '/sumber-daya/sign-document': {
+      id: '/sumber-daya/sign-document'
+      path: '/sign-document'
+      fullPath: '/sumber-daya/sign-document'
+      preLoaderRoute: typeof SumberDayaSignDocumentRouteImport
+      parentRoute: typeof SumberDayaRouteRoute
+    }
     '/sumber-daya/riwayat-persetujuan': {
       id: '/sumber-daya/riwayat-persetujuan'
       path: '/riwayat-persetujuan'
       fullPath: '/sumber-daya/riwayat-persetujuan'
       preLoaderRoute: typeof SumberDayaRiwayatPersetujuanRouteImport
+      parentRoute: typeof SumberDayaRouteRoute
+    }
+    '/sumber-daya/preview-document': {
+      id: '/sumber-daya/preview-document'
+      path: '/preview-document'
+      fullPath: '/sumber-daya/preview-document'
+      preLoaderRoute: typeof SumberDayaPreviewDocumentRouteImport
       parentRoute: typeof SumberDayaRouteRoute
     }
     '/sumber-daya/manajemen-ruang': {
@@ -956,11 +1134,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SumberDayaManajemenRuangRouteImport
       parentRoute: typeof SumberDayaRouteRoute
     }
+    '/senat/sign-document': {
+      id: '/senat/sign-document'
+      path: '/sign-document'
+      fullPath: '/senat/sign-document'
+      preLoaderRoute: typeof SenatSignDocumentRouteImport
+      parentRoute: typeof SenatRouteRoute
+    }
     '/senat/riwayat-persetujuan': {
       id: '/senat/riwayat-persetujuan'
       path: '/riwayat-persetujuan'
       fullPath: '/senat/riwayat-persetujuan'
       preLoaderRoute: typeof SenatRiwayatPersetujuanRouteImport
+      parentRoute: typeof SenatRouteRoute
+    }
+    '/senat/preview-document': {
+      id: '/senat/preview-document'
+      path: '/preview-document'
+      fullPath: '/senat/preview-document'
+      preLoaderRoute: typeof SenatPreviewDocumentRouteImport
       parentRoute: typeof SenatRouteRoute
     }
     '/peminjam/test-template': {
@@ -977,6 +1169,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PeminjamReservasiRouteImport
       parentRoute: typeof PeminjamRouteRoute
     }
+    '/ketua-ormawa/sign-document': {
+      id: '/ketua-ormawa/sign-document'
+      path: '/sign-document'
+      fullPath: '/ketua-ormawa/sign-document'
+      preLoaderRoute: typeof KetuaOrmawaSignDocumentRouteImport
+      parentRoute: typeof KetuaOrmawaRouteRoute
+    }
     '/ketua-ormawa/sign': {
       id: '/ketua-ormawa/sign'
       path: '/sign'
@@ -991,6 +1190,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof KetuaOrmawaRiwayatPersetujuanRouteImport
       parentRoute: typeof KetuaOrmawaRouteRoute
     }
+    '/ketua-ormawa/preview-document': {
+      id: '/ketua-ormawa/preview-document'
+      path: '/preview-document'
+      fullPath: '/ketua-ormawa/preview-document'
+      preLoaderRoute: typeof KetuaOrmawaPreviewDocumentRouteImport
+      parentRoute: typeof KetuaOrmawaRouteRoute
+    }
     '/ketua-ormawa/preview': {
       id: '/ketua-ormawa/preview'
       path: '/preview'
@@ -998,11 +1204,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof KetuaOrmawaPreviewRouteImport
       parentRoute: typeof KetuaOrmawaRouteRoute
     }
+    '/ketua-departemen/sign-document': {
+      id: '/ketua-departemen/sign-document'
+      path: '/sign-document'
+      fullPath: '/ketua-departemen/sign-document'
+      preLoaderRoute: typeof KetuaDepartemenSignDocumentRouteImport
+      parentRoute: typeof KetuaDepartemenRouteRoute
+    }
     '/ketua-departemen/riwayat-persetujuan': {
       id: '/ketua-departemen/riwayat-persetujuan'
       path: '/riwayat-persetujuan'
       fullPath: '/ketua-departemen/riwayat-persetujuan'
       preLoaderRoute: typeof KetuaDepartemenRiwayatPersetujuanRouteImport
+      parentRoute: typeof KetuaDepartemenRouteRoute
+    }
+    '/ketua-departemen/preview-document': {
+      id: '/ketua-departemen/preview-document'
+      path: '/preview-document'
+      fullPath: '/ketua-departemen/preview-document'
+      preLoaderRoute: typeof KetuaDepartemenPreviewDocumentRouteImport
       parentRoute: typeof KetuaDepartemenRouteRoute
     }
     '/kemahasiswaan/riwayat-persetujuan': {
@@ -1012,11 +1232,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof KemahasiswaanRiwayatPersetujuanRouteImport
       parentRoute: typeof KemahasiswaanRouteRoute
     }
+    '/dosen-pendamping/sign-document': {
+      id: '/dosen-pendamping/sign-document'
+      path: '/sign-document'
+      fullPath: '/dosen-pendamping/sign-document'
+      preLoaderRoute: typeof DosenPendampingSignDocumentRouteImport
+      parentRoute: typeof DosenPendampingRouteRoute
+    }
     '/dosen-pendamping/riwayat-persetujuan': {
       id: '/dosen-pendamping/riwayat-persetujuan'
       path: '/riwayat-persetujuan'
       fullPath: '/dosen-pendamping/riwayat-persetujuan'
       preLoaderRoute: typeof DosenPendampingRiwayatPersetujuanRouteImport
+      parentRoute: typeof DosenPendampingRouteRoute
+    }
+    '/dosen-pendamping/preview-document': {
+      id: '/dosen-pendamping/preview-document'
+      path: '/preview-document'
+      fullPath: '/dosen-pendamping/preview-document'
+      preLoaderRoute: typeof DosenPendampingPreviewDocumentRouteImport
       parentRoute: typeof DosenPendampingRouteRoute
     }
     '/peminjam/sign/': {
@@ -1206,13 +1440,17 @@ const AdminRouteRouteWithChildren = AdminRouteRoute._addFileChildren(
 )
 
 interface DosenPendampingRouteRouteChildren {
+  DosenPendampingPreviewDocumentRoute: typeof DosenPendampingPreviewDocumentRoute
   DosenPendampingRiwayatPersetujuanRoute: typeof DosenPendampingRiwayatPersetujuanRoute
+  DosenPendampingSignDocumentRoute: typeof DosenPendampingSignDocumentRoute
   DosenPendampingIndexRoute: typeof DosenPendampingIndexRoute
 }
 
 const DosenPendampingRouteRouteChildren: DosenPendampingRouteRouteChildren = {
+  DosenPendampingPreviewDocumentRoute: DosenPendampingPreviewDocumentRoute,
   DosenPendampingRiwayatPersetujuanRoute:
     DosenPendampingRiwayatPersetujuanRoute,
+  DosenPendampingSignDocumentRoute: DosenPendampingSignDocumentRoute,
   DosenPendampingIndexRoute: DosenPendampingIndexRoute,
 }
 
@@ -1239,13 +1477,17 @@ const KemahasiswaanRouteRouteWithChildren =
   KemahasiswaanRouteRoute._addFileChildren(KemahasiswaanRouteRouteChildren)
 
 interface KetuaDepartemenRouteRouteChildren {
+  KetuaDepartemenPreviewDocumentRoute: typeof KetuaDepartemenPreviewDocumentRoute
   KetuaDepartemenRiwayatPersetujuanRoute: typeof KetuaDepartemenRiwayatPersetujuanRoute
+  KetuaDepartemenSignDocumentRoute: typeof KetuaDepartemenSignDocumentRoute
   KetuaDepartemenIndexRoute: typeof KetuaDepartemenIndexRoute
 }
 
 const KetuaDepartemenRouteRouteChildren: KetuaDepartemenRouteRouteChildren = {
+  KetuaDepartemenPreviewDocumentRoute: KetuaDepartemenPreviewDocumentRoute,
   KetuaDepartemenRiwayatPersetujuanRoute:
     KetuaDepartemenRiwayatPersetujuanRoute,
+  KetuaDepartemenSignDocumentRoute: KetuaDepartemenSignDocumentRoute,
   KetuaDepartemenIndexRoute: KetuaDepartemenIndexRoute,
 }
 
@@ -1254,15 +1496,19 @@ const KetuaDepartemenRouteRouteWithChildren =
 
 interface KetuaOrmawaRouteRouteChildren {
   KetuaOrmawaPreviewRoute: typeof KetuaOrmawaPreviewRoute
+  KetuaOrmawaPreviewDocumentRoute: typeof KetuaOrmawaPreviewDocumentRoute
   KetuaOrmawaRiwayatPersetujuanRoute: typeof KetuaOrmawaRiwayatPersetujuanRoute
   KetuaOrmawaSignRoute: typeof KetuaOrmawaSignRoute
+  KetuaOrmawaSignDocumentRoute: typeof KetuaOrmawaSignDocumentRoute
   KetuaOrmawaIndexRoute: typeof KetuaOrmawaIndexRoute
 }
 
 const KetuaOrmawaRouteRouteChildren: KetuaOrmawaRouteRouteChildren = {
   KetuaOrmawaPreviewRoute: KetuaOrmawaPreviewRoute,
+  KetuaOrmawaPreviewDocumentRoute: KetuaOrmawaPreviewDocumentRoute,
   KetuaOrmawaRiwayatPersetujuanRoute: KetuaOrmawaRiwayatPersetujuanRoute,
   KetuaOrmawaSignRoute: KetuaOrmawaSignRoute,
+  KetuaOrmawaSignDocumentRoute: KetuaOrmawaSignDocumentRoute,
   KetuaOrmawaIndexRoute: KetuaOrmawaIndexRoute,
 }
 
@@ -1300,12 +1546,16 @@ const PeminjamRouteRouteWithChildren = PeminjamRouteRoute._addFileChildren(
 )
 
 interface SenatRouteRouteChildren {
+  SenatPreviewDocumentRoute: typeof SenatPreviewDocumentRoute
   SenatRiwayatPersetujuanRoute: typeof SenatRiwayatPersetujuanRoute
+  SenatSignDocumentRoute: typeof SenatSignDocumentRoute
   SenatIndexRoute: typeof SenatIndexRoute
 }
 
 const SenatRouteRouteChildren: SenatRouteRouteChildren = {
+  SenatPreviewDocumentRoute: SenatPreviewDocumentRoute,
   SenatRiwayatPersetujuanRoute: SenatRiwayatPersetujuanRoute,
+  SenatSignDocumentRoute: SenatSignDocumentRoute,
   SenatIndexRoute: SenatIndexRoute,
 }
 
@@ -1315,14 +1565,18 @@ const SenatRouteRouteWithChildren = SenatRouteRoute._addFileChildren(
 
 interface SumberDayaRouteRouteChildren {
   SumberDayaManajemenRuangRoute: typeof SumberDayaManajemenRuangRoute
+  SumberDayaPreviewDocumentRoute: typeof SumberDayaPreviewDocumentRoute
   SumberDayaRiwayatPersetujuanRoute: typeof SumberDayaRiwayatPersetujuanRoute
+  SumberDayaSignDocumentRoute: typeof SumberDayaSignDocumentRoute
   SumberDayaTambahPeminjamanRoute: typeof SumberDayaTambahPeminjamanRoute
   SumberDayaIndexRoute: typeof SumberDayaIndexRoute
 }
 
 const SumberDayaRouteRouteChildren: SumberDayaRouteRouteChildren = {
   SumberDayaManajemenRuangRoute: SumberDayaManajemenRuangRoute,
+  SumberDayaPreviewDocumentRoute: SumberDayaPreviewDocumentRoute,
   SumberDayaRiwayatPersetujuanRoute: SumberDayaRiwayatPersetujuanRoute,
+  SumberDayaSignDocumentRoute: SumberDayaSignDocumentRoute,
   SumberDayaTambahPeminjamanRoute: SumberDayaTambahPeminjamanRoute,
   SumberDayaIndexRoute: SumberDayaIndexRoute,
 }
@@ -1332,12 +1586,16 @@ const SumberDayaRouteRouteWithChildren = SumberDayaRouteRoute._addFileChildren(
 )
 
 interface Wadek1RouteRouteChildren {
+  Wadek1PreviewDocumentRoute: typeof Wadek1PreviewDocumentRoute
   Wadek1RiwayatPersetujuanRoute: typeof Wadek1RiwayatPersetujuanRoute
+  Wadek1SignDocumentRoute: typeof Wadek1SignDocumentRoute
   Wadek1IndexRoute: typeof Wadek1IndexRoute
 }
 
 const Wadek1RouteRouteChildren: Wadek1RouteRouteChildren = {
+  Wadek1PreviewDocumentRoute: Wadek1PreviewDocumentRoute,
   Wadek1RiwayatPersetujuanRoute: Wadek1RiwayatPersetujuanRoute,
+  Wadek1SignDocumentRoute: Wadek1SignDocumentRoute,
   Wadek1IndexRoute: Wadek1IndexRoute,
 }
 
@@ -1358,7 +1616,7 @@ const rootRouteChildren: RootRouteChildren = {
   Wadek1RouteRoute: Wadek1RouteRouteWithChildren,
   LoginRoute: LoginRoute,
   LoginOptionRoute: LoginOptionRoute,
-  PreviewDokumenRoute: PreviewDokumenRoute,
+  PreviewDocumentRoute: PreviewDocumentRoute,
   RegisterRoute: RegisterRoute,
   SignDocumentRoute: SignDocumentRoute,
   TandaTanganRoute: TandaTanganRoute,

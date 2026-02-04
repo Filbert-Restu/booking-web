@@ -1,17 +1,13 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
-import { useEffect, useRef, useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui/card';
 import { Button } from '@/shared/components/ui/button/button';
-import {
-  ArrowLeft,
-  Upload,
-  Pen,
-  Eraser,
-  Check,
-  AlertCircle,
-} from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/components/ui/select';
+import { Upload, Pen } from 'lucide-react';
 import { signatureService } from '@/services/signature.service';
 import { documentService } from '@/services/document.service';
 import api from '@/lib/axios';
+import SignatureCanvas from 'react-signature-canvas';
 import { AxiosError } from 'axios';
 
 export const Route = createFileRoute('/sign-document')({
@@ -20,195 +16,163 @@ export const Route = createFileRoute('/sign-document')({
     return {
       documentId: search.documentId as number | undefined,
       return: search.return as string | undefined,
-      autoApprove: search.autoApprove as boolean | undefined,
     };
   },
 });
 
-function RouteComponent() {
+type DocumentType = 'proposal' | 'approval-sheet' | 'executive-summary';
+
+export function SignDocumentContent({ documentId, returnPath }: { documentId: number | undefined; returnPath: string }) {
   const navigate = useNavigate();
-  const { documentId, return: returnPath, autoApprove } = Route.useSearch();
-
-  // Canvas for drawing signature
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [isDrawing, setIsDrawing] = useState(false);
-  const [signatureDataUrl, setSignatureDataUrl] = useState<string>('');
-  const [uploadedSignature, setUploadedSignature] = useState<string>('');
-  const [activeTab, setActiveTab] = useState<'draw' | 'upload'>('draw');
-
-  // Document preview
-  const [pdfUrl, setPdfUrl] = useState<string>('');
+  
+  const [signature, setSignature] = useState<string | null>(null);
+  const [selectedDocType, setSelectedDocType] = useState<DocumentType>('approval-sheet');
+  const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState<string>('');
-  const [previewWithSignature, setPreviewWithSignature] = useState<string>('');
+  const [showDrawMode, setShowDrawMode] = useState(false);
+  const [showUploadMode, setShowUploadMode] = useState(false);
+  const sigCanvas = useRef<SignatureCanvas>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    if (!documentId) {
-      setError('Document ID tidak ditemukan');
-      return;
+    loadSignature();
+    if (documentId) {
+      loadDocumentPreview(selectedDocType);
     }
-    loadDocumentPreview();
-  }, [documentId]);
-
-  useEffect(() => {
-    // Setup canvas
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-
-    // Set canvas size
-    canvas.width = canvas.offsetWidth;
-    canvas.height = 300;
-
-    // Set drawing styles
-    ctx.strokeStyle = '#000';
-    ctx.lineWidth = 2;
-    ctx.lineCap = 'round';
-    ctx.lineJoin = 'round';
   }, []);
 
   useEffect(() => {
-    // Load signature from database
-    const loadSignatureFromDatabase = async () => {
-      try {
-        const signature = await signatureService.getSignature();
-        if (signature) {
-          setUploadedSignature(signature.url); // Assuming the signature URL is returned
-        }
-      } catch (error) {
-        console.error('Failed to load signature from database:', error);
+    if (documentId && selectedDocType) {
+      loadDocumentPreview(selectedDocType);
+    }
+  }, [selectedDocType, documentId]);
+
+  const loadSignature = async () => {
+    try {
+      const sig = await signatureService.getSignature();
+      if (sig) {
+        // Get the signature file URL from backend
+        const url = await signatureService.getSignatureFileUrl();
+        setSignature(url);
       }
-    };
-
-    loadSignatureFromDatabase();
-  }, []);
-
-  // Update preview when signature changes
-  useEffect(() => {
-    if (signatureDataUrl || uploadedSignature) {
-      updatePreviewWithSignature();
+    } catch (err) {
+      console.log('No signature found');
     }
-  }, [signatureDataUrl, uploadedSignature, pdfUrl]);
+  };
 
-  const loadDocumentPreview = async () => {
+  const loadDocumentPreview = async (docType: DocumentType) => {
     if (!documentId) return;
 
     try {
       setLoading(true);
-      setError('');
+      // Clean up previous URL
+      if (pdfUrl) {
+        window.URL.revokeObjectURL(pdfUrl);
+      }
 
-      // Load PDF preview
       const response = await api.get(
-        `/documents/${documentId}/file/approval-sheet/pdf`,
-        { responseType: 'blob' },
+        `/documents/${documentId}/file/${docType}/pdf`,
+        {
+          responseType: 'blob',
+        },
       );
 
       const blob = new Blob([response.data], { type: 'application/pdf' });
       const url = window.URL.createObjectURL(blob);
       setPdfUrl(url);
     } catch (err) {
-      console.error('Failed to load document:', err);
-      if (err instanceof AxiosError) {
-        setError(err.response?.data?.message || 'Gagal memuat dokumen');
+      console.error('Failed to load document preview:', err);
+      const error = err as AxiosError<any>;
+      if (error.response?.status === 404) {
+        setPdfUrl(null);
+        alert(`Dokumen ${docType} belum tersedia`);
       } else {
-        setError('Terjadi kesalahan saat memuat dokumen');
+        alert('Gagal memuat preview dokumen');
       }
     } finally {
       setLoading(false);
     }
   };
 
-  const updatePreviewWithSignature = async () => {
-    const currentSignature =
-      activeTab === 'draw' ? signatureDataUrl : uploadedSignature;
-    if (!currentSignature || !pdfUrl) return;
-
-    // For now, just show the original PDF
-    // In production, you would overlay the signature on the PDF
-    setPreviewWithSignature(pdfUrl);
+  const handleClearSignature = () => {
+    sigCanvas.current?.clear();
   };
 
-  const startDrawing = (e: React.MouseEvent<HTMLCanvasElement>) => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-
-    setIsDrawing(true);
-    const rect = canvas.getBoundingClientRect();
-    ctx.beginPath();
-    ctx.moveTo(e.clientX - rect.left, e.clientY - rect.top);
-  };
-
-  const draw = (e: React.MouseEvent<HTMLCanvasElement>) => {
-    if (!isDrawing) return;
-
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-
-    const rect = canvas.getBoundingClientRect();
-    ctx.lineTo(e.clientX - rect.left, e.clientY - rect.top);
-    ctx.stroke();
-  };
-
-  const stopDrawing = () => {
-    if (!isDrawing) return;
-
-    setIsDrawing(false);
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-
-    // Save canvas as data URL
-    const dataUrl = canvas.toDataURL('image/png');
-    setSignatureDataUrl(dataUrl);
-  };
-
-  const clearCanvas = () => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    setSignatureDataUrl('');
-  };
-
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    if (!file.type.startsWith('image/')) {
-      alert('File harus berupa gambar (PNG, JPG, etc.)');
+  const handleSaveDrawnSignature = async () => {
+    if (!sigCanvas.current || sigCanvas.current.isEmpty()) {
+      alert('Silakan buat tanda tangan terlebih dahulu');
       return;
     }
 
+    try {
+      setLoading(true);
+      // Convert canvas to blob
+      const canvas = sigCanvas.current.getCanvas();
+      const blob = await new Promise<Blob>((resolve) => {
+        canvas.toBlob((b) => resolve(b!), 'image/png');
+      });
+      const file = new File([blob], 'signature.png', { type: 'image/png' });
+      
+      // Check if user already has signature, update or create
+      const existingSig = await signatureService.getSignature();
+      if (existingSig) {
+        await signatureService.updateSignature(existingSig.id, file);
+      } else {
+        await signatureService.uploadSignature(file);
+      }
+      
+      // Reload signature from database
+      await loadSignature();
+      setShowDrawMode(false);
+      alert('Tanda tangan berhasil disimpan!');
+    } catch (err) {
+      console.error('Failed to save signature:', err);
+      alert('Gagal menyimpan tanda tangan');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleUploadSignature = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file
     if (file.size > 2 * 1024 * 1024) {
       alert('Ukuran file maksimal 2MB');
       return;
     }
 
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const dataUrl = event.target?.result as string;
-      setUploadedSignature(dataUrl);
-    };
-    reader.readAsDataURL(file);
+    if (!['image/png', 'image/jpeg', 'image/jpg'].includes(file.type)) {
+      alert('Format file harus PNG, JPG, atau JPEG');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      // Check if user already has signature, update or create
+      const existingSig = await signatureService.getSignature();
+      if (existingSig) {
+        await signatureService.updateSignature(existingSig.id, file);
+      } else {
+        await signatureService.uploadSignature(file);
+      }
+      
+      // Reload signature from database
+      await loadSignature();
+      setShowUploadMode(false);
+      alert('Tanda tangan berhasil diupload!');
+    } catch (err) {
+      console.error('Failed to upload signature:', err);
+      alert('Gagal mengupload tanda tangan');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleSaveSignature = async () => {
-    const currentSignature =
-      activeTab === 'draw' ? signatureDataUrl : uploadedSignature;
-
-    if (!currentSignature) {
-      alert('Silakan buat atau upload tanda tangan terlebih dahulu');
+  const handleSignDocument = async () => {
+    if (!signature) {
+      alert('Silakan upload atau gambar tanda tangan terlebih dahulu');
       return;
     }
 
@@ -218,288 +182,204 @@ function RouteComponent() {
     }
 
     try {
-      setSaving(true);
-
-      // Convert data URL to blob
-      const response = await fetch(currentSignature);
-      const blob = await response.blob();
-
-      // Create File from Blob
-      const file = new File([blob], 'signature.png', { type: 'image/png' });
-
-      // Upload signature
-      await signatureService.uploadSignature(file);
-
-      // Approve document with signature
-      await documentService.approveDocument(
-        documentId,
-        '',
-        'Approved with signature',
-      );
-
-      alert('✅ Tanda tangan berhasil disimpan dan dokumen disetujui!');
-
-      // Navigate back
+      setLoading(true);
+      // Call approve API which will auto-apply signature
+      await documentService.approveDocument(documentId, '', 'Approved with signature');
+      alert('✅ Dokumen berhasil ditandatangani dan disetujui!');
+      
       if (returnPath) {
-        navigate({
-          to: returnPath as any,
-          search: { autoApprove: autoApprove } as any,
-        });
+        navigate({ to: returnPath as any });
       } else {
         navigate({ to: '/' as any });
       }
     } catch (err) {
-      console.error('Failed to save signature:', err);
-      if (err instanceof AxiosError) {
-        alert(
-          '❌ ' +
-            (err.response?.data?.message || 'Gagal menyimpan tanda tangan'),
-        );
-      } else {
-        alert('Terjadi kesalahan saat menyimpan tanda tangan');
-      }
+      console.error('Failed to sign document:', err);
+      const error = err as AxiosError<any>;
+      alert(error.response?.data?.message || 'Gagal menandatangani dokumen');
     } finally {
-      setSaving(false);
+      setLoading(false);
     }
   };
 
-  const handleCancel = () => {
-    if (returnPath) {
-      navigate({ to: returnPath as any });
-    } else {
-      navigate({ to: '/' as any });
-    }
-  };
-
-  // Cleanup blob URL on unmount
+  // Cleanup on unmount
   useEffect(() => {
     return () => {
       if (pdfUrl) {
         window.URL.revokeObjectURL(pdfUrl);
       }
-      if (previewWithSignature && previewWithSignature !== pdfUrl) {
-        window.URL.revokeObjectURL(previewWithSignature);
+      if (signature) {
+        window.URL.revokeObjectURL(signature);
       }
     };
-  }, [pdfUrl, previewWithSignature]);
+  }, [pdfUrl, signature]);
 
   return (
-    <div className='min-h-screen bg-gray-50 p-6'>
-      <div className='max-w-7xl mx-auto space-y-6'>
-        {/* Header */}
-        <div className='flex items-center justify-between'>
-          <div className='flex items-center gap-4'>
-            <Button variant='outline' onClick={handleCancel}>
-              <ArrowLeft className='w-4 h-4 mr-2' />
-              Kembali
-            </Button>
-            <div>
-              <h1 className='text-2xl font-bold text-gray-900'>
-                Tanda Tangan Dokumen
-              </h1>
-              <p className='text-gray-600 mt-1'>
-                Buat atau upload tanda tangan Anda
-              </p>
-            </div>
-          </div>
-          <Button onClick={handleSaveSignature} disabled={saving}>
-            {saving ? (
-              <>
-                <div className='w-4 h-4 mr-2 border-2 border-white border-t-transparent rounded-full animate-spin' />
-                Menyimpan...
-              </>
-            ) : (
-              <>
-                <Check className='w-4 h-4 mr-2' />
-                Simpan & Setujui
-              </>
-            )}
-          </Button>
-        </div>
+    <div className='p-6 max-w-7xl mx-auto'>
+      <div className='mb-6'>
+        <h1 className='text-2xl font-bold text-gray-900'>Tanda Tangani Dokumen</h1>
+        <p className='text-gray-600 mt-1'>
+          Upload atau gambar tanda tangan Anda, lalu pilih dokumen untuk ditandatangani
+        </p>
+      </div>
 
-        {/* Error Message */}
-        {error && (
-          <div className='bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg'>
-            {error}
-          </div>
-        )}
-
-        {/* Main Content - Split View */}
-        <div className='grid grid-cols-1 lg:grid-cols-3 gap-6'>
-          {/* Left Panel - Signature Editor */}
-          <div className='lg:col-span-1 space-y-6'>
-            <div className='bg-white border rounded-lg p-6'>
-              <h2 className='text-lg font-semibold mb-4'>
-                Editor Tanda Tangan
-              </h2>
-
-              {/* Tab Buttons */}
-              <div className='flex gap-2 mb-6'>
-                <Button
-                  variant={activeTab === 'draw' ? 'default' : 'outline'}
-                  onClick={() => setActiveTab('draw')}
-                  className='flex-1 gap-2'
-                >
-                  <Pen className='w-4 h-4' />
-                  Gambar
-                </Button>
-                <Button
-                  variant={activeTab === 'upload' ? 'default' : 'outline'}
-                  onClick={() => setActiveTab('upload')}
-                  className='flex-1 gap-2'
-                >
-                  <Upload className='w-4 h-4' />
-                  Upload
-                </Button>
+      <div className='grid grid-cols-1 lg:grid-cols-8 gap-6'>
+        {/* Card Kiri: Tanda Tangan */}
+        <Card className='lg:col-span-3'>
+          <CardHeader>
+            <CardTitle>Tanda Tangan Anda</CardTitle>
+          </CardHeader>
+          <CardContent className='space-y-4'>
+            {/* Preview tanda tangan yang tersimpan */}
+            {signature && !showDrawMode && !showUploadMode && (
+              <div className='border rounded-lg p-4 bg-gray-50'>
+                <p className='text-sm text-gray-600 mb-2'>Tanda tangan tersimpan:</p>
+                <img src={signature} alt='Signature' className='max-h-32 mx-auto' />
               </div>
+            )}
 
-              {/* Draw Tab */}
-              {activeTab === 'draw' && (
-                <div className='space-y-4'>
-                  <div className='space-y-2'>
-                    <label className='text-sm font-medium block'>
-                      Gambar Tanda Tangan Anda
-                    </label>
-                    <div className='border-2 border-dashed border-gray-300 rounded-lg bg-white'>
-                      <canvas
-                        ref={canvasRef}
-                        className='w-full cursor-crosshair'
-                        style={{ height: '300px' }}
-                        onMouseDown={startDrawing}
-                        onMouseMove={draw}
-                        onMouseUp={stopDrawing}
-                        onMouseLeave={stopDrawing}
-                      />
-                    </div>
-                    <p className='text-xs text-gray-500'>
-                      Gunakan mouse atau touchpad untuk menggambar tanda tangan
-                      Anda
-                    </p>
-                  </div>
-
-                  <Button
-                    variant='outline'
-                    onClick={clearCanvas}
-                    className='w-full gap-2'
-                  >
-                    <Eraser className='w-4 h-4' />
+            {/* Mode Gambar */}
+            {showDrawMode && (
+              <div className='space-y-4'>
+                <div className='border-2 border-gray-300 rounded-lg bg-white'>
+                  <SignatureCanvas
+                    ref={sigCanvas}
+                    canvasProps={{
+                      className: 'w-full h-48',
+                    }}
+                  />
+                </div>
+                <div className='flex gap-2'>
+                  <Button onClick={handleClearSignature} variant='outline' className='flex-1'>
                     Hapus
                   </Button>
-                </div>
-              )}
-
-              {/* Upload Tab */}
-              {activeTab === 'upload' && (
-                <div className='space-y-4'>
-                  <div className='space-y-2'>
-                    <label className='text-sm font-medium block'>
-                      Upload Gambar Tanda Tangan
-                    </label>
-                    <div className='border-2 border-dashed border-gray-300 rounded-lg p-8 bg-white'>
-                      {uploadedSignature ? (
-                        <div className='space-y-4'>
-                          <img
-                            src={uploadedSignature}
-                            alt='Uploaded Signature'
-                            className='max-h-50 mx-auto'
-                          />
-                          <Button
-                            variant='outline'
-                            onClick={() => setUploadedSignature('')}
-                            className='w-full gap-2'
-                          >
-                            <Upload className='w-4 h-4' />
-                            Ganti Gambar
-                          </Button>
-                        </div>
-                      ) : (
-                        <label className='cursor-pointer block'>
-                          <div className='flex flex-col items-center gap-2 text-gray-500'>
-                            <Upload className='w-8 h-8' />
-                            <span className='text-sm font-medium'>
-                              Klik untuk upload gambar
-                            </span>
-                            <span className='text-xs'>PNG, JPG (Max. 2MB)</span>
-                          </div>
-                          <input
-                            type='file'
-                            accept='image/*'
-                            onChange={handleFileUpload}
-                            className='hidden'
-                          />
-                        </label>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Tips */}
-            <div className='bg-white border rounded-lg p-6'>
-              <div className='flex gap-3'>
-                <AlertCircle className='w-5 h-5 text-blue-600 shrink-0 mt-0.5' />
-                <div className='text-sm'>
-                  <p className='font-semibold mb-2'>Tips:</p>
-                  <ul className='space-y-1 text-gray-600 text-xs'>
-                    <li>• Pastikan tanda tangan jelas dan mudah dibaca</li>
-                    <li>• Gunakan latar belakang putih untuk hasil terbaik</li>
-                    <li>
-                      • Tanda tangan akan disimpan dan digunakan untuk dokumen
-                      ini
-                    </li>
-                  </ul>
+                  <Button onClick={handleSaveDrawnSignature} className='flex-1'>
+                    Simpan
+                  </Button>
+                  <Button onClick={() => setShowDrawMode(false)} variant='outline'>
+                    Batal
+                  </Button>
                 </div>
               </div>
-            </div>
-          </div>
+            )}
 
-          {/* Right Panel - Document Preview */}
-          <div className='lg:col-span-2'>
-            <div className='bg-white border rounded-lg p-6'>
-              <div className='flex items-center justify-between mb-4'>
-                <h2 className='text-lg font-semibold'>Preview Dokumen</h2>
+            {/* Mode Upload */}
+            {showUploadMode && (
+              <div className='space-y-4'>
+                <input
+                  ref={fileInputRef}
+                  type='file'
+                  accept='image/*'
+                  onChange={handleUploadSignature}
+                  className='block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100'
+                />
+                <Button onClick={() => setShowUploadMode(false)} variant='outline' className='w-full'>
+                  Batal
+                </Button>
               </div>
+            )}
 
-              {loading ? (
-                <div className='flex items-center justify-center h-150 bg-gray-100 rounded-lg'>
-                  <div className='text-center'>
-                    <div className='w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4' />
-                    <p className='text-gray-600'>Memuat dokumen...</p>
-                  </div>
-                </div>
-              ) : pdfUrl ? (
-                <div className='space-y-4'>
-                  <div
-                    className='bg-gray-100 rounded-lg overflow-hidden border'
-                    style={{ height: '700px' }}
-                  >
-                    <iframe
-                      src={previewWithSignature || pdfUrl}
-                      className='w-full h-full'
-                      title='Document Preview'
-                    />
-                  </div>
-                  {(signatureDataUrl || uploadedSignature) && (
-                    <div className='p-3 bg-green-50 border border-green-200 rounded-lg'>
-                      <div className='flex items-center gap-2 text-green-800'>
-                        <Check className='w-4 h-4' />
-                        <span className='text-sm font-medium'>
-                          Tanda tangan siap diterapkan pada dokumen
-                        </span>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <div className='flex items-center justify-center h-150 bg-gray-100 rounded-lg'>
-                  <p className='text-gray-500'>Tidak ada preview tersedia</p>
-                </div>
-              )}
+            {/* Tombol Aksi */}
+            {!showDrawMode && !showUploadMode && (
+              <div className='space-y-2'>
+                <Button
+                  onClick={() => setShowDrawMode(true)}
+                  variant='outline'
+                  className='w-full flex items-center justify-center gap-2'
+                >
+                  <Pen className='w-4 h-4' />
+                  {signature ? 'Ubah dengan Gambar' : 'Gambar Tanda Tangan'}
+                </Button>
+                <Button
+                  onClick={() => setShowUploadMode(true)}
+                  variant='outline'
+                  className='w-full flex items-center justify-center gap-2'
+                >
+                  <Upload className='w-4 h-4' />
+                  {signature ? 'Ubah dengan Upload' : 'Upload Tanda Tangan'}
+                </Button>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Card Kanan: Preview Dokumen */}
+        <Card className='lg:col-span-5'>
+          <CardHeader>
+            <div className='flex items-center justify-between'>
+              <CardTitle>Preview Dokumen</CardTitle>
+              <Select value={selectedDocType} onValueChange={(val) => setSelectedDocType(val as DocumentType)}>
+                <SelectTrigger className='w-50'>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value='proposal'>Proposal</SelectItem>
+                  <SelectItem value='approval-sheet'>Lembar Pengesahan</SelectItem>
+                  <SelectItem value='executive-summary'>Executive Summary</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
-          </div>
-        </div>
+          </CardHeader>
+          <CardContent className='space-y-4'>
+            {/* Preview PDF */}
+            {loading && (
+              <div className='flex items-center justify-center h-[600px] border rounded-lg bg-gray-50'>
+                <p className='text-gray-500'>Memuat dokumen...</p>
+              </div>
+            )}
+            {!loading && pdfUrl && (
+              <div className='border rounded-lg overflow-hidden'>
+                <iframe
+                  src={pdfUrl}
+                  className='w-full h-[600px]'
+                  title='Document Preview'
+                />
+              </div>
+            )}
+            {!loading && !pdfUrl && (
+              <div className='flex items-center justify-center h-[600px] border rounded-lg bg-gray-50'>
+                <p className='text-gray-500'>Dokumen tidak tersedia</p>
+              </div>
+            )}
+
+            {/* Button Bubuhkan Tanda Tangan */}
+            {signature && pdfUrl && (
+              <Button
+                onClick={handleSignDocument}
+                disabled={loading}
+                className='w-full'
+                size='lg'
+              >
+                {loading ? 'Memproses...' : 'Bubuhkan Tanda Tangan'}
+              </Button>
+            )}
+            {!signature && (
+              <div className='text-center text-sm text-gray-500 p-4 bg-yellow-50 rounded-lg'>
+                Silakan upload atau gambar tanda tangan terlebih dahulu
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className='mt-6 flex justify-end'>
+        <Button 
+          onClick={() => {
+            if (returnPath) {
+              navigate({ to: returnPath as any });
+            } else {
+              navigate({ to: '/' as any });
+            }
+          }} 
+          variant='outline'
+        >
+          Kembali
+        </Button>
       </div>
     </div>
   );
+}
+
+function RouteComponent() {
+  const { documentId, return: returnPath } = Route.useSearch();
+  return <SignDocumentContent documentId={documentId} returnPath={returnPath || '/'} />;
 }

@@ -9,15 +9,13 @@ import { AxiosError } from 'axios';
 import { StatCard } from '@/shared/components/common/StatCard';
 import { Approval } from '@/features/approvals';
 import type { ActorRole } from '@/features/approvals';
-import type { DocActionPayload } from '@/features/approvals/Approval';
-import { documentService } from '@/services/document.service';
-import { signatureService } from '@/services/signature.service';
 import {
   mapDocumentsToApprovalItems,
   type ApprovalItem,
 } from '@/features/approvals/approval-utils';
+import { documentService } from '@/services/document.service';
+import { signatureService } from '@/services/signature.service';
 import { Button } from '@/shared/components/ui/button/button';
-import api from '@/lib/axios';
 
 export const Route = createFileRoute('/ketua-ormawa/')({
   component: RouteComponent,
@@ -37,11 +35,6 @@ function RouteComponent() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const actorRole: ActorRole = 'ketua-ormawa';
-  const [pdfPreview, setPdfPreview] = useState<{
-    id: number;
-    type: 'approval-sheet' | 'proposal';
-    url: string;
-  } | null>(null);
 
   useEffect(() => {
     fetchDocuments();
@@ -205,82 +198,13 @@ function RouteComponent() {
     }
   };
 
-  const handleOpenDoc = async (payload: DocActionPayload) => {
-    console.log('handleOpenDoc called with:', payload);
-
-    if (payload.mode === 'sign') {
-      // Navigate to sign document page
-      navigate({
-        to: '/sign-document',
-        search: {
-          documentId: payload.booking.id,
-          return: '/ketua-ormawa',
-          autoApprove: true,
-        },
-      });
-      return;
-    }
-
-    if (payload.mode === 'preview') {
-      // Preview: open PDF in modal - always use approval-sheet for ketua-ormawa
-      const documentId = payload.booking.id;
-      const docType = 'approval-sheet'; // Always use approval-sheet
-
-      console.log(
-        'Opening preview for document:',
+  const handleOpenDoc = (documentId: number) => {
+    navigate({
+      to: '/ketua-ormawa/sign-document',
+      search: {
         documentId,
-        'type:',
-        docType,
-      );
-
-      try {
-        const response = await api.get(
-          `/documents/${documentId}/file/${docType}/pdf`,
-          {
-            responseType: 'blob',
-          },
-        );
-
-        const blob = new Blob([response.data], {
-          type: 'application/pdf',
-        });
-        const url = window.URL.createObjectURL(blob);
-
-        setPdfPreview({ id: documentId, type: docType, url });
-      } catch (error) {
-        console.error('PDF preview failed:', error);
-        const err = error as any;
-        if (err.response?.status === 403) {
-          alert(
-            '❌ Akses Ditolak\n\nAnda tidak memiliki izin untuk melihat dokumen ini. Pastikan Anda sudah memproses dokumen ini.',
-          );
-        } else if (err.response?.status === 404) {
-          alert(
-            '❌ File Tidak Ditemukan\n\nLembar pengesahan belum tersedia untuk dokumen ini.',
-          );
-        } else if (err.response?.status === 500) {
-          alert(
-            '❌ Kesalahan Server\n\n' +
-              (err.response?.data?.message ||
-                'Terjadi kesalahan saat mengkonversi dokumen. Pastikan PHP GD extension sudah aktif.'),
-          );
-        } else {
-          alert(
-            'Gagal membuka preview PDF: ' +
-              (err.response?.data?.message || err.message),
-          );
-        }
-      }
-
-    }
-  };
-
-  // Cleanup blob URL when modal closes
-  const closePdfPreview = () => {
-    if (pdfPreview?.url) {
-      window.URL.revokeObjectURL(pdfPreview.url);
-    }
-    setPdfPreview(null);
+      },
+    });
   };
 
   if (loading) {
@@ -346,34 +270,9 @@ function RouteComponent() {
             actorRole={actorRole}
             onOpenDoc={handleOpenDoc}
             showOrganisasi={true}
-            showProposal={true}
           />
         )}
       </div>
-
-      {/* PDF Preview Modal */}
-      {pdfPreview && (
-        <div className='fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50'>
-          <div className='bg-white rounded-lg w-[90vw] h-[90vh] flex flex-col'>
-            <div className='flex justify-between items-center p-4 border-b'>
-              <h3 className='text-lg font-semibold'>Preview PDF</h3>
-              <button
-                onClick={closePdfPreview}
-                className='text-gray-500 hover:text-gray-700'
-              >
-                ✕
-              </button>
-            </div>
-            <div className='flex-1 overflow-hidden'>
-              <iframe
-                src={pdfPreview.url}
-                className='w-full h-full border-0'
-                title='PDF Preview'
-              />
-            </div>
-          </div>
-        </div>
-      )}
     </>
   );
 }

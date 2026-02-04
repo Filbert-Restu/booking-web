@@ -2,7 +2,6 @@ import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { useEffect, useState } from 'react';
 import { AxiosError } from 'axios';
 import { ApprovalHistory } from '@/features/approvals';
-import type { ActorRole } from '@/features/approvals';
 import { documentService } from '@/services/document.service';
 import { mapDocumentsToApprovalItems, type ApprovalItem } from '@/features/approvals/approval-utils';
 import { Button } from '@/shared/components/ui/button/button';
@@ -16,7 +15,6 @@ function RouteComponent() {
   const [approvalItems, setApprovalItems] = useState<ApprovalItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const actorRole: ActorRole = 'wadek1';
 
   useEffect(() => {
     fetchProcessedDocuments();
@@ -42,10 +40,10 @@ function RouteComponent() {
     }
   };
 
-  const handleOpenDoc = (payload: any) => {
+  const handleOpenDoc = (documentId: number) => {
     navigate({
-      to: '/preview-dokumen',
-      search: { doc: payload.doc, id: payload.booking.id, return: '/wadek1/riwayat-persetujuan' } as any
+      to: '/wadek1/preview-document',
+      search: { documentId }
     });
   };
 
@@ -86,7 +84,6 @@ function RouteComponent() {
       ) : (
         <ApprovalHistory
           bookings={approvalItems}
-          actorRole={actorRole}
           onOpenDoc={handleOpenDoc}
         />
       )}

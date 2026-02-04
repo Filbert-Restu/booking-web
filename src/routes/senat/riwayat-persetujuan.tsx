@@ -2,7 +2,6 @@ import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { useEffect, useState } from 'react';
 import { AxiosError } from 'axios';
 import { ApprovalHistory } from '@/features/approvals';
-import type { ActorRole } from '@/features/approvals';
 import { documentService } from '@/services/document.service';
 import {
   mapDocumentsToApprovalItems,
@@ -19,7 +18,6 @@ function RouteComponent() {
   const [approvalItems, setApprovalItems] = useState<ApprovalItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const actorRole: ActorRole = 'senat';
 
   useEffect(() => {
     fetchProcessedDocuments();
@@ -55,19 +53,10 @@ function RouteComponent() {
     }
   };
 
-  const handleOpenDoc = (payload: {
-    booking: ApprovalItem;
-    role: ActorRole;
-    doc: DocumentType;
-    mode: 'preview';
-  }) => {
+  const handleOpenDoc = (documentId: number) => {
     navigate({
-      to: '/preview-dokumen',
-      search: {
-        doc: payload.doc,
-        id: payload.booking.id,
-        return: '/senat/riwayat-persetujuan',
-      } as any,
+      to: '/senat/preview-document',
+      search: { documentId }
     });
   };
 
@@ -110,7 +99,6 @@ function RouteComponent() {
       ) : (
         <ApprovalHistory
           bookings={approvalItems}
-          actorRole={actorRole}
           onOpenDoc={handleOpenDoc}
         />
       )}

@@ -9,21 +9,12 @@ import {
 } from '@/shared/components/ui/table';
 import { Search } from 'lucide-react';
 import { Input } from '@/shared/components/ui/input';
-import type { ApprovalItem, ActorRole } from './Approval';
-
-type DocumentType = 'executive-summary' | 'lembar-pengesahan';
+import type { ApprovalItem } from './Approval';
 
 interface ApprovalHistoryProps {
   bookings: ApprovalItem[];
   showOrganisasi?: boolean;
-  showProposal?: boolean;
-  actorRole: ActorRole;
-  onOpenDoc?: (payload: {
-    booking: ApprovalItem;
-    role: ActorRole;
-    doc: DocumentType;
-    mode: 'preview';
-  }) => void;
+  onOpenDoc?: (documentId: number) => void;
 }
 
 function statusBadge(status: string) {
@@ -41,16 +32,14 @@ function statusBadge(status: string) {
 export function ApprovalHistory({
   bookings,
   showOrganisasi = true,
-  showProposal = true,
-  actorRole,
   onOpenDoc,
 }: ApprovalHistoryProps) {
   const [searchTerm, setSearchTerm] = useState('');
 
   const filteredItems = bookings;
 
-  const handleDocumentPreview = (booking: ApprovalItem, doc: DocumentType) => {
-    onOpenDoc?.({ booking, doc, role: actorRole, mode: 'preview' });
+  const handleDocumentPreview = (booking: ApprovalItem) => {
+    onOpenDoc?.(booking.id);
   };
 
   useEffect(() => {
@@ -82,9 +71,7 @@ export function ApprovalHistory({
               <TableHead>Ruang</TableHead>
               <TableHead>Tanggal</TableHead>
               <TableHead>Waktu</TableHead>
-              {showProposal && <TableHead>Proposal</TableHead>}
-              <TableHead className='text-center'>Executive Summary</TableHead>
-              <TableHead className='text-center'>Lembar Pengesahan</TableHead>
+              <TableHead className='text-center'>Dokumen</TableHead>
               <TableHead className='text-center'>Status</TableHead>
             </TableRow>
           </TableHeader>
@@ -92,7 +79,7 @@ export function ApprovalHistory({
             {filteredItems.length === 0 ? (
               <TableRow>
                 <TableCell
-                  colSpan={showOrganisasi && showProposal ? 14 : 12}
+                  colSpan={showOrganisasi ? 10 : 9}
                   className='h-24 text-center text-gray-500'
                 >
                   Belum ada riwayat persetujuan
@@ -111,45 +98,13 @@ export function ApprovalHistory({
                   <TableCell>{item.namaRuang}</TableCell>
                   <TableCell>{item.tanggal}</TableCell>
                   <TableCell>{item.waktu}</TableCell>
-                  {showProposal && (
-                    <TableCell>
-                      {item.proposalUrl ? (
-                        <a
-                          href={item.proposalUrl}
-                          target='_blank'
-                          rel='noopener noreferrer'
-                          className='text-blue-600 underline hover:text-blue-800'
-                        >
-                          Lihat PDF
-                        </a>
-                      ) : (
-                        '-'
-                      )}
-                    </TableCell>
-                  )}
-                  <TableCell>
-                    <div className='flex items-center justify-center'>
-                      <button
-                        onClick={() =>
-                          handleDocumentPreview(item, 'executive-summary')
-                        }
-                        className='text-blue-600 underline hover:text-blue-800'
-                      >
-                        Preview
-                      </button>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className='flex items-center justify-center'>
-                      <button
-                        onClick={() =>
-                          handleDocumentPreview(item, 'lembar-pengesahan')
-                        }
-                        className='text-blue-600 underline hover:text-blue-800'
-                      >
-                        Preview
-                      </button>
-                    </div>
+                  <TableCell className='text-center'>
+                    <button
+                      onClick={() => handleDocumentPreview(item)}
+                      className='text-blue-600 hover:text-blue-800 underline font-medium'
+                    >
+                      Lihat Dokumen
+                    </button>
                   </TableCell>
                   <TableCell>
                     <div className='flex items-center justify-center'>
