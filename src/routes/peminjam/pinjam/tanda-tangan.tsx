@@ -4,12 +4,21 @@ import { AxiosError } from 'axios';
 import { Stepper } from '@/shared/components/common/Stepper';
 import { Button } from '@/shared/components/ui/button/button';
 import { Checkbox } from '@/shared/components/ui/checkbox';
-import { FileText, Edit, AlertCircle, Download, RefreshCw } from 'lucide-react';
+import {
+  FileText,
+  Edit,
+  AlertCircle,
+  Download,
+  RefreshCw,
+  Eye,
+  X,
+  ChevronDown,
+  ChevronUp,
+} from 'lucide-react';
 import { documentService } from '@/services/document.service';
 import { bookingService } from '@/services/booking.service';
 import { signatureService } from '@/services/signature.service';
 import { useBookingContext } from '@/contexts/BookingContext';
-import { SignatureUpload } from '@/shared/components/common/SignatureUpload';
 import type { Signature } from '@/services/signature.service';
 import api from '@/lib/axios';
 
@@ -53,6 +62,38 @@ function RouteComponent() {
     executiveSummary?: string;
     approvalSheet?: string;
   }>({});
+  const [pdfUrls, setPdfUrls] = useState<{
+    proposal?: string;
+    executiveSummary?: string;
+    approvalSheet?: string;
+  }>({});
+  const [loadingPreview, setLoadingPreview] = useState<{
+    proposal: boolean;
+    executiveSummary: boolean;
+    approvalSheet: boolean;
+  }>({
+    proposal: false,
+    executiveSummary: false,
+    approvalSheet: false,
+  });
+  const [fullscreenPreview, setFullscreenPreview] = useState<{
+    isOpen: boolean;
+    type: 'proposal' | 'executiveSummary' | 'approvalSheet' | null;
+    title: string;
+  }>({
+    isOpen: false,
+    type: null,
+    title: '',
+  });
+  const [expandedPreviews, setExpandedPreviews] = useState<{
+    proposal: boolean;
+    executiveSummary: boolean;
+    approvalSheet: boolean;
+  }>({
+    proposal: false,
+    executiveSummary: false,
+    approvalSheet: false,
+  });
 
   // Load user signature on mount
   useEffect(() => {
@@ -71,6 +112,68 @@ function RouteComponent() {
 
     loadSignature();
   }, []);
+
+  // Load file as PDF blob URL with authentication
+  const loadFilePreview = async (
+    fileType: 'proposal' | 'executive-summary' | 'approval-sheet',
+    stateKey: 'proposal' | 'executiveSummary' | 'approvalSheet',
+  ) => {
+    if (!formData.document_id) return;
+
+    try {
+      setLoadingPreview((prev) => ({ ...prev, [stateKey]: true }));
+
+      // Request PDF version of the file
+      const apiPath = `/documents/${formData.document_id}/file/${fileType}/pdf`;
+      console.log(`[PREVIEW] Loading PDF for ${fileType}:`, apiPath);
+
+      const response = await api.get(apiPath, {
+        responseType: 'blob',
+      });
+
+      console.log(`[PREVIEW] Response received for ${fileType}:`, {
+        contentType: response.headers['content-type'],
+        size: response.data.size,
+      });
+
+      const blob = new Blob([response.data], {
+        type: 'application/pdf',
+      });
+      const blobUrl = URL.createObjectURL(blob);
+
+      console.log(`[PREVIEW] Blob URL created for ${fileType}:`, blobUrl);
+      setPdfUrls((prev) => ({ ...prev, [stateKey]: blobUrl }));
+    } catch (error) {
+      console.error(`[PREVIEW] Failed to load ${fileType} preview:`, error);
+      if (error instanceof AxiosError) {
+        console.error(`[PREVIEW] Error details:`, {
+          status: error.response?.status,
+          message: error.response?.data?.message,
+        });
+      }
+    } finally {
+      setLoadingPreview((prev) => ({ ...prev, [stateKey]: false }));
+    }
+  };
+
+  // Load proposal preview on mount
+  useEffect(() => {
+    if (formData.document_id) {
+      loadFilePreview('proposal', 'proposal');
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [formData.document_id]);
+
+  // Load generated documents preview when URLs change
+  useEffect(() => {
+    if (generatedUrls.executiveSummary) {
+      loadFilePreview('executive-summary', 'executiveSummary');
+    }
+    if (generatedUrls.approvalSheet) {
+      loadFilePreview('approval-sheet', 'approvalSheet');
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [generatedUrls]);
 
   // Manual reload signature
   const handleReloadSignature = async () => {
@@ -156,10 +259,12 @@ function RouteComponent() {
         approvalSheet: approvalSheet.download_url,
       });
 
+      // Preview will be loaded automatically by useEffect watching generatedUrls
+
       alert(
         'Dokumen berhasil digenerate!\n\n' +
           'Tanda tangan Anda telah otomatis tertanam di dokumen.\n' +
-          'Silakan download dan verifikasi dokumen.',
+          'Silakan lihat preview dan download dokumen.',
       );
     } catch (error) {
       console.error('❌ [GENERATE] Failed to generate documents:', error);
@@ -664,96 +769,292 @@ function RouteComponent() {
             </div>
 
             {/* Preview & Download Dokumen */}
-            <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
-              {/* Download Lembar Pengesahan */}
-              <div className='border border-gray-200 rounded-lg p-4'>
-                <div className='flex items-center gap-2 mb-3'>
-                  <FileText className='h-4 w-4 text-gray-600' />
-                  <h3 className='text-sm font-medium text-gray-900'>
-                    Lembar Pengesahan
-                  </h3>
+            <div className='grid grid-cols-1 lg:grid-cols-3 gap-4'>
+              {/* Proposal Preview */}
+              <div className='border border-gray-200 rounded-lg overflow-hidden'>
+                <div className='bg-gray-800 px-4 py-3 flex items-center justify-between'>
+                  <div className='flex items-center gap-2'>
+                    <FileText className='h-4 w-4 text-white' />
+                    <h3 className='text-sm font-medium text-white'>Proposal</h3>
+                  </div>
+                  <div className='flex gap-1'>
+                    <Button
+                      type='button'
+                      size='sm'
+                      variant='ghost'
+                      onClick={() =>
+                        setExpandedPreviews((prev) => ({
+                          ...prev,
+                          proposal: !prev.proposal,
+                        }))
+                      }
+                      className='text-white hover:bg-gray-700 h-8 px-2'
+                      title={expandedPreviews.proposal ? 'Collapse' : 'Expand'}
+                    >
+                      {expandedPreviews.proposal ? (
+                        <ChevronUp className='h-3 w-3' />
+                      ) : (
+                        <ChevronDown className='h-3 w-3' />
+                      )}
+                    </Button>
+                    <Button
+                      type='button'
+                      size='sm'
+                      variant='ghost'
+                      onClick={() =>
+                        setFullscreenPreview({
+                          isOpen: true,
+                          type: 'proposal',
+                          title: 'Proposal',
+                        })
+                      }
+                      disabled={!pdfUrls.proposal}
+                      className='text-white hover:bg-gray-700 h-8 px-2'
+                      title='Fullscreen'
+                    >
+                      <Eye className='h-3 w-3' />
+                    </Button>
+                    <Button
+                      type='button'
+                      size='sm'
+                      variant='ghost'
+                      onClick={() => handleDownloadFile('proposal')}
+                      disabled={
+                        downloadingFile !== null || !formData.document_id
+                      }
+                      className='text-white hover:bg-gray-700 h-8 px-2'
+                      title='Download'
+                    >
+                      <Download className='h-3 w-3' />
+                    </Button>
+                  </div>
                 </div>
-                <div className='bg-gray-100 border-2 border-dashed border-gray-300 rounded-lg p-6 min-h-[200px] flex items-center justify-center'>
-                  <div className='text-center text-gray-500'>
-                    <FileText className='h-12 w-12 mx-auto mb-2 opacity-50' />
-                    <p className='text-xs mb-3'>
-                      {formData.event_name || 'Peminjaman Ruangan'}
-                    </p>
-                    {generatedUrls.approvalSheet ? (
-                      <Button
-                        type='button'
-                        size='sm'
-                        variant='outline'
-                        onClick={() =>
-                          handleDownloadGenerated(
-                            generatedUrls.approvalSheet!,
-                            `lembar-pengesahan-${formData.document_id}.docx`,
-                          )
-                        }
-                        disabled={downloadingFile !== null}
-                        className='text-xs bg-green-50 border-green-300 text-green-700 hover:bg-green-100'
-                      >
-                        <Download className='h-3 w-3 mr-1' />
-                        {downloadingFile?.includes('lembar')
-                          ? 'Downloading...'
-                          : 'Download (Generated)'}
-                      </Button>
+                {expandedPreviews.proposal && (
+                  <div className='bg-gray-100 min-h-[600px] relative'>
+                    {loadingPreview.proposal ? (
+                      <div className='absolute inset-0 flex items-center justify-center'>
+                        <div className='text-center text-gray-500'>
+                          <RefreshCw className='h-8 w-8 mx-auto mb-2 animate-spin' />
+                          <p className='text-xs'>Memuat preview...</p>
+                        </div>
+                      </div>
+                    ) : pdfUrls.proposal ? (
+                      <iframe
+                        src={pdfUrls.proposal}
+                        className='w-full h-[600px] border-0'
+                        title='Proposal Preview'
+                      />
                     ) : (
-                      <div className='text-xs'>
-                        <p className='text-gray-400 mb-2'>Belum digenerate</p>
-                        <p className='text-orange-600 font-medium'>
-                          ⬆️ Klik "Generate Dokumen" dulu
-                        </p>
+                      <div className='absolute inset-0 flex items-center justify-center'>
+                        <div className='text-center text-gray-500'>
+                          <FileText className='h-12 w-12 mx-auto mb-2 opacity-50' />
+                          <p className='text-xs'>Preview tidak tersedia</p>
+                        </div>
                       </div>
                     )}
                   </div>
-                </div>
+                )}
               </div>
 
-              {/* Download Executive Summary */}
-              <div className='border border-gray-200 rounded-lg p-4'>
-                <div className='flex items-center gap-2 mb-3'>
-                  <FileText className='h-4 w-4 text-gray-600' />
-                  <h3 className='text-sm font-medium text-gray-900'>
-                    Executive Summary
-                  </h3>
+              {/* Executive Summary Preview */}
+              <div className='border border-gray-200 rounded-lg overflow-hidden'>
+                <div className='bg-blue-800 px-4 py-3 flex items-center justify-between'>
+                  <div className='flex items-center gap-2'>
+                    <FileText className='h-4 w-4 text-white' />
+                    <h3 className='text-sm font-medium text-white'>
+                      Executive Summary
+                    </h3>
+                  </div>
+                  <div className='flex gap-1'>
+                    <Button
+                      type='button'
+                      size='sm'
+                      variant='ghost'
+                      onClick={() =>
+                        setExpandedPreviews((prev) => ({
+                          ...prev,
+                          executiveSummary: !prev.executiveSummary,
+                        }))
+                      }
+                      className='text-white hover:bg-blue-700 h-8 px-2'
+                      title={
+                        expandedPreviews.executiveSummary
+                          ? 'Collapse'
+                          : 'Expand'
+                      }
+                    >
+                      {expandedPreviews.executiveSummary ? (
+                        <ChevronUp className='h-3 w-3' />
+                      ) : (
+                        <ChevronDown className='h-3 w-3' />
+                      )}
+                    </Button>
+                    <Button
+                      type='button'
+                      size='sm'
+                      variant='ghost'
+                      onClick={() =>
+                        setFullscreenPreview({
+                          isOpen: true,
+                          type: 'executiveSummary',
+                          title: 'Executive Summary',
+                        })
+                      }
+                      disabled={!pdfUrls.executiveSummary}
+                      className='text-white hover:bg-blue-700 h-8 px-2'
+                      title='Fullscreen'
+                    >
+                      <Eye className='h-3 w-3' />
+                    </Button>
+                    <Button
+                      type='button'
+                      size='sm'
+                      variant='ghost'
+                      onClick={() =>
+                        generatedUrls.executiveSummary &&
+                        handleDownloadGenerated(
+                          generatedUrls.executiveSummary,
+                          `executive-summary-${formData.document_id}.docx`,
+                        )
+                      }
+                      disabled={
+                        downloadingFile !== null ||
+                        !generatedUrls.executiveSummary
+                      }
+                      className='text-white hover:bg-blue-700 h-8 px-2'
+                      title='Download'
+                    >
+                      <Download className='h-3 w-3' />
+                    </Button>
+                  </div>
                 </div>
-                <div className='bg-gray-100 border-2 border-dashed border-gray-300 rounded-lg p-6 min-h-[200px] flex items-center justify-center'>
-                  <div className='text-center text-gray-500'>
-                    <FileText className='h-12 w-12 mx-auto mb-2 opacity-50' />
-                    <p className='text-xs mb-1'>Ruang: {formData.room_code}</p>
-                    <p className='text-xs mb-3'>
-                      Tanggal: {formData.booking_date}
-                    </p>
-                    {generatedUrls.executiveSummary ? (
-                      <Button
-                        type='button'
-                        size='sm'
-                        variant='outline'
-                        onClick={() =>
-                          handleDownloadGenerated(
-                            generatedUrls.executiveSummary!,
-                            `executive-summary-${formData.document_id}.docx`,
-                          )
-                        }
-                        disabled={downloadingFile !== null}
-                        className='text-xs bg-green-50 border-green-300 text-green-700 hover:bg-green-100'
-                      >
-                        <Download className='h-3 w-3 mr-1' />
-                        {downloadingFile?.includes('executive')
-                          ? 'Downloading...'
-                          : 'Download (Generated)'}
-                      </Button>
+                {expandedPreviews.executiveSummary && (
+                  <div className='bg-gray-100 min-h-[600px] relative'>
+                    {loadingPreview.executiveSummary ? (
+                      <div className='absolute inset-0 flex items-center justify-center'>
+                        <div className='text-center text-gray-500'>
+                          <RefreshCw className='h-8 w-8 mx-auto mb-2 animate-spin' />
+                          <p className='text-xs'>Memuat preview...</p>
+                        </div>
+                      </div>
+                    ) : pdfUrls.executiveSummary ? (
+                      <iframe
+                        src={pdfUrls.executiveSummary}
+                        className='w-full h-[600px] border-0'
+                        title='Executive Summary Preview'
+                      />
                     ) : (
-                      <div className='text-xs'>
-                        <p className='text-gray-400 mb-2'>Belum digenerate</p>
-                        <p className='text-orange-600 font-medium'>
-                          ⬆️ Klik "Generate Dokumen" dulu
-                        </p>
+                      <div className='absolute inset-0 flex items-center justify-center'>
+                        <div className='text-center text-gray-500'>
+                          <FileText className='h-12 w-12 mx-auto mb-2 opacity-50' />
+                          <p className='text-xs mb-2'>Belum digenerate</p>
+                          <p className='text-orange-600 text-xs font-medium'>
+                            ⬆️ Generate dokumen terlebih dahulu
+                          </p>
+                        </div>
                       </div>
                     )}
                   </div>
+                )}
+              </div>
+
+              {/* Lembar Pengesahan Preview */}
+              <div className='border border-gray-200 rounded-lg overflow-hidden'>
+                <div className='bg-green-800 px-4 py-3 flex items-center justify-between'>
+                  <div className='flex items-center gap-2'>
+                    <FileText className='h-4 w-4 text-white' />
+                    <h3 className='text-sm font-medium text-white'>
+                      Lembar Pengesahan
+                    </h3>
+                  </div>
+                  <div className='flex gap-1'>
+                    <Button
+                      type='button'
+                      size='sm'
+                      variant='ghost'
+                      onClick={() =>
+                        setExpandedPreviews((prev) => ({
+                          ...prev,
+                          approvalSheet: !prev.approvalSheet,
+                        }))
+                      }
+                      className='text-white hover:bg-green-700 h-8 px-2'
+                      title={
+                        expandedPreviews.approvalSheet ? 'Collapse' : 'Expand'
+                      }
+                    >
+                      {expandedPreviews.approvalSheet ? (
+                        <ChevronUp className='h-3 w-3' />
+                      ) : (
+                        <ChevronDown className='h-3 w-3' />
+                      )}
+                    </Button>
+                    <Button
+                      type='button'
+                      size='sm'
+                      variant='ghost'
+                      onClick={() =>
+                        setFullscreenPreview({
+                          isOpen: true,
+                          type: 'approvalSheet',
+                          title: 'Lembar Pengesahan',
+                        })
+                      }
+                      disabled={!pdfUrls.approvalSheet}
+                      className='text-white hover:bg-green-700 h-8 px-2'
+                      title='Fullscreen'
+                    >
+                      <Eye className='h-3 w-3' />
+                    </Button>
+                    <Button
+                      type='button'
+                      size='sm'
+                      variant='ghost'
+                      onClick={() =>
+                        generatedUrls.approvalSheet &&
+                        handleDownloadGenerated(
+                          generatedUrls.approvalSheet,
+                          `lembar-pengesahan-${formData.document_id}.docx`,
+                        )
+                      }
+                      disabled={
+                        downloadingFile !== null || !generatedUrls.approvalSheet
+                      }
+                      className='text-white hover:bg-green-700 h-8 px-2'
+                      title='Download'
+                    >
+                      <Download className='h-3 w-3' />
+                    </Button>
+                  </div>
                 </div>
+                {expandedPreviews.approvalSheet && (
+                  <div className='bg-gray-100 min-h-[600px] relative'>
+                    {loadingPreview.approvalSheet ? (
+                      <div className='absolute inset-0 flex items-center justify-center'>
+                        <div className='text-center text-gray-500'>
+                          <RefreshCw className='h-8 w-8 mx-auto mb-2 animate-spin' />
+                          <p className='text-xs'>Memuat preview...</p>
+                        </div>
+                      </div>
+                    ) : pdfUrls.approvalSheet ? (
+                      <iframe
+                        src={pdfUrls.approvalSheet}
+                        className='w-full h-[600px] border-0'
+                        title='Lembar Pengesahan Preview'
+                      />
+                    ) : (
+                      <div className='absolute inset-0 flex items-center justify-center'>
+                        <div className='text-center text-gray-500'>
+                          <FileText className='h-12 w-12 mx-auto mb-2 opacity-50' />
+                          <p className='text-xs mb-2'>Belum digenerate</p>
+                          <p className='text-orange-600 text-xs font-medium'>
+                            ⬆️ Generate dokumen terlebih dahulu
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
 
@@ -842,6 +1143,34 @@ function RouteComponent() {
           </div>
         </div>
       </div>
+
+      {/* Fullscreen PDF Preview Modal */}
+      {fullscreenPreview.isOpen && fullscreenPreview.type && (
+        <div className='fixed inset-0 z-50 bg-black bg-opacity-90 flex flex-col'>
+          <div className='bg-gray-900 px-6 py-4 flex items-center justify-between border-b border-gray-700'>
+            <h2 className='text-lg font-semibold text-white'>
+              {fullscreenPreview.title}
+            </h2>
+            <Button
+              type='button'
+              variant='ghost'
+              onClick={() =>
+                setFullscreenPreview({ isOpen: false, type: null, title: '' })
+              }
+              className='text-white hover:bg-gray-800 h-10 w-10 p-0'
+            >
+              <X className='h-5 w-5' />
+            </Button>
+          </div>
+          <div className='flex-1 p-4'>
+            <iframe
+              src={pdfUrls[fullscreenPreview.type]}
+              className='w-full h-full border-0 rounded-lg'
+              title={`${fullscreenPreview.title} Fullscreen`}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }
