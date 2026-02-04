@@ -45,6 +45,10 @@ export interface RoomBooking {
         id: number;
         title: string;
         status: string;
+        content?: {
+            ketua_pelaksana_nama?: string;
+            [key: string]: any;
+        };
     };
     bookedBy?: {
         id: number;

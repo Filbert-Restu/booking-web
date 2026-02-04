@@ -62,10 +62,13 @@ export function useBookingForm({
       ketua: {
         nama: String(
           val('ketua_pelaksana_nama', 'ketua_pelaksana_nama', 'ketuaNama') ||
+            localStorage.getItem('userName') ||
             '',
         ),
         nim: String(
-          val('ketua_pelaksana_nim', 'ketua_pelaksana_nim', 'ketuaNim') || '',
+          val('ketua_pelaksana_nim', 'ketua_pelaksana_nim', 'ketuaNim') ||
+            localStorage.getItem('userNim') ||
+            '',
         ),
         hp: String(
           val('ketua_pelaksana_hp', 'ketua_pelaksana_hp', 'ketuaHp') || '',

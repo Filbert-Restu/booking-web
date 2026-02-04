@@ -551,6 +551,8 @@ function RouteComponent() {
       to: '/tanda-tangan',
       search: {
         return: '/peminjam/pinjam/tanda-tangan',
+        documentId: undefined,
+        autoApprove: undefined,
       },
     });
   };

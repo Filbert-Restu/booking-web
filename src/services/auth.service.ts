@@ -19,6 +19,8 @@ interface LoginResponse {
     id: number;
     name: string;
     email: string;
+    nim?: string | null;
+    nip?: string | null;
     role_id: number;
     unit_id: number;
     role?: {
@@ -80,6 +82,14 @@ export const authService = {
     localStorage.setItem('userName', data.user.name);
     localStorage.setItem('userId', data.user.id.toString());
 
+    // Simpan NIM/NIP jika ada
+    if (data.user.nim) {
+      localStorage.setItem('userNim', data.user.nim);
+    }
+    if (data.user.nip) {
+      localStorage.setItem('userNip', data.user.nip);
+    }
+
     if (data.user.role) {
       localStorage.setItem('role', data.user.role.name);
       localStorage.setItem('roleId', data.user.role.id.toString());
@@ -106,6 +116,8 @@ export const authService = {
     localStorage.removeItem('userEmail');
     localStorage.removeItem('userName');
     localStorage.removeItem('userId');
+    localStorage.removeItem('userNim');
+    localStorage.removeItem('userNip');
     localStorage.removeItem('role');
     localStorage.removeItem('roleId');
     localStorage.removeItem('userUnit');

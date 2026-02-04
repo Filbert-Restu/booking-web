@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { AxiosError } from 'axios';
 import { Stepper } from '@/shared/components/common/Stepper';
 import { Input } from '@/shared/components/ui/input';
@@ -29,7 +29,6 @@ function RouteComponent() {
         search: {
           editId: undefined,
           roomId: undefined,
-          roomCode: undefined,
           bookingDate: undefined,
           startTime: undefined,
           endTime: undefined,
@@ -61,12 +60,123 @@ function RouteComponent() {
   );
 
   const [loading, setLoading] = useState(false);
+  const [autoSaving, setAutoSaving] = useState(false);
+  const autoSaveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const steps = [
     { number: 1, title: 'Detail Tempat' },
     { number: 2, title: 'Proposal' },
     { number: 3, title: 'Tanda Tangan' },
   ];
+
+  // Autosave function
+  const autoSave = useCallback(async () => {
+    if (!formData.document_id) return;
+
+    try {
+      setAutoSaving(true);
+
+      const data = new FormData();
+      
+      // Title
+      if (namaKegiatan.trim()) {
+        data.append('title', namaKegiatan);
+      }
+
+      const contentData: any = {};
+
+      // Data dari step sebelumnya
+      if (formData.ketua_pelaksana_nama) contentData.ketua_pelaksana_nama = formData.ketua_pelaksana_nama;
+      if (formData.ketua_pelaksana_nim) contentData.ketua_pelaksana_nim = formData.ketua_pelaksana_nim;
+      if (formData.ketua_pelaksana_hp) contentData.ketua_pelaksana_hp = formData.ketua_pelaksana_hp;
+      if (formData.room_id !== undefined) contentData.room_id = formData.room_id;
+      if (formData.room_code) contentData.room_code = formData.room_code;
+      if (formData.booking_date) contentData.booking_date = formData.booking_date;
+      if (formData.start_time) contentData.start_time = formData.start_time;
+      if (formData.end_time) contentData.end_time = formData.end_time;
+      if (formData.purpose) contentData.purpose = formData.purpose;
+
+      // Data proposal (step 2)
+      if (namaKegiatan.trim()) contentData.event_name = namaKegiatan;
+      if (sifat.trim()) contentData.event_nature = sifat;
+      if (bentuk.trim()) contentData.event_form = bentuk;
+      if (tujuan.trim()) contentData.objectives = tujuan;
+      if (manfaat.trim()) contentData.benefits = manfaat;
+      if (sasaran.trim()) contentData.target_audience = sasaran;
+      if (waktu.trim()) contentData.schedule = waktu;
+      if (tempat.trim()) contentData.location = tempat;
+      if (alat.trim()) contentData.equipment = alat;
+      if (ketuaPanitia.trim()) contentData.committee_head = ketuaPanitia;
+      if (undangan.trim()) contentData.invitations = undangan;
+
+      const userName = localStorage.getItem('userName');
+      if (userName) contentData.peminjam_nama = userName;
+
+      Object.keys(contentData).forEach((key) => {
+        data.append(`content[${key}]`, contentData[key]);
+      });
+
+      data.append('meta_data[type]', 'room_reservation');
+      data.append('meta_data[step]', 'proposal');
+
+      await documentService.updateDocument(formData.document_id, data);
+
+      // Update context
+      updateFormData({
+        event_name: namaKegiatan,
+        event_nature: sifat,
+        event_form: bentuk,
+        objectives: tujuan,
+        benefits: manfaat,
+        target_audience: sasaran,
+        schedule: waktu,
+        location: tempat,
+        equipment: alat,
+        committee_head: ketuaPanitia,
+        invitations: undangan,
+      });
+
+      console.log('✅ Autosave berhasil');
+    } catch (err) {
+      console.error('❌ Autosave gagal:', err);
+    } finally {
+      setAutoSaving(false);
+    }
+  }, [
+    formData,
+    namaKegiatan,
+    sifat,
+    bentuk,
+    tujuan,
+    manfaat,
+    sasaran,
+    waktu,
+    tempat,
+    alat,
+    ketuaPanitia,
+    undangan,
+    updateFormData,
+  ]);
+
+  // Debounced autosave effect
+  useEffect(() => {
+    // Clear previous timeout
+    if (autoSaveTimeoutRef.current) {
+      clearTimeout(autoSaveTimeoutRef.current);
+    }
+
+    // Set new timeout for autosave (2 seconds after user stops typing)
+    autoSaveTimeoutRef.current = setTimeout(() => {
+      autoSave();
+    }, 2000);
+
+    // Cleanup
+    return () => {
+      if (autoSaveTimeoutRef.current) {
+        clearTimeout(autoSaveTimeoutRef.current);
+      }
+    };
+  }, [namaKegiatan, sifat, bentuk, tujuan, manfaat, sasaran, waktu, tempat, alat, ketuaPanitia, undangan, autoSave]);
 
   const handleNext = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -259,7 +369,6 @@ function RouteComponent() {
       search: {
         editId: undefined,
         roomId: undefined,
-        roomCode: undefined,
         bookingDate: undefined,
         startTime: undefined,
         endTime: undefined,
@@ -277,7 +386,12 @@ function RouteComponent() {
 
       <div className='max-w-4xl mx-auto'>
         <div className='bg-white rounded-lg shadow-sm border border-gray-200 p-6'>
-          <h2 className='text-xl font-semibold text-gray-900 mb-6'>Proposal</h2>
+          <div className='flex justify-between items-center mb-6'>
+            <h2 className='text-xl font-semibold text-gray-900'>Proposal</h2>
+            {autoSaving && (
+              <span className='text-sm text-gray-500'>Menyimpan...</span>
+            )}
+          </div>
 
           <form onSubmit={handleNext} className='space-y-4'>
             {/* Form Fields */}

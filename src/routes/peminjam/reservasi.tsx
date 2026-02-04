@@ -1,6 +1,6 @@
-import { createFileRoute, useNavigate } from '@tanstack/react-router';
+import { createFileRoute } from '@tanstack/react-router';
 import { useState, useEffect, useMemo } from 'react';
-import { Clock, Calendar, AlertCircle } from 'lucide-react';
+import { Calendar, AlertCircle } from 'lucide-react';
 import { AxiosError } from 'axios';
 
 import {
@@ -23,7 +23,6 @@ import {
 } from '@/shared/components/ui/table';
 import { roomService, type Room, type RoomBooking } from '@/services/room.service';
 import { documentService } from '@/services/document.service';
-import { useBookingContext } from '@/contexts/BookingContext';
 
 export const Route = createFileRoute('/peminjam/reservasi')({
 	component: RouteComponent,
@@ -43,9 +42,7 @@ export const Route = createFileRoute('/peminjam/reservasi')({
 });
 
 function RouteComponent() {
-	const navigate = useNavigate();
 	const searchParams = Route.useSearch();
-	const { updateFormData } = useBookingContext();
 	const [rooms, setRooms] = useState<Room[]>([]);
 	const [selectedRoomId, setSelectedRoomId] = useState<number | null>(null);
 	const [selectedRoom, setSelectedRoom] = useState<Room | null>(null);
@@ -57,13 +54,18 @@ function RouteComponent() {
 	const [checkingAvailability, setCheckingAvailability] = useState(false);
 	const [availabilityMessage, setAvailabilityMessage] = useState<string | null>(null);
 	const [dateValidationMsg, setDateValidationMsg] = useState<string | null>(null);
+	const [timeValidationMsg, setTimeValidationMsg] = useState<string | null>(null);
 
 	const [startTime, setStartTime] = useState('');
 	const [endTime, setEndTime] = useState('');
 	const [bookingDate, setBookingDate] = useState('');
 	const [activity, setActivity] = useState('');
-	const [ketuaPelaksanaNama, setKetuaPelaksanaNama] = useState('');
-	const [ketuaPelaksanaNim, setKetuaPelaksanaNim] = useState('');
+	const [ketuaPelaksanaNama, setKetuaPelaksanaNama] = useState(() => {
+		return localStorage.getItem('userName') || '';
+	});
+	const [ketuaPelaksanaNim, setKetuaPelaksanaNim] = useState(() => {
+		return localStorage.getItem('userNim') || '';
+	});
 	const [ketuaPelaksanaHp, setKetuaPelaksanaHp] = useState('');
 
 	// Check if selected date is Saturday
@@ -72,6 +74,12 @@ function RouteComponent() {
 		const d = new Date(bookingDate + 'T00:00:00');
 		return d.getDay() === 6; // Saturday === 6
 	}, [bookingDate]);
+
+	// Check if time is valid (start_time < end_time)
+	const isTimeValid = useMemo(() => {
+		if (!startTime || !endTime) return true; // Belum diisi, anggap valid (belum ada error)
+		return startTime < endTime;
+	}, [startTime, endTime]);
 
 	// Auto-fill form from query params (from Riwayat Pengajuan)
 	useEffect(() => {
@@ -112,6 +120,17 @@ function RouteComponent() {
 			setDateValidationMsg(null);
 		}
 	}, [bookingDate, isSaturday]);
+
+	// Update validation message when time changes
+	useEffect(() => {
+		if (!startTime || !endTime) {
+			setTimeValidationMsg(null);
+		} else if (!isTimeValid) {
+			setTimeValidationMsg('Waktu mulai harus lebih awal dari waktu selesai');
+		} else {
+			setTimeValidationMsg(null);
+		}
+	}, [startTime, endTime, isTimeValid]);
 
 	// Fetch rooms on mount
 	useEffect(() => {
@@ -281,14 +300,23 @@ function RouteComponent() {
 			// Create document for reservation
 			setLoading(true);
 
-			// Assuming workflow_id 1 is for room booking (adjust as needed)
-			const document = await documentService.createDocument({
-				workflow_id: 1,
+			// Tentukan workflow_id berdasarkan unit category user
+			const userUnitCategory = localStorage.getItem('userUnitCategory') || 'HMD';
+			const workflowMap: Record<string, number> = {
+				HMD: 1,
+				BEM: 2,
+				SENAT: 3,
+				UKM: 4,
+			};
+			const workflowId = workflowMap[userUnitCategory] || 1;
+
+			await documentService.createDocument({
+				workflow_id: workflowId,
 				title: `Peminjaman ${selectedRoom?.name || 'Ruangan'} - ${bookingDate}`,
 				content: {
 					room_id: selectedRoomId,
-				room_code: selectedRoom?.code || '',
-				room_name: selectedRoom?.name || '',
+					room_code: selectedRoom?.code || '',
+					room_name: selectedRoom?.name || '',
 					booking_date: bookingDate,
 					start_time: startTime,
 					end_time: endTime,
@@ -304,26 +332,26 @@ function RouteComponent() {
 				},
 			});
 
-			// Save reservation data to context for stepper flow
-			updateFormData({
-				document_id: document.id,
-				room_id: selectedRoomId,
-				room_code: selectedRoom?.code || '',
-				booking_date: bookingDate,
-				start_time: startTime,
-				end_time: endTime,
-				purpose: activity,
-				ketua_pelaksana_nama: ketuaPelaksanaNama,
-				ketua_pelaksana_nim: ketuaPelaksanaNim,
-				ketua_pelaksana_hp: ketuaPelaksanaHp,
-			});
-
-			// Navigate to peminjaman list
-			navigate({ to: '/peminjam/pinjam' });
+			// Reset form dan refresh data
+			alert('Reservasi berhasil disimpan! Silakan cek di halaman Riwayat Pengajuan untuk melanjutkan.');
+			
+			// Reset form
+			setStartTime('');
+			setEndTime('');
+			setBookingDate('');
+			setActivity('');
+			setKetuaPelaksanaNama(localStorage.getItem('userName') || '');
+			setKetuaPelaksanaNim(localStorage.getItem('userNim') || '');
+			setKetuaPelaksanaHp('');
+			
+			// Refresh booking list
+			if (selectedRoomId) {
+				await handleSearch();
+			}
 		} catch (err) {
-			console.error('Failed to create reservation:', err);
+			console.error('Failed to check availability:', err);
 			if (err instanceof AxiosError) {
-				alert(err.response?.data?.message || 'Gagal membuat reservasi');
+				alert(err.response?.data?.message || 'Gagal mengecek ketersediaan ruangan');
 			} else {
 				alert('Terjadi kesalahan saat membuat reservasi');
 			}
@@ -488,28 +516,33 @@ function RouteComponent() {
 											min={new Date().toISOString().split('T')[0]}
 											required
 										/>
-							{dateValidationMsg && (
-								<div className='text-sm text-red-600 mt-1'>
-									{dateValidationMsg}
-								</div>
-							)}
-										<div className='flex items-center gap-2 w-full'>
-											<Input
-												type='time'
-												value={startTime}
-												onChange={(e) => setStartTime(e.target.value)}
-												className='flex-1 min-w-0'
-												required
-											/>
-											<span className='text-sm text-gray-500 shrink-0'>-</span>
-											<Input
-												type='time'
-												value={endTime}
-												onChange={(e) => setEndTime(e.target.value)}
-												className='flex-1 min-w-0'
-												required
-											/>
+									{dateValidationMsg && (
+										<div className='text-sm text-red-600 mt-1'>
+											{dateValidationMsg}
 										</div>
+									)}
+									<div className='flex items-center gap-2 w-full'>
+										<Input
+											type='time'
+											value={startTime}
+											onChange={(e) => setStartTime(e.target.value)}
+											className='flex-1 min-w-0'
+											required
+										/>
+										<span className='text-sm text-gray-500 shrink-0'>-</span>
+										<Input
+											type='time'
+											value={endTime}
+											onChange={(e) => setEndTime(e.target.value)}
+											className='flex-1 min-w-0'
+											required
+										/>
+									</div>
+									{timeValidationMsg && (
+										<div className='text-sm text-red-600 mt-1'>
+											{timeValidationMsg}
+										</div>
+									)}
 									</div>
 								</div>
 
@@ -529,7 +562,7 @@ function RouteComponent() {
 
 							<div className='space-y-2'>
 								<label className='block text-sm font-medium text-gray-700'>
-									Aktivitas/Kegiatan
+									Nama Kegiatan
 								</label>
 								<Textarea
 									placeholder='Jelaskan kegiatan yang akan dilakukan...'
@@ -542,12 +575,11 @@ function RouteComponent() {
 									required
 								/>
 							</div>
-
 							<div className='flex justify-end'>
 								<Button
 									type='submit'
 									className='mt-2'
-									disabled={loading || checkingAvailability || availabilityMessage?.startsWith('✗') || !isSaturday}
+									disabled={loading || checkingAvailability || availabilityMessage?.startsWith('✗') || !isSaturday || !isTimeValid}
 								>
 									{loading ? 'Memproses...' : 'Reservasi'}
 								</Button>
@@ -599,7 +631,9 @@ function RouteComponent() {
 													<TableCell className='text-center'>
 														{index + 1}
 													</TableCell>
-													<TableCell>{item.bookedBy?.name || '-'}</TableCell>
+													<TableCell>
+														{item.document?.content?.ketua_pelaksana_nama || item.bookedBy?.name || '-'}
+													</TableCell>
 													<TableCell>
 														{new Date(item.booking_date).toLocaleDateString('id-ID')}
 													</TableCell>

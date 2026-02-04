@@ -34,9 +34,9 @@ export const documentHelpers = {
   },
 
   getEventName: (doc: Document) => {
-    return doc.content?.event_name
-      ? String(doc.content.event_name)
-      : 'Tidak ada nama';
+    // Ambil dari purpose (field saat reservasi) atau event_name sebagai fallback
+    const eventName = doc.content?.purpose || doc.content?.event_name;
+    return eventName ? String(eventName) : 'Tidak ada nama';
   },
 
   // --- 2. Helpers Ketua Pelaksana (Pengganti fungsi lama Anda) ---

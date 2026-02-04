@@ -35,10 +35,10 @@ function RouteComponent() {
     queryKey: ['documents'],
     queryFn: () => documentService.getDocuments(),
     refetchInterval: 30000,
-    select: (res) => [
-      ...(res.my_documents || []),
-      ...(res.processed_documents || []),
-    ],
+    select: (res) => {
+      // Backend sudah handle deduplication, jadi langsung return
+      return res.my_documents || [];
+    },
   });
 
   const handleAjukanPinjam = () => {
