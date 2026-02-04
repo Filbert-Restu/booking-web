@@ -4,7 +4,10 @@ import { AxiosError } from 'axios';
 import { ApprovalHistory } from '@/features/approvals';
 import type { ActorRole } from '@/features/approvals';
 import { documentService } from '@/services/document.service';
-import { mapDocumentsToApprovalItems, type ApprovalItem } from '@/features/approvals/approval-utils';
+import {
+  mapDocumentsToApprovalItems,
+  type ApprovalItem,
+} from '@/features/approvals/approval-utils';
 import { Button } from '@/shared/components/ui/button/button';
 
 export const Route = createFileRoute('/ketua-departemen/riwayat-persetujuan')({
@@ -33,7 +36,9 @@ function RouteComponent() {
     } catch (err) {
       console.error('Failed to fetch processed documents:', err);
       if (err instanceof AxiosError) {
-        setError(err.response?.data?.message || 'Gagal memuat riwayat persetujuan');
+        setError(
+          err.response?.data?.message || 'Gagal memuat riwayat persetujuan',
+        );
       } else {
         setError('Terjadi kesalahan saat memuat data');
       }
@@ -45,7 +50,11 @@ function RouteComponent() {
   const handleOpenDoc = (payload: any) => {
     navigate({
       to: '/preview-dokumen',
-      search: { doc: payload.doc, id: payload.booking.id, return: '/ketua-departemen/riwayat-persetujuan' } as any
+      search: {
+        doc: payload.doc,
+        id: payload.booking.id,
+        return: '/ketua-departemen/riwayat-persetujuan',
+      } as any,
     });
   };
 
@@ -53,7 +62,9 @@ function RouteComponent() {
     return (
       <div className='container mx-auto py-6'>
         <div className='text-center'>
-          <div className='text-lg font-semibold text-gray-700'>Memuat riwayat...</div>
+          <div className='text-lg font-semibold text-gray-700'>
+            Memuat riwayat...
+          </div>
         </div>
       </div>
     );
@@ -88,6 +99,8 @@ function RouteComponent() {
           bookings={approvalItems}
           actorRole={actorRole}
           onOpenDoc={handleOpenDoc}
+          showOrganisasi={true}
+          showProposal={true}
         />
       )}
     </div>

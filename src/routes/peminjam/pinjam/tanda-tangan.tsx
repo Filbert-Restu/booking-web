@@ -34,7 +34,7 @@ function RouteComponent() {
   useEffect(() => {
     if (!formData.document_id) {
       navigate({
-        to: '/peminjam/pinjam/detail-tempat',
+        to: '/peminjam/pinjam',
         search: {
           editId: undefined,
           roomId: undefined,
@@ -99,12 +99,14 @@ function RouteComponent() {
   useEffect(() => {
     const loadSignature = async () => {
       try {
-        console.log('📥 [SIGNATURE] Loading signature...');
         const sig = await signatureService.getSignature();
         setSignature(sig);
-        console.log('✅ [SIGNATURE] Signature loaded:', sig);
       } catch (error) {
-        console.error('❌ [SIGNATURE] Failed to load signature:', error);
+        if (error instanceof AxiosError) {
+          if (error.response?.status === 404) {
+            setSignature(null);
+          }
+        }
       } finally {
         setLoadingSignature(false);
       }
@@ -125,15 +127,9 @@ function RouteComponent() {
 
       // Request PDF version of the file
       const apiPath = `/documents/${formData.document_id}/file/${fileType}/pdf`;
-      console.log(`[PREVIEW] Loading PDF for ${fileType}:`, apiPath);
 
       const response = await api.get(apiPath, {
         responseType: 'blob',
-      });
-
-      console.log(`[PREVIEW] Response received for ${fileType}:`, {
-        contentType: response.headers['content-type'],
-        size: response.data.size,
       });
 
       const blob = new Blob([response.data], {
@@ -141,15 +137,12 @@ function RouteComponent() {
       });
       const blobUrl = URL.createObjectURL(blob);
 
-      console.log(`[PREVIEW] Blob URL created for ${fileType}:`, blobUrl);
       setPdfUrls((prev) => ({ ...prev, [stateKey]: blobUrl }));
     } catch (error) {
-      console.error(`[PREVIEW] Failed to load ${fileType} preview:`, error);
       if (error instanceof AxiosError) {
-        console.error(`[PREVIEW] Error details:`, {
-          status: error.response?.status,
-          message: error.response?.data?.message,
-        });
+        alert(
+          `Gagal memuat preview: ${error.response?.data?.message || error.message}`,
+        );
       }
     } finally {
       setLoadingPreview((prev) => ({ ...prev, [stateKey]: false }));
@@ -179,10 +172,8 @@ function RouteComponent() {
   const handleReloadSignature = async () => {
     try {
       setLoadingSignature(true);
-      console.log('🔄 [SIGNATURE] Manually reloading signature...');
       const sig = await signatureService.getSignature();
       setSignature(sig);
-      console.log('✅ [SIGNATURE] Signature reloaded:', sig);
       if (sig) {
         alert(
           '✅ Tanda tangan berhasil dimuat!\n\nAnda bisa generate dokumen sekarang.',
@@ -193,10 +184,15 @@ function RouteComponent() {
         );
       }
     } catch (error) {
-      console.error('❌ [SIGNATURE] Failed to reload:', error);
-      alert(
-        '❌ Gagal memuat tanda tangan.\n\nSilakan refresh halaman atau coba lagi.',
-      );
+      if (error instanceof AxiosError) {
+        alert(
+          `Gagal memuat tanda tangan: ${
+            error.response?.data?.message || error.message
+          }`,
+        );
+      } else {
+        alert('Gagal memuat tanda tangan');
+      }
     } finally {
       setLoadingSignature(false);
     }
@@ -211,12 +207,6 @@ function RouteComponent() {
 
     // Validate signature exists
     if (!signature) {
-      console.error('❌ [GENERATE] No signature found');
-      console.error('📊 [GENERATE] Debug info:', {
-        signature,
-        loadingSignature,
-        document_id: formData.document_id,
-      });
       alert(
         '⚠️ Tanda Tangan Belum Diupload!\n\n' +
           'Anda harus mengupload tanda tangan terlebih dahulu sebelum generate dokumen.\n\n' +
@@ -226,58 +216,16 @@ function RouteComponent() {
       return;
     }
 
-    console.log('✅ [GENERATE] Signature found, proceeding with generation');
-    console.log('📊 [GENERATE] Signature info:', {
-      id: signature.id,
-      user_id: signature.user_id,
-      signature: signature.signature,
-    });
-
     try {
       setGeneratingDocs(true);
 
-      // 🔍 DEBUG: Check document content before generating
-      console.log('🔍 [DEBUG] Fetching document to check content...');
-      const documentDetail = await documentService.getDocument(
-        formData.document_id,
-      );
-      console.log(
-        '📄 [DEBUG] Document content:',
-        JSON.stringify(documentDetail.content, null, 2),
-      );
-      console.log(
-        '📊 [DEBUG] Content keys:',
-        Object.keys(documentDetail.content || {}),
-      );
-      console.log(
-        '🎯 [DEBUG] Event name in content:',
-        documentDetail.content?.event_name,
-      );
-      console.log(
-        '🎯 [DEBUG] Event nature in content:',
-        documentDetail.content?.event_nature,
-      );
-      console.log(
-        '🎯 [DEBUG] Objectives in content:',
-        documentDetail.content?.objectives,
-      );
-
-      console.log('📄 [GENERATE] Generating documents from templates...');
-      console.log('🔑 [GENERATE] User has signature:', signature.id);
-
-      // Generate executive summary
-      console.log('📄 [GENERATE] Generating executive summary...');
       const execSummary = await documentService.generateExecutiveSummary(
         formData.document_id,
       );
-      console.log('✅ [GENERATE] Executive summary generated:', execSummary);
 
-      // Generate approval sheet
-      console.log('📄 [GENERATE] Generating approval sheet...');
       const approvalSheet = await documentService.generateApprovalSheet(
         formData.document_id,
       );
-      console.log('✅ [GENERATE] Approval sheet generated:', approvalSheet);
 
       // Save URLs for download buttons
       setGeneratedUrls({
@@ -293,7 +241,6 @@ function RouteComponent() {
           'Silakan lihat preview dan download dokumen.',
       );
     } catch (error) {
-      console.error('❌ [GENERATE] Failed to generate documents:', error);
       if (error instanceof AxiosError) {
         const errorMsg = error.response?.data?.message || error.message;
         alert(`❌ Gagal generate dokumen\n\n${errorMsg}`);
@@ -336,26 +283,13 @@ function RouteComponent() {
     try {
       setLoading(true);
 
-      console.log('🚀 [SUBMIT] Starting submission process...');
-      console.log('📋 [SUBMIT] formData:', formData);
-      console.log('🔑 [SUBMIT] document_id:', formData.document_id);
-      console.log('🏠 [SUBMIT] room_id:', formData.room_id);
-      console.log('📅 [SUBMIT] booking_date:', formData.booking_date);
-      console.log('⏰ [SUBMIT] start_time:', formData.start_time);
-      console.log('⏰ [SUBMIT] end_time:', formData.end_time);
-
       // CRITICAL: Get booking data from document content if not in formData
       let bookingData;
       if (!formData.room_id || !formData.booking_date) {
-        console.warn(
-          '⚠️ [SUBMIT] Booking data not in context, fetching from document...',
-        );
         const documentDetail = await documentService.getDocument(
           formData.document_id!,
         );
         const content = documentDetail.content as any;
-
-        console.log('📄 [SUBMIT] Document content:', content);
 
         bookingData = {
           document_id: formData.document_id!,
@@ -385,32 +319,17 @@ function RouteComponent() {
         };
       }
 
-      console.log('📤 [SUBMIT] Final booking data:', bookingData);
-
-      console.log('📤 [SUBMIT] Final booking data:', bookingData);
-
-      // 1. Check document status first
-      console.log('🔍 [SUBMIT] Checking document status...');
       const documentDetail = await documentService.getDocument(
         formData.document_id!,
       );
-      console.log('📄 [SUBMIT] Document status:', documentDetail.status);
 
       // Only submit if document is still in DRAFT status
       if (documentDetail.status === 'DRAFT') {
-        console.log('📤 [SUBMIT] Submitting document...');
         await documentService.submitDocument(formData.document_id!);
-        console.log('✅ [SUBMIT] Document submitted successfully');
-      } else {
-        console.log(
-          '⚠️ [SUBMIT] Document already submitted, skipping submit step',
-        );
       }
 
       // 2. Create room booking with data from document content
-      console.log('📤 [SUBMIT] Creating booking with data:', bookingData);
       await bookingService.createBooking(bookingData);
-      console.log('✅ [SUBMIT] Booking created successfully');
 
       alert(
         'Peminjaman berhasil diajukan! Dokumen sedang dalam proses persetujuan.',
@@ -422,24 +341,12 @@ function RouteComponent() {
       // Navigate to peminjaman list
       navigate({ to: '/peminjam/pinjam' });
     } catch (err) {
-      console.error('❌ [SUBMIT] Failed to submit:', err);
       if (err instanceof AxiosError) {
-        console.error('❌ [SUBMIT] Error response:', err.response?.data);
-        console.error(
-          '❌ [SUBMIT] Error response (JSON):',
-          JSON.stringify(err.response?.data, null, 2),
-        );
-        console.error('❌ [SUBMIT] Error status:', err.response?.status);
-        console.error('❌ [SUBMIT] Error config:', err.config);
-        console.error('❌ [SUBMIT] Request URL:', err.config?.url);
-        console.error('❌ [SUBMIT] Request data:', err.config?.data);
-
         const errorMsg =
           err.response?.data?.message || 'Gagal mengajukan peminjaman';
         const validationErrors = err.response?.data?.errors;
 
         if (validationErrors) {
-          console.error('❌ [SUBMIT] Validation errors:', validationErrors);
           const errorDetails = Object.entries(validationErrors)
             .map(([field, messages]) => `${field}: ${messages}`)
             .join('\n');
@@ -487,7 +394,6 @@ function RouteComponent() {
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
     } catch (error) {
-      console.error('Failed to download file:', error);
       if (error instanceof AxiosError) {
         alert(
           `Gagal mengunduh file: ${error.response?.data?.message || error.message}`,
@@ -532,7 +438,6 @@ function RouteComponent() {
       document.body.removeChild(link);
       window.URL.revokeObjectURL(blobUrl);
     } catch (error) {
-      console.error('Failed to download generated file:', error);
       if (error instanceof AxiosError) {
         alert(
           `Gagal mengunduh file: ${error.response?.data?.message || error.message}`,
@@ -564,9 +469,6 @@ function RouteComponent() {
         setLoadingSignature(true);
         const sig = await signatureService.getSignature();
         setSignature(sig);
-        console.log('🔄 [SIGNATURE] Reloaded signature:', sig);
-      } catch (error) {
-        console.error('❌ [SIGNATURE] Failed to reload:', error);
       } finally {
         setLoadingSignature(false);
       }
@@ -682,7 +584,7 @@ function RouteComponent() {
             {/* Info Box */}
             <div className='bg-blue-50 border border-blue-200 rounded-lg p-4'>
               <div className='flex gap-3'>
-                <AlertCircle className='h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5' />
+                <AlertCircle className='h-5 w-5 text-blue-600 shrink-0 mt-0.5' />
                 <div className='text-sm text-blue-900'>
                   <p className='font-medium mb-2'>
                     Langkah-langkah Generate Dokumen dengan Tanda Tangan:
@@ -851,14 +753,14 @@ function RouteComponent() {
                         downloadingFile !== null || !formData.document_id
                       }
                       className='text-white hover:bg-gray-700 h-8 px-2'
-                      title='Download'
+                      title='Download Proposal'
                     >
                       <Download className='h-3 w-3' />
                     </Button>
                   </div>
                 </div>
                 {expandedPreviews.proposal && (
-                  <div className='bg-gray-100 min-h-[600px] relative'>
+                  <div className='bg-gray-100 min-h-150 relative'>
                     {loadingPreview.proposal ? (
                       <div className='absolute inset-0 flex items-center justify-center'>
                         <div className='text-center text-gray-500'>
@@ -869,7 +771,7 @@ function RouteComponent() {
                     ) : pdfUrls.proposal ? (
                       <iframe
                         src={pdfUrls.proposal}
-                        className='w-full h-[600px] border-0'
+                        className='w-full h-150 border-0'
                         title='Proposal Preview'
                       />
                     ) : (
@@ -957,7 +859,7 @@ function RouteComponent() {
                   </div>
                 </div>
                 {expandedPreviews.executiveSummary && (
-                  <div className='bg-gray-100 min-h-[600px] relative'>
+                  <div className='bg-gray-100 min-h-150 relative'>
                     {loadingPreview.executiveSummary ? (
                       <div className='absolute inset-0 flex items-center justify-center'>
                         <div className='text-center text-gray-500'>
@@ -968,7 +870,7 @@ function RouteComponent() {
                     ) : pdfUrls.executiveSummary ? (
                       <iframe
                         src={pdfUrls.executiveSummary}
-                        className='w-full h-[600px] border-0'
+                        className='w-full h-150 border-0'
                         title='Executive Summary Preview'
                       />
                     ) : (
@@ -1056,7 +958,7 @@ function RouteComponent() {
                   </div>
                 </div>
                 {expandedPreviews.approvalSheet && (
-                  <div className='bg-gray-100 min-h-[600px] relative'>
+                  <div className='bg-gray-100 min-h-150 relative'>
                     {loadingPreview.approvalSheet ? (
                       <div className='absolute inset-0 flex items-center justify-center'>
                         <div className='text-center text-gray-500'>
@@ -1067,7 +969,7 @@ function RouteComponent() {
                     ) : pdfUrls.approvalSheet ? (
                       <iframe
                         src={pdfUrls.approvalSheet}
-                        className='w-full h-[600px] border-0'
+                        className='w-full h-150 border-0'
                         title='Lembar Pengesahan Preview'
                       />
                     ) : (

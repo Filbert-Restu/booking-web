@@ -4,7 +4,10 @@ import { AxiosError } from 'axios';
 import { ApprovalHistory } from '@/features/approvals';
 import type { ActorRole } from '@/features/approvals';
 import { documentService } from '@/services/document.service';
-import { mapDocumentsToApprovalItems, type ApprovalItem } from '@/features/approvals/approval-utils';
+import {
+  mapDocumentsToApprovalItems,
+  type ApprovalItem,
+} from '@/features/approvals/approval-utils';
 import { Button } from '@/shared/components/ui/button/button';
 
 export const Route = createFileRoute('/senat/riwayat-persetujuan')({
@@ -28,14 +31,22 @@ function RouteComponent() {
       setError(null);
       const data = await documentService.getDocuments();
 
-      // Get processed documents (documents that this user has approved/rejected)
+      console.log('Raw data from API:', data); // Log raw data from API
+
+      // Use processed_documents instead of all_documents
       const processedDocs = data.processed_documents || [];
+      console.log('Processed documents:', processedDocs); // Log processed documents
+
       const mappedItems = mapDocumentsToApprovalItems(processedDocs);
+      console.log('Mapped approval items:', mappedItems); // Log mapped items
+
       setApprovalItems(mappedItems);
     } catch (err) {
       console.error('Failed to fetch processed documents:', err);
       if (err instanceof AxiosError) {
-        setError(err.response?.data?.message || 'Gagal memuat riwayat persetujuan');
+        setError(
+          err.response?.data?.message || 'Gagal memuat dokumen yang diproses',
+        );
       } else {
         setError('Terjadi kesalahan saat memuat data');
       }
@@ -44,10 +55,19 @@ function RouteComponent() {
     }
   };
 
-  const handleOpenDoc = (payload: any) => {
+  const handleOpenDoc = (payload: {
+    booking: ApprovalItem;
+    role: ActorRole;
+    doc: DocumentType;
+    mode: 'preview';
+  }) => {
     navigate({
       to: '/preview-dokumen',
-      search: { doc: payload.doc, id: payload.booking.id, return: '/senat/riwayat-persetujuan' } as any
+      search: {
+        doc: payload.doc,
+        id: payload.booking.id,
+        return: '/senat/riwayat-persetujuan',
+      } as any,
     });
   };
 
@@ -55,7 +75,9 @@ function RouteComponent() {
     return (
       <div className='container mx-auto py-6'>
         <div className='text-center'>
-          <div className='text-lg font-semibold text-gray-700'>Memuat riwayat...</div>
+          <div className='text-lg font-semibold text-gray-700'>
+            Memuat riwayat...
+          </div>
         </div>
       </div>
     );

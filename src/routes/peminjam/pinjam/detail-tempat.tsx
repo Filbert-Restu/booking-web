@@ -334,25 +334,91 @@ function BookingForm(props: BookingFormProps) {
             <div className='flex gap-2'>
               <div className='flex-1'>
                 <label className='text-sm'>Mulai</label>
-                <Input
-                  type='time'
-                  value={form.startTime}
-                  onChange={(e) => handleChange('startTime', e.target.value)}
-                  min='09:00'
-                  max='17:00'
-                  required
-                />
+                <div className='flex gap-2'>
+                  <Select
+                    value={form.startTime.split(':')[0] || '09'}
+                    onValueChange={(hour) => {
+                      const minute = form.startTime.split(':')[1] || '00';
+                      handleChange('startTime', `${hour}:${minute}`);
+                    }}
+                  >
+                    <SelectTrigger className='w-full'>
+                      <SelectValue placeholder='Jam' />
+                    </SelectTrigger>
+                    <SelectContent position='popper' className='max-h-[200px]'>
+                      {Array.from({ length: 9 }, (_, i) => {
+                        const hour = (i + 9).toString().padStart(2, '0');
+                        return (
+                          <SelectItem key={hour} value={hour}>
+                            {hour}
+                          </SelectItem>
+                        );
+                      })}
+                    </SelectContent>
+                  </Select>
+                  <Select
+                    value={form.startTime.split(':')[1] || '00'}
+                    onValueChange={(minute) => {
+                      const hour = form.startTime.split(':')[0] || '09';
+                      handleChange('startTime', `${hour}:${minute}`);
+                    }}
+                  >
+                    <SelectTrigger className='w-full'>
+                      <SelectValue placeholder='Menit' />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {['00', '15', '30', '45'].map((minute) => (
+                        <SelectItem key={minute} value={minute}>
+                          {minute}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
               <div className='flex-1'>
                 <label className='text-sm'>Selesai</label>
-                <Input
-                  type='time'
-                  value={form.endTime}
-                  onChange={(e) => handleChange('endTime', e.target.value)}
-                  min='09:00'
-                  max='17:00'
-                  required
-                />
+                <div className='flex gap-2'>
+                  <Select
+                    value={form.endTime.split(':')[0] || '17'}
+                    onValueChange={(hour) => {
+                      const minute = form.endTime.split(':')[1] || '00';
+                      handleChange('endTime', `${hour}:${minute}`);
+                    }}
+                  >
+                    <SelectTrigger className='w-full'>
+                      <SelectValue placeholder='Jam' />
+                    </SelectTrigger>
+                    <SelectContent position='popper' className='max-h-[200px]'>
+                      {Array.from({ length: 9 }, (_, i) => {
+                        const hour = (i + 9).toString().padStart(2, '0');
+                        return (
+                          <SelectItem key={hour} value={hour}>
+                            {hour}
+                          </SelectItem>
+                        );
+                      })}
+                    </SelectContent>
+                  </Select>
+                  <Select
+                    value={form.endTime.split(':')[1] || '00'}
+                    onValueChange={(minute) => {
+                      const hour = form.endTime.split(':')[0] || '17';
+                      handleChange('endTime', `${hour}:${minute}`);
+                    }}
+                  >
+                    <SelectTrigger className='w-full'>
+                      <SelectValue placeholder='Menit' />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {['00', '15', '30', '45'].map((minute) => (
+                        <SelectItem key={minute} value={minute}>
+                          {minute}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
                 {timeValidationMsg && (
                   <div className='text-sm text-red-600 mt-1'>
                     {timeValidationMsg}

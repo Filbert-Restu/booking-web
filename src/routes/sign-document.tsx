@@ -1,7 +1,14 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { useEffect, useRef, useState } from 'react';
 import { Button } from '@/shared/components/ui/button/button';
-import { ArrowLeft, Upload, Pen, Eraser, Check, AlertCircle } from 'lucide-react';
+import {
+  ArrowLeft,
+  Upload,
+  Pen,
+  Eraser,
+  Check,
+  AlertCircle,
+} from 'lucide-react';
 import { signatureService } from '@/services/signature.service';
 import { documentService } from '@/services/document.service';
 import api from '@/lib/axios';
@@ -21,14 +28,14 @@ export const Route = createFileRoute('/sign-document')({
 function RouteComponent() {
   const navigate = useNavigate();
   const { documentId, return: returnPath, autoApprove } = Route.useSearch();
-  
+
   // Canvas for drawing signature
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [isDrawing, setIsDrawing] = useState(false);
   const [signatureDataUrl, setSignatureDataUrl] = useState<string>('');
   const [uploadedSignature, setUploadedSignature] = useState<string>('');
   const [activeTab, setActiveTab] = useState<'draw' | 'upload'>('draw');
-  
+
   // Document preview
   const [pdfUrl, setPdfUrl] = useState<string>('');
   const [loading, setLoading] = useState(false);
@@ -63,6 +70,22 @@ function RouteComponent() {
     ctx.lineJoin = 'round';
   }, []);
 
+  useEffect(() => {
+    // Load signature from database
+    const loadSignatureFromDatabase = async () => {
+      try {
+        const signature = await signatureService.getSignature();
+        if (signature) {
+          setUploadedSignature(signature.url); // Assuming the signature URL is returned
+        }
+      } catch (error) {
+        console.error('Failed to load signature from database:', error);
+      }
+    };
+
+    loadSignatureFromDatabase();
+  }, []);
+
   // Update preview when signature changes
   useEffect(() => {
     if (signatureDataUrl || uploadedSignature) {
@@ -76,11 +99,11 @@ function RouteComponent() {
     try {
       setLoading(true);
       setError('');
-      
+
       // Load PDF preview
       const response = await api.get(
         `/documents/${documentId}/file/approval-sheet/pdf`,
-        { responseType: 'blob' }
+        { responseType: 'blob' },
       );
 
       const blob = new Blob([response.data], { type: 'application/pdf' });
@@ -99,7 +122,8 @@ function RouteComponent() {
   };
 
   const updatePreviewWithSignature = async () => {
-    const currentSignature = activeTab === 'draw' ? signatureDataUrl : uploadedSignature;
+    const currentSignature =
+      activeTab === 'draw' ? signatureDataUrl : uploadedSignature;
     if (!currentSignature || !pdfUrl) return;
 
     // For now, just show the original PDF
@@ -136,7 +160,7 @@ function RouteComponent() {
 
   const stopDrawing = () => {
     if (!isDrawing) return;
-    
+
     setIsDrawing(false);
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -180,8 +204,9 @@ function RouteComponent() {
   };
 
   const handleSaveSignature = async () => {
-    const currentSignature = activeTab === 'draw' ? signatureDataUrl : uploadedSignature;
-    
+    const currentSignature =
+      activeTab === 'draw' ? signatureDataUrl : uploadedSignature;
+
     if (!currentSignature) {
       alert('Silakan buat atau upload tanda tangan terlebih dahulu');
       return;
@@ -194,32 +219,42 @@ function RouteComponent() {
 
     try {
       setSaving(true);
-      
+
       // Convert data URL to blob
       const response = await fetch(currentSignature);
       const blob = await response.blob();
-      
+
       // Create File from Blob
       const file = new File([blob], 'signature.png', { type: 'image/png' });
-      
+
       // Upload signature
       await signatureService.uploadSignature(file);
-      
+
       // Approve document with signature
-      await documentService.approveDocument(documentId, '', 'Approved with signature');
-      
+      await documentService.approveDocument(
+        documentId,
+        '',
+        'Approved with signature',
+      );
+
       alert('✅ Tanda tangan berhasil disimpan dan dokumen disetujui!');
-      
+
       // Navigate back
       if (returnPath) {
-        navigate({ to: returnPath as any, search: { autoApprove: autoApprove } as any });
+        navigate({
+          to: returnPath as any,
+          search: { autoApprove: autoApprove } as any,
+        });
       } else {
         navigate({ to: '/' as any });
       }
     } catch (err) {
       console.error('Failed to save signature:', err);
       if (err instanceof AxiosError) {
-        alert('❌ ' + (err.response?.data?.message || 'Gagal menyimpan tanda tangan'));
+        alert(
+          '❌ ' +
+            (err.response?.data?.message || 'Gagal menyimpan tanda tangan'),
+        );
       } else {
         alert('Terjadi kesalahan saat menyimpan tanda tangan');
       }
@@ -259,7 +294,9 @@ function RouteComponent() {
               Kembali
             </Button>
             <div>
-              <h1 className='text-2xl font-bold text-gray-900'>Tanda Tangan Dokumen</h1>
+              <h1 className='text-2xl font-bold text-gray-900'>
+                Tanda Tangan Dokumen
+              </h1>
               <p className='text-gray-600 mt-1'>
                 Buat atau upload tanda tangan Anda
               </p>
@@ -292,168 +329,177 @@ function RouteComponent() {
           {/* Left Panel - Signature Editor */}
           <div className='lg:col-span-1 space-y-6'>
             <div className='bg-white border rounded-lg p-6'>
-              <h2 className='text-lg font-semibold mb-4'>Editor Tanda Tangan</h2>
+              <h2 className='text-lg font-semibold mb-4'>
+                Editor Tanda Tangan
+              </h2>
 
-            {/* Tab Buttons */}
-            <div className='flex gap-2 mb-6'>
-              <Button
-                variant={activeTab === 'draw' ? 'default' : 'outline'}
-                onClick={() => setActiveTab('draw')}
-                className='flex-1 gap-2'
-              >
-                <Pen className='w-4 h-4' />
-                Gambar
-              </Button>
-              <Button
-                variant={activeTab === 'upload' ? 'default' : 'outline'}
-                onClick={() => setActiveTab('upload')}
-                className='flex-1 gap-2'
-              >
-                <Upload className='w-4 h-4' />
-                Upload
-              </Button>
-            </div>
-
-            {/* Draw Tab */}
-            {activeTab === 'draw' && (
-              <div className='space-y-4'>
-                <div className='space-y-2'>
-                  <label className='text-sm font-medium block'>
-                    Gambar Tanda Tangan Anda
-                  </label>
-                  <div className='border-2 border-dashed border-gray-300 rounded-lg bg-white'>
-                    <canvas
-                      ref={canvasRef}
-                      className='w-full cursor-crosshair'
-                      style={{ height: '300px' }}
-                      onMouseDown={startDrawing}
-                      onMouseMove={draw}
-                      onMouseUp={stopDrawing}
-                      onMouseLeave={stopDrawing}
-                    />
-                  </div>
-                  <p className='text-xs text-gray-500'>
-                    Gunakan mouse atau touchpad untuk menggambar tanda tangan Anda
-                  </p>
-                </div>
-
+              {/* Tab Buttons */}
+              <div className='flex gap-2 mb-6'>
                 <Button
-                  variant='outline'
-                  onClick={clearCanvas}
-                  className='w-full gap-2'
+                  variant={activeTab === 'draw' ? 'default' : 'outline'}
+                  onClick={() => setActiveTab('draw')}
+                  className='flex-1 gap-2'
                 >
-                  <Eraser className='w-4 h-4' />
-                  Hapus
+                  <Pen className='w-4 h-4' />
+                  Gambar
+                </Button>
+                <Button
+                  variant={activeTab === 'upload' ? 'default' : 'outline'}
+                  onClick={() => setActiveTab('upload')}
+                  className='flex-1 gap-2'
+                >
+                  <Upload className='w-4 h-4' />
+                  Upload
                 </Button>
               </div>
-            )}
 
-            {/* Upload Tab */}
-            {activeTab === 'upload' && (
-              <div className='space-y-4'>
-                <div className='space-y-2'>
-                  <label className='text-sm font-medium block'>
-                    Upload Gambar Tanda Tangan
-                  </label>
-                  <div className='border-2 border-dashed border-gray-300 rounded-lg p-8 bg-white'>
-                    {uploadedSignature ? (
-                      <div className='space-y-4'>
-                        <img
-                          src={uploadedSignature}
-                          alt='Uploaded Signature'
-                          className='max-h-50 mx-auto'
-                        />
-                        <Button
-                          variant='outline'
-                          onClick={() => setUploadedSignature('')}
-                          className='w-full gap-2'
-                        >
-                          <Upload className='w-4 h-4' />
-                          Ganti Gambar
-                        </Button>
-                      </div>
-                    ) : (
-                      <label className='cursor-pointer block'>
-                        <div className='flex flex-col items-center gap-2 text-gray-500'>
-                          <Upload className='w-8 h-8' />
-                          <span className='text-sm font-medium'>
-                            Klik untuk upload gambar
-                          </span>
-                          <span className='text-xs'>PNG, JPG (Max. 2MB)</span>
-                        </div>
-                        <input
-                          type='file'
-                          accept='image/*'
-                          onChange={handleFileUpload}
-                          className='hidden'
-                        />
-                      </label>
-                    )}
+              {/* Draw Tab */}
+              {activeTab === 'draw' && (
+                <div className='space-y-4'>
+                  <div className='space-y-2'>
+                    <label className='text-sm font-medium block'>
+                      Gambar Tanda Tangan Anda
+                    </label>
+                    <div className='border-2 border-dashed border-gray-300 rounded-lg bg-white'>
+                      <canvas
+                        ref={canvasRef}
+                        className='w-full cursor-crosshair'
+                        style={{ height: '300px' }}
+                        onMouseDown={startDrawing}
+                        onMouseMove={draw}
+                        onMouseUp={stopDrawing}
+                        onMouseLeave={stopDrawing}
+                      />
+                    </div>
+                    <p className='text-xs text-gray-500'>
+                      Gunakan mouse atau touchpad untuk menggambar tanda tangan
+                      Anda
+                    </p>
                   </div>
-                </div>
-              </div>
-            )}
-          </div>
 
-          {/* Tips */}
-          <div className='bg-white border rounded-lg p-6'>
-            <div className='flex gap-3'>
-              <AlertCircle className='w-5 h-5 text-blue-600 shrink-0 mt-0.5' />
-              <div className='text-sm'>
-                <p className='font-semibold mb-2'>Tips:</p>
-                <ul className='space-y-1 text-gray-600 text-xs'>
-                  <li>• Pastikan tanda tangan jelas dan mudah dibaca</li>
-                  <li>• Gunakan latar belakang putih untuk hasil terbaik</li>
-                  <li>• Tanda tangan akan disimpan dan digunakan untuk dokumen ini</li>
-                </ul>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Right Panel - Document Preview */}
-        <div className='lg:col-span-2'>
-          <div className='bg-white border rounded-lg p-6'>
-            <div className='flex items-center justify-between mb-4'>
-              <h2 className='text-lg font-semibold'>Preview Dokumen</h2>
-            </div>
-
-            {loading ? (
-              <div className='flex items-center justify-center h-150 bg-gray-100 rounded-lg'>
-                <div className='text-center'>
-                  <div className='w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4' />
-                  <p className='text-gray-600'>Memuat dokumen...</p>
+                  <Button
+                    variant='outline'
+                    onClick={clearCanvas}
+                    className='w-full gap-2'
+                  >
+                    <Eraser className='w-4 h-4' />
+                    Hapus
+                  </Button>
                 </div>
-              </div>
-            ) : pdfUrl ? (
-              <div className='space-y-4'>
-                <div className='bg-gray-100 rounded-lg overflow-hidden border' style={{ height: '700px' }}>
-                  <iframe
-                    src={previewWithSignature || pdfUrl}
-                    className='w-full h-full'
-                    title='Document Preview'
-                  />
-                </div>
-                {(signatureDataUrl || uploadedSignature) && (
-                  <div className='p-3 bg-green-50 border border-green-200 rounded-lg'>
-                    <div className='flex items-center gap-2 text-green-800'>
-                      <Check className='w-4 h-4' />
-                      <span className='text-sm font-medium'>
-                        Tanda tangan siap diterapkan pada dokumen
-                      </span>
+              )}
+
+              {/* Upload Tab */}
+              {activeTab === 'upload' && (
+                <div className='space-y-4'>
+                  <div className='space-y-2'>
+                    <label className='text-sm font-medium block'>
+                      Upload Gambar Tanda Tangan
+                    </label>
+                    <div className='border-2 border-dashed border-gray-300 rounded-lg p-8 bg-white'>
+                      {uploadedSignature ? (
+                        <div className='space-y-4'>
+                          <img
+                            src={uploadedSignature}
+                            alt='Uploaded Signature'
+                            className='max-h-50 mx-auto'
+                          />
+                          <Button
+                            variant='outline'
+                            onClick={() => setUploadedSignature('')}
+                            className='w-full gap-2'
+                          >
+                            <Upload className='w-4 h-4' />
+                            Ganti Gambar
+                          </Button>
+                        </div>
+                      ) : (
+                        <label className='cursor-pointer block'>
+                          <div className='flex flex-col items-center gap-2 text-gray-500'>
+                            <Upload className='w-8 h-8' />
+                            <span className='text-sm font-medium'>
+                              Klik untuk upload gambar
+                            </span>
+                            <span className='text-xs'>PNG, JPG (Max. 2MB)</span>
+                          </div>
+                          <input
+                            type='file'
+                            accept='image/*'
+                            onChange={handleFileUpload}
+                            className='hidden'
+                          />
+                        </label>
+                      )}
                     </div>
                   </div>
-                )}
+                </div>
+              )}
+            </div>
+
+            {/* Tips */}
+            <div className='bg-white border rounded-lg p-6'>
+              <div className='flex gap-3'>
+                <AlertCircle className='w-5 h-5 text-blue-600 shrink-0 mt-0.5' />
+                <div className='text-sm'>
+                  <p className='font-semibold mb-2'>Tips:</p>
+                  <ul className='space-y-1 text-gray-600 text-xs'>
+                    <li>• Pastikan tanda tangan jelas dan mudah dibaca</li>
+                    <li>• Gunakan latar belakang putih untuk hasil terbaik</li>
+                    <li>
+                      • Tanda tangan akan disimpan dan digunakan untuk dokumen
+                      ini
+                    </li>
+                  </ul>
+                </div>
               </div>
-            ) : (
-              <div className='flex items-center justify-center h-150 bg-gray-100 rounded-lg'>
-                <p className='text-gray-500'>Tidak ada preview tersedia</p>
+            </div>
+          </div>
+
+          {/* Right Panel - Document Preview */}
+          <div className='lg:col-span-2'>
+            <div className='bg-white border rounded-lg p-6'>
+              <div className='flex items-center justify-between mb-4'>
+                <h2 className='text-lg font-semibold'>Preview Dokumen</h2>
               </div>
-            )}
+
+              {loading ? (
+                <div className='flex items-center justify-center h-150 bg-gray-100 rounded-lg'>
+                  <div className='text-center'>
+                    <div className='w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4' />
+                    <p className='text-gray-600'>Memuat dokumen...</p>
+                  </div>
+                </div>
+              ) : pdfUrl ? (
+                <div className='space-y-4'>
+                  <div
+                    className='bg-gray-100 rounded-lg overflow-hidden border'
+                    style={{ height: '700px' }}
+                  >
+                    <iframe
+                      src={previewWithSignature || pdfUrl}
+                      className='w-full h-full'
+                      title='Document Preview'
+                    />
+                  </div>
+                  {(signatureDataUrl || uploadedSignature) && (
+                    <div className='p-3 bg-green-50 border border-green-200 rounded-lg'>
+                      <div className='flex items-center gap-2 text-green-800'>
+                        <Check className='w-4 h-4' />
+                        <span className='text-sm font-medium'>
+                          Tanda tangan siap diterapkan pada dokumen
+                        </span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className='flex items-center justify-center h-150 bg-gray-100 rounded-lg'>
+                  <p className='text-gray-500'>Tidak ada preview tersedia</p>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>
     </div>
-  </div>
   );
 }
