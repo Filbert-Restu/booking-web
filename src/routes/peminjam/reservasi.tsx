@@ -300,6 +300,27 @@ function RouteComponent() {
 			// Create document for reservation
 			setLoading(true);
 
+			// Check if user already has a DRAFT reservation for this room and date
+			const existingDocs = await documentService.getDocuments();
+			const hasDuplicateReservation = existingDocs.my_documents?.some((doc: any) => {
+				const content = doc.content || {};
+				const metaData = doc.meta_data || {};
+				return (
+					doc.status === 'DRAFT' &&
+					metaData.step === 'reservation' &&
+					content.room_id === selectedRoomId &&
+					content.booking_date === bookingDate &&
+					content.start_time === startTime &&
+					content.end_time === endTime
+				);
+			});
+
+			if (hasDuplicateReservation) {
+				alert('Anda sudah memiliki reservasi yang sama di daftar pengajuan. Silakan submit atau edit reservasi yang ada.');
+				setLoading(false);
+				return;
+			}
+
 			// Tentukan workflow_id berdasarkan unit category user
 			const userUnitCategory = localStorage.getItem('userUnitCategory') || 'HMD';
 			const workflowMap: Record<string, number> = {

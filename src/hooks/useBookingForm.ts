@@ -126,16 +126,16 @@ export function useBookingForm({
   // Effect untuk auto-check availability
   useEffect(() => {
     if (form.roomId && form.bookingDate && form.startTime && form.endTime) {
-      const timer = setTimeout(() => checkAvailabilityMutation.mutate(), 500);
+      // Debounce 800ms untuk mengurangi request berlebihan
+      const timer = setTimeout(() => checkAvailabilityMutation.mutate(), 800);
       return () => clearTimeout(timer);
     }
-    // ERROR FIX: Tambahkan checkAvailabilityMutation ke dependency (atau abaikan warning jika yakin stabil)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     form.roomId,
     form.bookingDate,
     form.startTime,
     form.endTime,
-    checkAvailabilityMutation,
   ]);
 
   // --- 4. MUTATION (Submit) ---

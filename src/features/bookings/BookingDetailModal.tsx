@@ -46,11 +46,12 @@ export function BookingDetailModal({ open, onOpenChange, booking }: Props) {
 
         <Dialog.Content
           className={cn(
-            'fixed left-1/2 top-1/2 w-[95%] max-w-2xl -translate-x-1/2 -translate-y-1/2 bg-white rounded-lg p-6 md:p-8 shadow-xl z-50',
+            'fixed left-1/2 top-1/2 w-[95%] max-w-2xl max-h-[90vh] -translate-x-1/2 -translate-y-1/2 bg-white rounded-lg shadow-xl z-50',
             'focus:outline-none',
+            'flex flex-col',
           )}
         >
-          <div className='flex items-start justify-between gap-4'>
+          <div className='flex items-start justify-between gap-4 p-6 md:p-8 pb-4 shrink-0'>
             <div>
               <Dialog.Title className='text-lg font-semibold'>
                 Detail Peminjaman
@@ -66,7 +67,8 @@ export function BookingDetailModal({ open, onOpenChange, booking }: Props) {
             </Dialog.Close>
           </div>
 
-          <div className='mt-6 grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6'>
+          <div className='overflow-y-auto px-6 md:px-8 flex-1'>
+            <div className='grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6'>
             <DetailRow label='Tujuan / Kegiatan' className='sm:col-span-2'>
               {booking.purpose}
             </DetailRow>
@@ -116,8 +118,9 @@ export function BookingDetailModal({ open, onOpenChange, booking }: Props) {
               </DetailRow>
             )}
           </div>
+          </div>
 
-          <div className='mt-8 flex justify-end gap-2'>
+          <div className='p-6 md:p-8 pt-4 flex justify-end gap-2 shrink-0 border-t'>
             <Button
               variant='outline'
               onClick={() => onOpenChange(false)}

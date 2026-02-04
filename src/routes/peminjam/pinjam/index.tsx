@@ -36,8 +36,33 @@ function RouteComponent() {
     queryFn: () => documentService.getDocuments(),
     refetchInterval: 30000,
     select: (res) => {
-      // Backend sudah handle deduplication, jadi langsung return
-      return res.my_documents || [];
+      const myDocs = res.my_documents || [];
+      
+      // Deduplicate berdasarkan kombinasi unique: room_id + booking_date + start_time + end_time
+      // Prioritas: IN_PROGRESS > DRAFT (status reservasi)
+      const uniqueMap = new Map<string, Document>();
+      
+      myDocs.forEach((doc: Document) => {
+        const content = (doc.content || {}) as any;
+        const key = `${content.room_id || 'null'}_${content.booking_date || 'null'}_${content.start_time || 'null'}_${content.end_time || 'null'}`;
+        
+        const existing = uniqueMap.get(key);
+        if (!existing) {
+          uniqueMap.set(key, doc);
+        } else {
+          // Jika ada duplikat, prioritaskan yang IN_PROGRESS daripada DRAFT
+          if (doc.status === 'IN_PROGRESS' && existing.status === 'DRAFT') {
+            uniqueMap.set(key, doc);
+          } else if (doc.status === existing.status) {
+            // Jika status sama, ambil yang lebih baru (ID lebih besar)
+            if (doc.id > existing.id) {
+              uniqueMap.set(key, doc);
+            }
+          }
+        }
+      });
+      
+      return Array.from(uniqueMap.values());
     },
   });
 
