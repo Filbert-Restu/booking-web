@@ -88,19 +88,20 @@ function RouteComponent() {
 
   const handleAjukanPinjamWithData = useCallback(
     (doc: Document<BookingContent>) => {
-      const content = doc.content;
+      // Untuk dokumen REVISED/DRAFT, gunakan editId agar form auto-fill dari database
+      // Ini memastikan SEMUA field terisi otomatis, tidak hanya yang ada di search params
       navigate({
         to: '/peminjam/pinjam/detail-tempat',
         search: {
-          editId: undefined,
-          roomId: content?.room_id,
-          bookingDate: content?.booking_date,
-          startTime: content?.start_time,
-          endTime: content?.end_time,
-          purpose: content?.purpose,
-          ketuaNama: content?.ketua_pelaksana_nama,
-          ketuaNim: content?.ketua_pelaksana_nim,
-          ketuaHp: content?.ketua_pelaksana_hp,
+          editId: doc.id, // Kirim document ID untuk auto-fill
+          roomId: undefined,
+          bookingDate: undefined,
+          startTime: undefined,
+          endTime: undefined,
+          purpose: undefined,
+          ketuaNama: undefined,
+          ketuaNim: undefined,
+          ketuaHp: undefined,
         },
       });
     },
@@ -215,12 +216,22 @@ function RouteComponent() {
             );
           }
           if (doc.status === 'REVISED' || doc.status === 'REJECTED') {
+            // Find the RETURNED log entry to get revision note and revisor
+            const returnedLog = doc.logs?.find(log => log.action === 'RETURNED');
+            const revisorName = returnedLog?.user?.name || 'Approver';
+            const revisionNote = returnedLog?.note || 'Perlu revisi';
+            
             return (
               <div className='flex flex-col gap-1'>
-                <span className='text-sm text-orange-600'>Perlu revisi</span>
+                <span className='text-xs text-gray-600'>
+                  Dikembalikan oleh <span className='font-semibold'>{revisorName}</span>
+                </span>
+                <span className='text-xs text-orange-600 italic'>
+                  &quot;{revisionNote}&quot;
+                </span>
                 <button
                   onClick={() => handleAjukanPinjamWithData(doc)}
-                  className='text-sm text-blue-600 hover:text-blue-800 hover:underline font-medium'
+                  className='text-sm text-blue-600 hover:text-blue-800 hover:underline font-medium mt-1'
                 >
                   Ajukan Kembali
                 </button>

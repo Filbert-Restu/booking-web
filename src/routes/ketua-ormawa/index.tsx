@@ -14,7 +14,6 @@ import {
   type ApprovalItem,
 } from '@/features/approvals/approval-utils';
 import { documentService } from '@/services/document.service';
-import { signatureService } from '@/services/signature.service';
 import { Button } from '@/shared/components/ui/button/button';
 
 export const Route = createFileRoute('/ketua-ormawa/')({
@@ -134,47 +133,19 @@ function RouteComponent() {
 
 
   const handleApprove = async (id: number) => {
-    try {
-      // Check if user has signature
-      const signature = await signatureService.getSignature();
-      if (!signature) {
-        const confirmSetup = confirm(
-          '⚠️ Tanda Tangan Belum Diupload\n\n' +
-            'Anda harus mengupload tanda tangan digital terlebih dahulu sebelum approve dokumen.\n\n' +
-            'Apakah Anda ingin mengupload tanda tangan sekarang?',
-        );
-        if (confirmSetup) {
-          navigate({
-            to: '/tanda-tangan',
-            search: {
-              return: '/ketua-ormawa',
-              autoApprove: false,
-            } as any,
-          });
-        }
-        return;
-      }
-
-      const note = prompt('Masukkan catatan (opsional):') || '';
-
-      // Backend will automatically use signature from database
-      await documentService.approveDocument(id, '', note);
-      alert(
-        '✅ Dokumen berhasil disetujui!\n\nDokumen telah diteruskan ke step berikutnya.',
-      );
-
-      // Refresh data
-      await fetchDocuments();
-    } catch (err) {
-      console.error('Failed to approve document:', err);
-      if (err instanceof AxiosError) {
-        alert(
-          '❌ Gagal menyetujui dokumen\n\n' +
-            (err.response?.data?.message || err.message),
-        );
-      } else {
-        alert('Terjadi kesalahan saat menyetujui dokumen');
-      }
+    const confirmSign = confirm(
+      '✍️ Membubuhkan Tanda Tangan\n\n' +
+        'Untuk menyetujui dokumen ini, Anda perlu membubuhkan tanda tangan digital.\n\n' +
+        'Anda akan diarahkan ke halaman tanda tangan.',
+    );
+    
+    if (confirmSign) {
+      navigate({
+        to: '/ketua-ormawa/sign-document',
+        search: {
+          documentId: id,
+        },
+      });
     }
   };
 

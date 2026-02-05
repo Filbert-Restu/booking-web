@@ -44,7 +44,7 @@ function RouteComponent() {
 
   const handleOpenDoc = (payload: any) => {
     navigate({
-      to: '/preview-dokumen',
+      to: '/preview-document',
       search: { doc: payload.doc, id: payload.booking.id, return: '/dosen-pendamping/riwayat-persetujuan' } as any
     });
   };
@@ -86,8 +86,8 @@ function RouteComponent() {
       ) : (
         <ApprovalHistory
           bookings={approvalItems}
-          actorRole={actorRole}
           onOpenDoc={handleOpenDoc}
+          showOrganisasi={true}
         />
       )}
     </div>

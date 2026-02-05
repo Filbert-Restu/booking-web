@@ -323,8 +323,8 @@ function RouteComponent() {
         formData.document_id!,
       );
 
-      // Only submit if document is still in DRAFT status
-      if (documentDetail.status === 'DRAFT') {
+      // Submit if document is in DRAFT or REVISED status
+      if (documentDetail.status === 'DRAFT' || documentDetail.status === 'REVISED') {
         await documentService.submitDocument(formData.document_id!);
       }
 
@@ -456,7 +456,6 @@ function RouteComponent() {
       to: '/tanda-tangan',
       search: {
         return: '/peminjam/pinjam/tanda-tangan',
-        documentId: undefined,
         autoApprove: undefined,
       },
     });

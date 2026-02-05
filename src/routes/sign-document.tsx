@@ -38,6 +38,8 @@ export function SignDocumentContent({ documentId, returnPath }: { documentId: nu
     loadSignature();
     if (documentId) {
       loadDocumentPreview(selectedDocType);
+      // Auto-show draw mode when coming from approve flow
+      setShowDrawMode(true);
     }
   }, []);
 

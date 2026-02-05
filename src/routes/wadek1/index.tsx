@@ -70,17 +70,19 @@ function RouteComponent() {
   ];
 
   const handleApprove = async (id: number) => {
-    try {
-      await documentService.approveDocument(id, 'Disetujui oleh Wadek 1');
-      alert('Dokumen berhasil disetujui!');
-      await fetchDocuments();
-    } catch (err) {
-      console.error('Failed to approve document:', err);
-      if (err instanceof AxiosError) {
-        alert(err.response?.data?.message || 'Gagal menyetujui dokumen');
-      } else {
-        alert('Terjadi kesalahan saat menyetujui dokumen');
-      }
+    const confirmSign = confirm(
+      '✍️ Membubuhkan Tanda Tangan\n\n' +
+        'Untuk menyetujui dokumen ini, Anda perlu membubuhkan tanda tangan digital.\n\n' +
+        'Anda akan diarahkan ke halaman tanda tangan.',
+    );
+    
+    if (confirmSign) {
+      navigate({
+        to: '/wadek1/sign-document',
+        search: {
+          documentId: id,
+        },
+      });
     }
   };
 

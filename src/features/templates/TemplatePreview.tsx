@@ -87,11 +87,23 @@ export function TemplatePreview({
 
       if (file instanceof File) {
         arrayBuffer = await file.arrayBuffer();
-      } else {
+      } else if (file && typeof file === 'string') {
         const response = await api.get(file, {
           responseType: 'arraybuffer',
         });
         arrayBuffer = response.data;
+      } else if (templateId) {
+        // Download DOCX from backend for placeholder extraction
+        const response = await api.get(
+          `/document-templates/${templateId}/download`,
+          {
+            responseType: 'arraybuffer',
+          },
+        );
+        arrayBuffer = response.data;
+      } else {
+        // No file or template ID provided
+        return;
       }
 
       // Extract placeholders using mammoth
