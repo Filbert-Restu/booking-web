@@ -38,15 +38,15 @@ function RouteComponent() {
     select: (res) => {
       const myDocs = res.my_documents || [];
       console.log('📄 My documents from API:', myDocs);
-      
+
       // Deduplicate berdasarkan kombinasi unique: room_id + booking_date + start_time + end_time
       // Prioritas: IN_PROGRESS > DRAFT (status reservasi)
       const uniqueMap = new Map<string, Document>();
-      
+
       myDocs.forEach((doc: Document) => {
-        const content = (doc.content || {}) as any;
+        const content = doc.content || {};
         const key = `${content.room_id || 'null'}_${content.booking_date || 'null'}_${content.start_time || 'null'}_${content.end_time || 'null'}`;
-        
+
         const existing = uniqueMap.get(key);
         if (!existing) {
           uniqueMap.set(key, doc);
@@ -62,7 +62,7 @@ function RouteComponent() {
           }
         }
       });
-      
+
       const result = Array.from(uniqueMap.values());
       console.log('📄 After deduplication:', result);
       return result;
@@ -194,14 +194,11 @@ function RouteComponent() {
         className: 'w-[11%]',
         cell: (doc) => {
           if (doc.status === 'IN_PROGRESS') {
-            console.log('🔍 IN_PROGRESS doc:', doc);
-            console.log('🔍 currentHolder:', doc.currentHolder);
-            console.log('🔍 role:', doc.currentHolder?.role);
             const holderName = documentHelpers.getCurrentHolder(doc);
-            console.log('🔍 holderName from helper:', holderName);
             return (
               <span className='text-sm text-gray-700'>
-                Dokumen sedang di <span className='font-semibold'>{holderName}</span>
+                Dokumen sedang di{' '}
+                <span className='font-semibold'>{holderName}</span>
               </span>
             );
           }
@@ -217,14 +214,17 @@ function RouteComponent() {
           }
           if (doc.status === 'REVISED' || doc.status === 'REJECTED') {
             // Find the RETURNED log entry to get revision note and revisor
-            const returnedLog = doc.logs?.find(log => log.action === 'RETURNED');
+            const returnedLog = doc.logs?.find(
+              (log) => log.action === 'RETURNED',
+            );
             const revisorName = returnedLog?.user?.name || 'Approver';
             const revisionNote = returnedLog?.note || 'Perlu revisi';
-            
+
             return (
               <div className='flex flex-col gap-1'>
                 <span className='text-xs text-gray-600'>
-                  Dikembalikan oleh <span className='font-semibold'>{revisorName}</span>
+                  Dikembalikan oleh{' '}
+                  <span className='font-semibold'>{revisorName}</span>
                 </span>
                 <span className='text-xs text-orange-600 italic'>
                   &quot;{revisionNote}&quot;

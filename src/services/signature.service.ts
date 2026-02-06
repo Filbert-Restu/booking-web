@@ -73,9 +73,19 @@ class SignatureService {
    * Get signature file URL (for preview)
    * Returns blob URL that can be used in <img> tag
    */
-  async getSignatureFileUrl(): Promise<string | null> {
+  /**
+   * Get signature file URL (for preview)
+   * If `signatureId` is provided, include it as a query param so the backend
+   * can return the specific file for that signature (if supported).
+   */
+  async getSignatureFileUrl(signatureId?: number): Promise<string | null> {
     try {
-      const response = await api.get('/signs/file', {
+      // Add timestamp to prevent caching
+      const timestamp = Date.now();
+      const endpoint = signatureId
+        ? `/signs/file?signature_id=${encodeURIComponent(String(signatureId))}&_t=${timestamp}`
+        : `/signs/file?_t=${timestamp}`;
+      const response = await api.get(endpoint, {
         responseType: 'blob',
       });
       const blob = response.data;

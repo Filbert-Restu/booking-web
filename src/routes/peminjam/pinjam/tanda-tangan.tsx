@@ -324,7 +324,10 @@ function RouteComponent() {
       );
 
       // Submit if document is in DRAFT or REVISED status
-      if (documentDetail.status === 'DRAFT' || documentDetail.status === 'REVISED') {
+      if (
+        documentDetail.status === 'DRAFT' ||
+        documentDetail.status === 'REVISED'
+      ) {
         await documentService.submitDocument(formData.document_id!);
       }
 
@@ -698,7 +701,7 @@ function RouteComponent() {
             </div>
 
             {/* Preview & Download Dokumen */}
-            <div className='grid grid-cols-1 lg:grid-cols-3 gap-4'>
+            <div className='grid grid-cols-1 gap-4'>
               {/* Proposal Preview */}
               <div className='border border-gray-200 rounded-lg overflow-hidden'>
                 <div className='bg-gray-800 px-4 py-3 flex items-center justify-between'>

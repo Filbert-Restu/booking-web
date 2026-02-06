@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router';
-import { SignDocumentContent } from '@/routes/sign-document';
+import { SignDocumentContent } from '@/features/documents/components/SignDocumentContent';
 
 export const Route = createFileRoute('/wadek1/sign-document')({
   component: RouteComponent,

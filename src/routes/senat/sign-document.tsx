@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router';
-import { SignDocumentContent } from '@/routes/sign-document';
+import { SignDocumentContent } from '@/features/documents/components/SignDocumentContent';
 
 export const Route = createFileRoute('/senat/sign-document')({
   component: RouteComponent,

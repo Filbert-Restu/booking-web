@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router';
-import { SignDocumentContent } from '@/routes/sign-document';
+import { SignDocumentContent } from '@/features/documents/components/SignDocumentContent';
 
 export const Route = createFileRoute('/ketua-ormawa/sign-document')({
   component: RouteComponent,
@@ -13,5 +13,7 @@ export const Route = createFileRoute('/ketua-ormawa/sign-document')({
 function RouteComponent() {
   const { documentId } = Route.useSearch();
 
-  return <SignDocumentContent documentId={documentId} returnPath='/ketua-ormawa' />;
+  return (
+    <SignDocumentContent documentId={documentId} returnPath='/ketua-ormawa' />
+  );
 }

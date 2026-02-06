@@ -7,9 +7,17 @@ import type { Signature } from '@/services/signature.service';
 
 interface SignatureUploadProps {
   onSignatureUploaded?: (signature: Signature) => void;
+  /** Additional class applied to the outer container */
+  className?: string;
+  /** Additional class applied to the preview <img> */
+  imgClassName?: string;
 }
 
-export function SignatureUpload({ onSignatureUploaded }: SignatureUploadProps) {
+export function SignatureUpload({
+  onSignatureUploaded,
+  className,
+  imgClassName,
+}: SignatureUploadProps) {
   const [mode, setMode] = useState<'view' | 'draw' | 'upload'>('view');
   const [existingSignature, setExistingSignature] = useState<Signature | null>(
     null,
@@ -17,20 +25,57 @@ export function SignatureUpload({ onSignatureUploaded }: SignatureUploadProps) {
   const [signatureUrl, setSignatureUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const sigCanvas = useRef<SignatureCanvas>(null);
+  const prevBlobUrl = useRef<string | null>(null);
+  // Coerce to number; keep NaN if missing so comparisons are numeric
+  const currentUserId = Number(localStorage.getItem('userId'));
 
   useEffect(() => {
     loadExistingSignature();
+    return () => {
+      // revoke any created object URL on unmount
+      if (prevBlobUrl.current) {
+        try {
+          URL.revokeObjectURL(prevBlobUrl.current);
+        } catch (e) {
+          /* ignore */
+        }
+        prevBlobUrl.current = null;
+      }
+    };
   }, []);
+
+  const updateSignatureUrl = (url: string | null) => {
+    if (prevBlobUrl.current && prevBlobUrl.current !== url) {
+      try {
+        URL.revokeObjectURL(prevBlobUrl.current);
+      } catch (e) {
+        /* ignore */
+      }
+    }
+    prevBlobUrl.current = url;
+    setSignatureUrl(url);
+  };
 
   const loadExistingSignature = async () => {
     try {
       setLoading(true);
       const signature = await signatureService.getSignature();
-      setExistingSignature(signature);
+      // Debug: log returned signature and current user id to help diagnose preview issues
+      console.debug('SignatureUpload.loadExistingSignature', {
+        signature,
+        currentUserId,
+      });
+      // Ensure the returned signature belongs to the current authenticated user
+      if (signature && Number(signature.user_id) === currentUserId) {
+        setExistingSignature(signature);
 
-      if (signature) {
-        const url = await signatureService.getSignatureFileUrl();
-        setSignatureUrl(url);
+        // Request file blob for this specific signature id to avoid mismatched previews
+        const url = await signatureService.getSignatureFileUrl(signature.id);
+        updateSignatureUrl(url);
+      } else {
+        // If signature exists but belongs to another user, ignore it
+        setExistingSignature(null);
+        setSignatureUrl(null);
       }
     } catch (error) {
       console.error('Failed to load signature:', error);
@@ -74,9 +119,9 @@ export function SignatureUpload({ onSignatureUploaded }: SignatureUploadProps) {
 
       setExistingSignature(signature);
 
-      // Get new URL
-      const url = await signatureService.getSignatureFileUrl();
-      setSignatureUrl(url);
+      // Use local blob for immediate preview to avoid caching/server delay
+      const clientUrl = URL.createObjectURL(blob);
+      updateSignatureUrl(clientUrl);
 
       setMode('view');
       alert('Tanda tangan berhasil disimpan');
@@ -120,9 +165,9 @@ export function SignatureUpload({ onSignatureUploaded }: SignatureUploadProps) {
 
       setExistingSignature(signature);
 
-      // Get new URL
-      const url = await signatureService.getSignatureFileUrl();
-      setSignatureUrl(url);
+      // Use local file blob for immediate preview
+      const clientUrl = URL.createObjectURL(file);
+      updateSignatureUrl(clientUrl);
 
       setMode('view');
       alert('Tanda tangan berhasil disimpan');
@@ -158,16 +203,30 @@ export function SignatureUpload({ onSignatureUploaded }: SignatureUploadProps) {
 
   if (loading) {
     return (
-      <div className='border border-gray-200 rounded-lg p-6 bg-gray-50'>
-        <div className='flex items-center justify-center h-40'>
-          <div className='animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900'></div>
+      <div
+        className={
+          'border border-gray-200 rounded-lg p-6 bg-white ' + (className || '')
+        }
+      >
+        <h3 className='text-sm font-medium text-gray-900 mb-4'>
+          Tanda Tangan Digital
+        </h3>
+
+        <div className='min-h-60 flex items-center justify-center'>
+          <div className='border border-gray-300 rounded-lg p-4 bg-gray-50 w-full flex items-center justify-center'>
+            <div className='animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900'></div>
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className='border border-gray-200 rounded-lg p-6 bg-white'>
+    <div
+      className={
+        'border border-gray-200 rounded-lg p-6 bg-white ' + (className || '')
+      }
+    >
       <h3 className='text-sm font-medium text-gray-900 mb-4'>
         Tanda Tangan Digital
       </h3>
@@ -180,7 +239,7 @@ export function SignatureUpload({ onSignatureUploaded }: SignatureUploadProps) {
                 <img
                   src={signatureUrl}
                   alt='Tanda Tangan'
-                  className='max-h-32 object-contain'
+                  className={(imgClassName || 'max-h-32 object-contain').trim()}
                 />
               </div>
               <div className='flex gap-2'>
