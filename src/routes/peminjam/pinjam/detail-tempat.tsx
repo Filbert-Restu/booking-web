@@ -23,11 +23,12 @@ import { id } from 'date-fns/locale';
 import { cn } from '@/shared/lib/utils';
 
 // --- IMPORTS BARU ---
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { roomService, type Room } from '@/services/room.service';
 import { documentService } from '@/services/document.service';
 import { useBookingForm } from '@/hooks/useBookingForm';
 import type { ReservationContent } from '@/types/booking';
+import api from '@/lib/axios';
 
 export const Route = createFileRoute('/peminjam/pinjam/detail-tempat')({
   validateSearch: (search: Record<string, unknown>) => ({
@@ -45,8 +46,33 @@ export const Route = createFileRoute('/peminjam/pinjam/detail-tempat')({
 });
 
 function RouteComponent() {
+  const navigate = useNavigate();
   const searchParams = Route.useSearch();
   const { editId } = searchParams;
+  const [currentUser, setCurrentUser] = useState<any>(null);
+  const [authLoading, setAuthLoading] = useState(true);
+  const [accessError, setAccessError] = useState<string | null>(null);
+
+  // FETCH CURRENT USER
+  useEffect(() => {
+    const fetchCurrentUser = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        if (!token) {
+          navigate({ to: '/login-option' });
+          return;
+        }
+        const response = await api.get('/user');
+        setCurrentUser(response.data);
+      } catch (error) {
+        console.error('Failed to fetch current user:', error);
+        navigate({ to: '/login-option' });
+      } finally {
+        setAuthLoading(false);
+      }
+    };
+    fetchCurrentUser();
+  }, [navigate]);
 
   // 1. FETCH ROOMS
   const {
@@ -67,14 +93,56 @@ function RouteComponent() {
   } = useQuery({
     queryKey: ['document', editId],
     queryFn: () => documentService.getDocument(editId!),
-    enabled: !!editId,
+    enabled: !!editId && !!currentUser,
   });
 
+  // 3. CHECK ACCESS AUTHORIZATION (untuk edit mode)
+  useEffect(() => {
+    if (editId && existingDoc && currentUser) {
+      const isOwner = existingDoc.creator_id === currentUser.id;
+      const isCurrentHolder = existingDoc.current_holder_id === currentUser.id;
+      const isAdmin = currentUser.role?.slug === 'admin';
+
+      if (!isOwner && !isCurrentHolder && !isAdmin) {
+        setAccessError(
+          'Anda tidak memiliki akses untuk mengedit dokumen ini. Hanya pemilik dokumen atau approver yang sedang memegang dokumen yang dapat melakukan edit.',
+        );
+      } else if (
+        existingDoc.status &&
+        !['DRAFT', 'REVISION'].includes(existingDoc.status)
+      ) {
+        setAccessError(
+          'Dokumen sudah tidak dapat diedit. Dokumen hanya dapat diedit dengan status DRAFT atau REVISION.',
+        );
+      } else {
+        setAccessError(null);
+      }
+    }
+  }, [editId, existingDoc, currentUser]);
+
   // --- LOADING STATES ---
-  if (loadingRooms || loadingDoc) {
+  if (authLoading || loadingRooms || loadingDoc) {
     return (
       <div className='p-6 flex justify-center items-center min-h-screen'>
         <div className='text-center text-gray-600'>Memuat data...</div>
+      </div>
+    );
+  }
+
+  // --- ACCESS ERROR ---
+  if (accessError) {
+    return (
+      <div className='p-6 flex justify-center items-center min-h-screen'>
+        <div className='text-center max-w-md'>
+          <div className='text-red-600 mb-4'>
+            <AlertCircle className='w-12 h-12 mx-auto mb-3' />
+            <h3 className='font-semibold mb-2'>Akses Ditolak</h3>
+            <p className='text-sm'>{accessError}</p>
+          </div>
+          <Button onClick={() => navigate({ to: '/peminjam/pinjam' })}>
+            Kembali ke Daftar Peminjaman
+          </Button>
+        </div>
       </div>
     );
   }
@@ -102,6 +170,7 @@ function RouteComponent() {
       }
       searchParams={searchParams}
       editId={editId}
+      existingDocument={existingDoc}
     />
   );
 }
@@ -115,6 +184,7 @@ interface BookingFormProps {
   initialData?: ReservationContent;
   searchParams: Record<string, unknown>;
   editId?: number;
+  existingDocument?: any; // Document object dari backend
 }
 
 function BookingForm(props: BookingFormProps) {
@@ -189,6 +259,14 @@ function BookingForm(props: BookingFormProps) {
 
   const selectedRoom = props.rooms.find((r) => r.id === form.roomId);
 
+  // Check if document can be edited
+  const canEditDocument = useMemo(() => {
+    if (!props.editId || !props.existingDocument) return true; // New document
+    return ['DRAFT', 'REVISION'].includes(
+      props.existingDocument.status || 'DRAFT',
+    );
+  }, [props.editId, props.existingDocument]);
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     // Validasi UI sederhana
@@ -214,9 +292,54 @@ function BookingForm(props: BookingFormProps) {
       />
 
       <div className='max-w-2xl mx-auto bg-white rounded-lg shadow-sm border border-gray-200 p-6'>
-        <h2 className='text-xl font-semibold mb-6'>
-          Detail Tempat - {selectedRoom?.name || 'Pilih Ruangan'}
-        </h2>
+        <div className='mb-6'>
+          <h2 className='text-xl font-semibold'>
+            Detail Tempat - {selectedRoom?.name || 'Pilih Ruangan'}
+          </h2>
+          {props.editId && props.existingDocument && (
+            <div className='mt-2 p-3 bg-blue-50 border border-blue-200 rounded-lg'>
+              <div className='flex items-center gap-2 text-sm text-blue-800'>
+                <AlertCircle className='w-4 h-4' />
+                <span className='font-medium'>Mode Edit</span>
+              </div>
+              <div className='mt-1 text-xs text-blue-600 space-y-1'>
+                <div>
+                  Dokumen ID: #{props.editId} | Status:
+                  <span className='font-medium ml-1'>
+                    {props.existingDocument.status || 'DRAFT'}
+                  </span>
+                </div>
+                {props.existingDocument.creator && (
+                  <div>
+                    Dibuat oleh:{' '}
+                    <span className='font-medium'>
+                      {props.existingDocument.creator.name}
+                    </span>
+                  </div>
+                )}
+                {props.existingDocument.current_holder && (
+                  <div>
+                    Sedang ditangani:{' '}
+                    <span className='font-medium'>
+                      {props.existingDocument.current_holder.name}
+                    </span>
+                  </div>
+                )}
+              </div>
+              {props.existingDocument.status &&
+                !['DRAFT', 'REVISION'].includes(
+                  props.existingDocument.status,
+                ) && (
+                  <div className='mt-2 p-2 bg-yellow-50 border border-yellow-200 rounded text-xs text-yellow-800'>
+                    ⚠️ Dokumen dengan status{' '}
+                    <strong>{props.existingDocument.status}</strong> tidak dapat
+                    diedit. Hanya dokumen dengan status DRAFT atau REVISION yang
+                    dapat diubah.
+                  </div>
+                )}
+            </div>
+          )}
+        </div>
 
         <form onSubmit={handleSubmit} className='space-y-5'>
           {/* ROOM SELECT */}
@@ -225,6 +348,7 @@ function BookingForm(props: BookingFormProps) {
             <Select
               value={form.roomId?.toString()}
               onValueChange={(val) => handleChange('roomId', Number(val))}
+              disabled={!canEditDocument}
             >
               <SelectTrigger className='w-full'>
                 <SelectValue placeholder='Pilih...' />
@@ -246,6 +370,7 @@ function BookingForm(props: BookingFormProps) {
               placeholder='Nama Ketua'
               value={form.ketua.nama}
               onChange={(e) => handleKetuaChange('nama', e.target.value)}
+              disabled={!canEditDocument}
               required
             />
             <Input
@@ -257,6 +382,7 @@ function BookingForm(props: BookingFormProps) {
                   e.target.value.replace(/\D/g, '').slice(0, 14),
                 )
               }
+              disabled={!canEditDocument}
               required
             />
             <Input
@@ -268,6 +394,7 @@ function BookingForm(props: BookingFormProps) {
                   e.target.value.replace(/\D/g, '').slice(0, 13),
                 )
               }
+              disabled={!canEditDocument}
               required
             />
           </div>
@@ -280,6 +407,7 @@ function BookingForm(props: BookingFormProps) {
                 <PopoverTrigger asChild>
                   <Button
                     variant={'outline'}
+                    disabled={!canEditDocument}
                     className={cn(
                       'w-full justify-start text-left font-normal',
                       !form.bookingDate && 'text-muted-foreground',
@@ -302,7 +430,7 @@ function BookingForm(props: BookingFormProps) {
                       form.bookingDate ? new Date(form.bookingDate) : undefined
                     }
                     onSelect={(date: Date | undefined) => {
-                      if (date) {
+                      if (date && canEditDocument) {
                         // Format date ke string 'YYYY-MM-DD' untuk disimpan di state
                         // Perlu penyesuaian timezone agar tidak bergeser hari
                         const offset = date.getTimezoneOffset();
@@ -315,12 +443,18 @@ function BookingForm(props: BookingFormProps) {
 
                         handleChange('bookingDate', dateString);
                         setDateValidationMsg(null); // Reset error jika ada
+                      } else if (!canEditDocument) {
+                        // Do nothing if document cannot be edited
+                        return;
                       } else {
                         handleChange('bookingDate', '');
                       }
                     }}
                     // LOGIKA KUNCI DISINI:
                     disabled={(date: Date) => {
+                      // DISABLE JIKA DOCUMENT TIDAK BISA DIEDIT
+                      if (!canEditDocument) return true;
+
                       // 1. Disable jika BUKAN hari Sabtu (0=Minggu, 6=Sabtu)
                       const isNotSaturday = date.getDay() !== 6;
 
@@ -350,6 +484,7 @@ function BookingForm(props: BookingFormProps) {
                       const minute = form.startTime.split(':')[1] || '00';
                       handleChange('startTime', `${hour}:${minute}`);
                     }}
+                    disabled={!canEditDocument}
                   >
                     <SelectTrigger className='w-full'>
                       <SelectValue placeholder='Jam' />
@@ -371,6 +506,7 @@ function BookingForm(props: BookingFormProps) {
                       const hour = form.startTime.split(':')[0] || '09';
                       handleChange('startTime', `${hour}:${minute}`);
                     }}
+                    disabled={!canEditDocument}
                   >
                     <SelectTrigger className='w-full'>
                       <SelectValue placeholder='Menit' />
@@ -394,6 +530,7 @@ function BookingForm(props: BookingFormProps) {
                       const minute = form.endTime.split(':')[1] || '00';
                       handleChange('endTime', `${hour}:${minute}`);
                     }}
+                    disabled={!canEditDocument}
                   >
                     <SelectTrigger className='w-full'>
                       <SelectValue placeholder='Jam' />
@@ -415,6 +552,7 @@ function BookingForm(props: BookingFormProps) {
                       const hour = form.endTime.split(':')[0] || '17';
                       handleChange('endTime', `${hour}:${minute}`);
                     }}
+                    disabled={!canEditDocument}
                   >
                     <SelectTrigger className='w-full'>
                       <SelectValue placeholder='Menit' />
@@ -446,6 +584,22 @@ function BookingForm(props: BookingFormProps) {
             </div>
           )}
 
+          {/* DOCUMENT STATUS WARNING */}
+          {!canEditDocument && (
+            <div className='p-3 bg-amber-50 border border-amber-200 rounded text-sm text-amber-800'>
+              <div className='flex items-center gap-2'>
+                <AlertCircle className='w-4 h-4' />
+                <span className='font-medium'>Dokumen Tidak Dapat Diedit</span>
+              </div>
+              <p className='mt-1 text-xs'>
+                Dokumen dengan status{' '}
+                <strong>{props.existingDocument?.status}</strong> sudah dikunci
+                dan tidak dapat diubah. Hanya dokumen dengan status DRAFT atau
+                REVISION yang dapat diedit.
+              </p>
+            </div>
+          )}
+
           {/* ACTIVITY INPUT */}
           <div>
             <label className='text-sm'>Aktivitas</label>
@@ -453,6 +607,7 @@ function BookingForm(props: BookingFormProps) {
               rows={3}
               value={form.activity}
               onChange={(e) => handleChange('activity', e.target.value)}
+              disabled={!canEditDocument}
               required
             />
           </div>
@@ -472,7 +627,8 @@ function BookingForm(props: BookingFormProps) {
                 submitMutation.isPending ||
                 (availabilityMsg?.isError && !props.editId) ||
                 !isSaturday ||
-                !isTimeWindowValid
+                !isTimeWindowValid ||
+                !canEditDocument
               }
             >
               {submitMutation.isPending ? 'Menyimpan...' : 'Selanjutnya'}

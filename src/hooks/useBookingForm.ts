@@ -54,9 +54,7 @@ export function useBookingForm({
       bookingDate: String(
         val('booking_date', 'booking_date', 'bookingDate') || '',
       ),
-      startTime: String(
-        val('start_time', 'start_time', 'startTime') || '',
-      ),
+      startTime: String(val('start_time', 'start_time', 'startTime') || ''),
       endTime: String(val('end_time', 'end_time', 'endTime') || ''),
       activity: String(val('purpose', 'purpose', 'purpose') || ''),
       ketua: {
@@ -102,11 +100,34 @@ export function useBookingForm({
   const checkAvailabilityMutation = useMutation({
     mutationFn: async () => {
       if (!form.roomId || !form.bookingDate) return;
+
+      // Skip availability check jika dalam edit mode dengan data yang sama
+      // Karena dokumen sedang diedit, data asli dianggap "available" untuk diedit
+      if (editId && initialData) {
+        const isSameRoom = initialData.room_id === form.roomId;
+        const isSameDate = initialData.booking_date === form.bookingDate;
+        const isSameStartTime = initialData.start_time === form.startTime;
+        const isSameEndTime = initialData.end_time === form.endTime;
+
+        if (isSameRoom && isSameDate && isSameStartTime && isSameEndTime) {
+          // Data sama dengan asli, return available
+          return {
+            available: true,
+            room: rooms.find((r) => r.id === form.roomId)!,
+            date: form.bookingDate,
+            start_time: form.startTime,
+            end_time: form.endTime,
+            conflicts: [],
+          };
+        }
+      }
+
       return await roomService.checkAvailability(
         form.roomId,
         form.bookingDate,
         form.startTime,
         form.endTime,
+        editId, // Pass editId untuk exclude document yang sedang diedit
       );
     },
     onSuccess: (res) => {
@@ -131,28 +152,21 @@ export function useBookingForm({
       return () => clearTimeout(timer);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [
-    form.roomId,
-    form.bookingDate,
-    form.startTime,
-    form.endTime,
-  ]);
+  }, [form.roomId, form.bookingDate, form.startTime, form.endTime]);
 
   // --- 4. MUTATION (Submit) ---
   const submitMutation = useMutation({
     mutationFn: async () => {
-      // 1. Validasi Availability (Skip jika Edit Mode)
-      // ERROR FIX: Menggunakan 'editId' agar tidak unused
-      if (!editId) {
-        const avail = await roomService.checkAvailability(
-          form.roomId!,
-          form.bookingDate,
-          form.startTime,
-          form.endTime,
-        );
-        if (!avail.available) {
-          throw new Error('Ruangan tidak tersedia pada jam tersebut.');
-        }
+      // 1. Validasi Availability dengan exclude current document jika edit mode
+      const avail = await roomService.checkAvailability(
+        form.roomId!,
+        form.bookingDate,
+        form.startTime,
+        form.endTime,
+        editId, // Exclude current document ID jika dalam edit mode
+      );
+      if (!avail.available) {
+        throw new Error('Ruangan tidak tersedia pada jam tersebut.');
       }
 
       // 2. Siapkan Data

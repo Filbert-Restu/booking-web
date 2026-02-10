@@ -40,7 +40,7 @@ export const DocumentStatusBadge: React.FC<{ doc: Document }> = ({ doc }) => {
       label: 'Disetujui',
     },
     REJECTED: { bg: 'bg-red-100', text: 'text-red-800', label: 'Ditolak' },
-    REVISED: {
+    REVISION: {
       bg: 'bg-orange-100',
       text: 'text-orange-800',
       label: 'Perlu Revisi',

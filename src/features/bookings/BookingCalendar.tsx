@@ -71,15 +71,15 @@ export default function BookingCalendar() {
   // Get color based on booking status
   function getEventColor(status: string): string {
     switch (status) {
-      case 'approved':
+      case 'APPROVED':
         return '#10b981'; // green
-      case 'pending':
+      case 'PENDING':
         return '#f59e0b'; // orange
-      case 'rejected':
+      case 'REJECTED':
         return '#ef4444'; // red
-      case 'cancelled':
+      case 'CANCELLED':
         return '#6b7280'; // gray
-      case 'completed':
+      case 'COMPLETED':
         return '#3b82f6'; // blue
       default:
         return '#9ca3af'; // default gray

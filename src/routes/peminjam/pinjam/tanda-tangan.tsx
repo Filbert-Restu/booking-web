@@ -323,19 +323,21 @@ function RouteComponent() {
         formData.document_id!,
       );
 
-      // Submit if document is in DRAFT or REVISED status
+      // Submit document only if it's in DRAFT or REVISION status
+      // DRAFT = first time submit, REVISION = resubmit after revision
       if (
         documentDetail.status === 'DRAFT' ||
-        documentDetail.status === 'REVISED'
+        documentDetail.status === 'REVISION'
       ) {
         await documentService.submitDocument(formData.document_id!);
       }
 
-      // 2. Create room booking with data from document content
       await bookingService.createBooking(bookingData);
 
       alert(
-        'Peminjaman berhasil diajukan! Dokumen sedang dalam proses persetujuan.',
+        'Peminjaman berhasil diajukan! 🎉\n\n' +
+          'Status: Dokumen sedang dalam proses persetujuan.\n' +
+          'Anda bisa memantau perkembangan di halaman "Daftar Peminjaman".',
       );
 
       // Reset context
@@ -355,10 +357,22 @@ function RouteComponent() {
             .join('\n');
           alert(`${errorMsg}\n\nDetail:\n${errorDetails}`);
         } else {
-          alert(errorMsg);
+          // Special handling for specific error cases
+          if (err.response?.status === 400) {
+            alert(
+              `❌ Gagal mengajukan dokumen\n\n${errorMsg}\n\n` +
+                'Kemungkinan penyebab:\n' +
+                '• Dokumen sudah dalam proses persetujuan\n' +
+                '• Status dokumen tidak valid untuk diajukan\n' +
+                '• Data dokumen belum lengkap\n\n' +
+                'Silakan cek kembali atau hubungi administrator.',
+            );
+          } else {
+            alert(`❌ Error: ${errorMsg}`);
+          }
         }
       } else {
-        alert('Terjadi kesalahan saat mengajukan peminjaman');
+        alert('Terjadi kesalahan tidak dikenal saat mengajukan peminjaman');
       }
     } finally {
       setLoading(false);

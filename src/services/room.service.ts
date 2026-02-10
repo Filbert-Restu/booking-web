@@ -123,14 +123,22 @@ export const roomService = {
     date: string,
     startTime: string,
     endTime: string,
+    excludeDocumentId?: number, // Parameter baru untuk exclude document saat edit
   ): Promise<AvailabilityResponse['data']> {
+    const payload: any = {
+      date,
+      start_time: startTime,
+      end_time: endTime,
+    };
+
+    // Tambahkan exclude document ID jika ada (untuk edit mode)
+    if (excludeDocumentId) {
+      payload.exclude_document_id = excludeDocumentId;
+    }
+
     const response = await api.post<AvailabilityResponse>(
       `/rooms/${roomId}/check-availability`,
-      {
-        date,
-        start_time: startTime,
-        end_time: endTime,
-      },
+      payload,
     );
     return response.data.data;
   },

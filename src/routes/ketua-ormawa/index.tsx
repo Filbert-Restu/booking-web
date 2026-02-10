@@ -1,10 +1,6 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { useEffect, useState } from 'react';
-import {
-  Clock,
-  Users,
-  CheckCircle,
-} from 'lucide-react';
+import { Clock, Users, CheckCircle } from 'lucide-react';
 import { AxiosError } from 'axios';
 import { StatCard } from '@/shared/components/common/StatCard';
 import { Approval } from '@/features/approvals';
@@ -112,25 +108,7 @@ function RouteComponent() {
       textColor: 'text-yellow-600',
       bgLight: 'bg-yellow-50',
     },
-    {
-      title: 'Total Pengaju',
-      value: String(approvalItems.length),
-      icon: Users,
-      textColor: 'text-blue-600',
-      bgLight: 'bg-blue-50',
-    },
-    {
-      title: 'Total Diapprove',
-      value: String(
-        approvalItems.filter((b) => b.status === 'approved').length,
-      ),
-      icon: CheckCircle,
-      textColor: 'text-green-600',
-      bgLight: 'bg-green-50',
-    },
   ];
-
-
 
   const handleApprove = async (id: number) => {
     const confirmSign = confirm(
@@ -138,7 +116,7 @@ function RouteComponent() {
         'Untuk menyetujui dokumen ini, Anda perlu membubuhkan tanda tangan digital.\n\n' +
         'Anda akan diarahkan ke halaman tanda tangan.',
     );
-    
+
     if (confirmSign) {
       navigate({
         to: '/ketua-ormawa/sign-document',

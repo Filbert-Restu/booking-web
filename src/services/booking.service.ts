@@ -87,6 +87,21 @@ export const bookingService = {
   },
 
   /**
+   * Check if document already has a room booking
+   */
+  async getBookingByDocumentId(
+    documentId: number,
+  ): Promise<RoomBooking | null> {
+    try {
+      const bookings = await this.getBookings({ document_id: documentId });
+      return bookings.length > 0 ? bookings[0] : null;
+    } catch (error) {
+      console.error('Error checking document booking:', error);
+      return null;
+    }
+  },
+
+  /**
    * Create new room booking
    */
   async createBooking(data: {

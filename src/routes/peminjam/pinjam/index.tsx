@@ -161,6 +161,25 @@ function RouteComponent() {
         cell: (doc) => documentHelpers.getBookingDate(doc),
       },
       {
+        header: 'Jam Pelaksanaan',
+        className: 'w-[10%]',
+        cell: (doc) => {
+          const content = doc.content || {};
+          const startTime = content.start_time;
+          const endTime = content.end_time;
+
+          if (startTime && endTime) {
+            return (
+              <div className='text-sm'>
+                <div className='font-medium'>{startTime}</div>
+                <div className='text-gray-500'>s/d {endTime}</div>
+              </div>
+            );
+          }
+          return <span className='text-sm text-gray-400'>-</span>;
+        },
+      },
+      {
         header: 'Ruangan',
         className: 'w-[7%]',
         cell: (doc) => documentHelpers.getRoomInfo(doc),
