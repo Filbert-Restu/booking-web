@@ -15,14 +15,7 @@ function RouteComponent() {
   const navigate = useNavigate();
   const { formData, updateFormData } = useBookingContext();
 
-  // Redirect if no document_id (user skipped step 1)
   useEffect(() => {
-    // ====== DEBUG: CEK FORMDATA SAAT MOUNT ======
-    console.log(
-      '🎬 [DEBUG] Proposal mounted, formData:',
-      JSON.stringify(formData, null, 2),
-    );
-
     if (!formData.document_id) {
       navigate({
         to: '/peminjam/pinjam/detail-tempat',
@@ -42,18 +35,14 @@ function RouteComponent() {
   }, [formData.document_id, navigate]);
 
   // Nama kegiatan TIDAK auto-fill (user harus isi manual)
-  const [namaKegiatan, setNamaKegiatan] = useState('');
+  const [namaKegiatan, setNamaKegiatan] = useState(formData.event_name || '');
   const [sifat, setSifat] = useState(formData.event_nature || '');
   const [bentuk, setBentuk] = useState(formData.event_form || '');
   const [tujuan, setTujuan] = useState(formData.objectives || '');
   const [manfaat, setManfaat] = useState(formData.benefits || '');
   const [sasaran, setSasaran] = useState(formData.target_audience || '');
-  const [waktu, setWaktu] = useState(formData.schedule || '');
   const [tempat, setTempat] = useState(formData.location || '');
   const [alat, setAlat] = useState(formData.equipment || '');
-  const [ketuaPanitia, setKetuaPanitia] = useState(
-    formData.committee_head || '',
-  );
   const [undangan, setUndangan] = useState(formData.invitations || '');
   const [proposalFile, setProposalFile] = useState<File | null>(
     formData.proposal_file || null,
@@ -77,7 +66,7 @@ function RouteComponent() {
       setAutoSaving(true);
 
       const data = new FormData();
-      
+
       // Title
       if (namaKegiatan.trim()) {
         data.append('title', namaKegiatan);
@@ -86,12 +75,17 @@ function RouteComponent() {
       const contentData: any = {};
 
       // Data dari step sebelumnya
-      if (formData.ketua_pelaksana_nama) contentData.ketua_pelaksana_nama = formData.ketua_pelaksana_nama;
-      if (formData.ketua_pelaksana_nim) contentData.ketua_pelaksana_nim = formData.ketua_pelaksana_nim;
-      if (formData.ketua_pelaksana_hp) contentData.ketua_pelaksana_hp = formData.ketua_pelaksana_hp;
-      if (formData.room_id !== undefined) contentData.room_id = formData.room_id;
+      if (formData.ketua_pelaksana_nama)
+        contentData.ketua_pelaksana_nama = formData.ketua_pelaksana_nama;
+      if (formData.ketua_pelaksana_nim)
+        contentData.ketua_pelaksana_nim = formData.ketua_pelaksana_nim;
+      if (formData.ketua_pelaksana_hp)
+        contentData.ketua_pelaksana_hp = formData.ketua_pelaksana_hp;
+      if (formData.room_id !== undefined)
+        contentData.room_id = formData.room_id;
       if (formData.room_code) contentData.room_code = formData.room_code;
-      if (formData.booking_date) contentData.booking_date = formData.booking_date;
+      if (formData.booking_date)
+        contentData.booking_date = formData.booking_date;
       if (formData.start_time) contentData.start_time = formData.start_time;
       if (formData.end_time) contentData.end_time = formData.end_time;
       if (formData.purpose) contentData.purpose = formData.purpose;
@@ -103,10 +97,8 @@ function RouteComponent() {
       if (tujuan.trim()) contentData.objectives = tujuan;
       if (manfaat.trim()) contentData.benefits = manfaat;
       if (sasaran.trim()) contentData.target_audience = sasaran;
-      if (waktu.trim()) contentData.schedule = waktu;
       if (tempat.trim()) contentData.location = tempat;
       if (alat.trim()) contentData.equipment = alat;
-      if (ketuaPanitia.trim()) contentData.committee_head = ketuaPanitia;
       if (undangan.trim()) contentData.invitations = undangan;
 
       const userName = localStorage.getItem('userName');
@@ -129,10 +121,8 @@ function RouteComponent() {
         objectives: tujuan,
         benefits: manfaat,
         target_audience: sasaran,
-        schedule: waktu,
         location: tempat,
         equipment: alat,
-        committee_head: ketuaPanitia,
         invitations: undangan,
       });
 
@@ -150,10 +140,8 @@ function RouteComponent() {
     tujuan,
     manfaat,
     sasaran,
-    waktu,
     tempat,
     alat,
-    ketuaPanitia,
     undangan,
     updateFormData,
   ]);
@@ -168,7 +156,7 @@ function RouteComponent() {
     // Set new timeout for autosave (2 seconds after user stops typing)
     autoSaveTimeoutRef.current = setTimeout(() => {
       autoSave();
-    }, 2000);
+    }, 60000);
 
     // Cleanup
     return () => {
@@ -176,7 +164,18 @@ function RouteComponent() {
         clearTimeout(autoSaveTimeoutRef.current);
       }
     };
-  }, [namaKegiatan, sifat, bentuk, tujuan, manfaat, sasaran, waktu, tempat, alat, ketuaPanitia, undangan, autoSave]);
+  }, [
+    namaKegiatan,
+    sifat,
+    bentuk,
+    tujuan,
+    manfaat,
+    sasaran,
+    tempat,
+    alat,
+    undangan,
+    autoSave,
+  ]);
 
   const handleNext = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -185,17 +184,6 @@ function RouteComponent() {
       alert('Mohon isi minimal Nama Kegiatan dan Tujuan');
       return;
     }
-
-    // ====== DEBUG: CEK FORMDATA DARI CONTEXT ======
-    console.log(
-      '🔍 [DEBUG] formData dari context:',
-      JSON.stringify(formData, null, 2),
-    );
-    console.log(
-      '🔍 [DEBUG] formData.ketua_pelaksana_nama:',
-      formData.ketua_pelaksana_nama,
-    );
-    console.log('🔍 [DEBUG] formData.room_id:', formData.room_id);
 
     try {
       setLoading(true);
@@ -268,32 +256,19 @@ function RouteComponent() {
         contentData.purpose = formData.purpose;
       }
 
-      // Tambah data proposal (step 2) - HANYA yang tidak kosong
       if (namaKegiatan.trim()) contentData.event_name = namaKegiatan;
       if (sifat.trim()) contentData.event_nature = sifat;
       if (bentuk.trim()) contentData.event_form = bentuk;
       if (tujuan.trim()) contentData.objectives = tujuan;
       if (manfaat.trim()) contentData.benefits = manfaat;
       if (sasaran.trim()) contentData.target_audience = sasaran;
-      if (waktu.trim()) contentData.schedule = waktu;
       if (tempat.trim()) contentData.location = tempat;
       if (alat.trim()) contentData.equipment = alat;
-      if (ketuaPanitia.trim()) contentData.committee_head = ketuaPanitia;
       if (undangan.trim()) contentData.invitations = undangan;
 
       // Tambah info peminjam
       const userName = localStorage.getItem('userName');
       if (userName) contentData.peminjam_nama = userName;
-
-      // ====== DEBUG: CEK CONTENTDATA SEBELUM APPEND ======
-      console.log(
-        '📦 [DEBUG] contentData yang akan dikirim:',
-        JSON.stringify(contentData, null, 2),
-      );
-      console.log(
-        '📦 [DEBUG] Jumlah keys contentData:',
-        Object.keys(contentData).length,
-      );
 
       // Append content fields to FormData
       Object.keys(contentData).forEach((key) => {
@@ -310,12 +285,6 @@ function RouteComponent() {
       data.append('meta_data[type]', 'room_reservation');
       data.append('meta_data[step]', 'proposal');
 
-      // ====== DEBUG: CEK SEMUA FORMDATA ENTRIES SEBELUM KIRIM ======
-      console.log('🚀 [DEBUG] FormData entries yang akan dikirim ke backend:');
-      for (const [key, value] of data.entries()) {
-        console.log(`   ${key}:`, value);
-      }
-
       await documentService.updateDocument(formData.document_id!, data);
 
       // Save to context
@@ -326,10 +295,8 @@ function RouteComponent() {
         objectives: tujuan,
         benefits: manfaat,
         target_audience: sasaran,
-        schedule: waktu,
         location: tempat,
         equipment: alat,
-        committee_head: ketuaPanitia,
         invitations: undangan,
         proposal_file: proposalFile,
       });
@@ -357,10 +324,8 @@ function RouteComponent() {
       objectives: tujuan,
       benefits: manfaat,
       target_audience: sasaran,
-      schedule: waktu,
       location: tempat,
       equipment: alat,
-      committee_head: ketuaPanitia,
       invitations: undangan,
       proposal_file: proposalFile,
     });
@@ -416,6 +381,7 @@ function RouteComponent() {
                   value={sifat}
                   onChange={(e) => setSifat(e.target.value)}
                   placeholder='Masukkan sifat kegiatan (contoh: Internal, Eksternal)'
+                  required
                 />
               </div>
 
@@ -427,6 +393,7 @@ function RouteComponent() {
                   value={bentuk}
                   onChange={(e) => setBentuk(e.target.value)}
                   placeholder='Masukkan bentuk kegiatan (contoh: Seminar, Workshop)'
+                  required
                 />
               </div>
 
@@ -450,6 +417,7 @@ function RouteComponent() {
                   value={manfaat}
                   onChange={(e) => setManfaat(e.target.value)}
                   placeholder='Masukkan manfaat kegiatan'
+                  required
                 />
               </div>
 
@@ -461,17 +429,7 @@ function RouteComponent() {
                   value={sasaran}
                   onChange={(e) => setSasaran(e.target.value)}
                   placeholder='Masukkan sasaran kegiatan (contoh: Mahasiswa Informatika)'
-                />
-              </div>
-
-              <div>
-                <label className='block text-sm font-medium text-gray-700 mb-1'>
-                  Waktu
-                </label>
-                <Input
-                  value={waktu}
-                  onChange={(e) => setWaktu(e.target.value)}
-                  placeholder='Masukkan waktu pelaksanaan (contoh: 09:00 - 15:00)'
+                  required
                 />
               </div>
 
@@ -483,6 +441,7 @@ function RouteComponent() {
                   value={tempat}
                   onChange={(e) => setTempat(e.target.value)}
                   placeholder='Masukkan tempat pelaksanaan'
+                  required
                 />
               </div>
 
@@ -494,17 +453,7 @@ function RouteComponent() {
                   value={alat}
                   onChange={(e) => setAlat(e.target.value)}
                   placeholder='Masukkan alat yang dibutuhkan'
-                />
-              </div>
-
-              <div>
-                <label className='block text-sm font-medium text-gray-700 mb-1'>
-                  Ketua Panitia
-                </label>
-                <Input
-                  value={ketuaPanitia}
-                  onChange={(e) => setKetuaPanitia(e.target.value)}
-                  placeholder='Masukkan nama ketua panitia'
+                  required
                 />
               </div>
 
@@ -516,6 +465,7 @@ function RouteComponent() {
                   value={undangan}
                   onChange={(e) => setUndangan(e.target.value)}
                   placeholder='Masukkan daftar undangan'
+                  required
                 />
               </div>
             </div>

@@ -1,4 +1,8 @@
-import { createFileRoute, useNavigate, useSearch } from '@tanstack/react-router';
+import {
+  createFileRoute,
+  useNavigate,
+  useSearch,
+} from '@tanstack/react-router';
 import { useEffect, useState } from 'react';
 import type { ChangeEvent, FormEvent } from 'react';
 import { AxiosError } from 'axios';
@@ -12,7 +16,9 @@ export const Route = createFileRoute('/admin/manajemen-ruang/edit')({
 
 function RouteComponent() {
   const navigate = useNavigate();
-  const search = useSearch({ from: '/admin/manajemen-ruang/edit' }) as { id?: string };
+  const search = useSearch({ from: '/admin/manajemen-ruang/edit' }) as {
+    id?: string;
+  };
   const roomId = search.id ? parseInt(search.id) : null;
 
   const [namaRuang, setNamaRuang] = useState('');
@@ -23,15 +29,6 @@ function RouteComponent() {
   const [fotoRuang, setFotoRuang] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
   const [loadingData, setLoadingData] = useState(true);
-
-  useEffect(() => {
-    if (roomId) {
-      fetchRoomData();
-    } else {
-      alert('ID ruangan tidak ditemukan');
-      navigate({ to: '/admin/manajemen-ruang' });
-    }
-  }, [roomId]);
 
   const fetchRoomData = async () => {
     if (!roomId) return;
@@ -45,7 +42,9 @@ function RouteComponent() {
       setKodeRuang(room.code);
       setKuotaRuang(String(room.capacity || 10));
       setCatatan(room.description || '');
-      setFasilitas(Array.isArray(room.facilities) ? room.facilities.join(', ') : '');
+      setFasilitas(
+        Array.isArray(room.facilities) ? room.facilities.join(', ') : '',
+      );
     } catch (err) {
       console.error('Failed to fetch room data:', err);
       alert('Gagal memuat data ruangan');
@@ -54,6 +53,15 @@ function RouteComponent() {
       setLoadingData(false);
     }
   };
+
+  useEffect(() => {
+    if (roomId) {
+      fetchRoomData();
+    } else {
+      alert('ID ruangan tidak ditemukan');
+      navigate({ to: '/admin/manajemen-ruang' });
+    }
+  }, []);
 
   const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0] ?? null;
@@ -79,8 +87,8 @@ function RouteComponent() {
       // Update room data
       const facilitiesArray = fasilitas
         .split(',')
-        .map(f => f.trim())
-        .filter(f => f.length > 0);
+        .map((f) => f.trim())
+        .filter((f) => f.length > 0);
 
       const roomData = {
         name: namaRuang,
@@ -116,14 +124,12 @@ function RouteComponent() {
     }
   };
 
-  const handleClose = () => {
-    navigate({ to: '/admin/manajemen-ruang' });
-  };
-
   if (loadingData) {
     return (
       <div className='p-6 flex justify-center items-center min-h-screen'>
-        <div className='text-lg font-semibold text-gray-700'>Memuat data ruangan...</div>
+        <div className='text-lg font-semibold text-gray-700'>
+          Memuat data ruangan...
+        </div>
       </div>
     );
   }
@@ -133,11 +139,13 @@ function RouteComponent() {
       <div className='w-full max-w-xl bg-white rounded-lg shadow-md border border-gray-200 p-6 space-y-6'>
         <div className='flex items-start justify-between'>
           <div>
-            <h1 className='text-xl font-semibold text-gray-900'>Edit Ruangan</h1>
+            <h1 className='text-xl font-semibold text-gray-900'>
+              Edit Ruangan
+            </h1>
           </div>
           <button
             type='button'
-            onClick={handleClose}
+            onClick={() => navigate({ to: '/admin/manajemen-ruang' })}
             className='text-gray-400 hover:text-gray-600 text-2xl leading-none'
             aria-label='Tutup'
           >
@@ -241,7 +249,9 @@ function RouteComponent() {
               className='block w-full text-sm text-gray-900 file:mr-4 file:rounded-md file:border-0 file:bg-gray-100 file:px-4 file:py-2 file:text-sm file:font-medium file:text-gray-700 hover:file:bg-gray-200'
             />
             {fotoRuang && (
-              <p className='text-sm text-gray-500 mt-1'>File baru: {fotoRuang.name}</p>
+              <p className='text-sm text-gray-500 mt-1'>
+                File baru: {fotoRuang.name}
+              </p>
             )}
           </div>
 
@@ -249,7 +259,7 @@ function RouteComponent() {
             <Button
               type='button'
               variant='outline'
-              onClick={handleClose}
+              onClick={() => navigate({ to: '/admin/manajemen-ruang' })}
               className='px-6'
               disabled={loading}
             >

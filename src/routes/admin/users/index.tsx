@@ -117,10 +117,6 @@ function RouteComponent() {
     setFilteredUsers(filtered);
   }, [debouncedSearchQuery, selectedRoleId, selectedUnitId, users]);
 
-  useEffect(() => {
-    fetchData();
-  }, []);
-
   const fetchData = async () => {
     try {
       setIsLoading(true);
@@ -145,6 +141,10 @@ function RouteComponent() {
       setIsLoading(false);
     }
   };
+
+  useEffect(() => {
+    fetchData();
+  }, []);
 
   const handleCreate = () => {
     setFormData({
@@ -359,7 +359,7 @@ function RouteComponent() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className='w-8 sm:w-[50px] text-center text-xs sm:text-sm'>
+                <TableHead className='w-8 sm:w-12.5 text-center text-xs sm:text-sm'>
                   No
                 </TableHead>
                 <TableHead className='text-xs sm:text-sm'>Nama</TableHead>
@@ -576,7 +576,7 @@ function RouteComponent() {
 
       {/* Edit User Modal */}
       <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
-        <DialogContent className='sm:max-w-[500px]'>
+        <DialogContent className='sm:max-w-125'>
           <form onSubmit={handleSubmitEdit}>
             <DialogHeader>
               <DialogTitle>Edit User</DialogTitle>
@@ -693,7 +693,7 @@ function RouteComponent() {
 
       {/* Detail User Modal */}
       <Dialog open={isDetailModalOpen} onOpenChange={setIsDetailModalOpen}>
-        <DialogContent className='sm:max-w-[600px]'>
+        <DialogContent className='sm:max-w-125'>
           <DialogHeader>
             <DialogTitle>Detail User</DialogTitle>
             <DialogDescription>

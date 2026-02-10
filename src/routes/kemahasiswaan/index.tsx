@@ -130,16 +130,16 @@ function RouteComponent() {
   }) => {
     if (payload.mode === 'preview') {
       navigate({
-        to: '/preview-dokumen',
+        to: '/preview-document', // UBAH INI (sebelumnya /preview-dokumen)
         search: {
           doc: payload.doc,
           id: payload.booking.id,
           return: '/kemahasiswaan',
-        } as any,
+        } as any, // Kita bahas cara menghapus 'as any' di Langkah 2
       });
     } else if (payload.mode === 'sign') {
       navigate({
-        to: '/tanda-tangan',
+        to: '/sign-document', // UBAH INI (sebelumnya /tanda-tangan)
         search: {
           doc: payload.doc,
           id: payload.booking.id,

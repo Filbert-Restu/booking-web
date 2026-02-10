@@ -178,6 +178,15 @@ function BookingForm(props: BookingFormProps) {
     }
   }, [form.startTime, form.endTime, isTimeWindowValid]);
 
+  React.useEffect(() => {
+    if (!form.startTime) {
+      handleChange('startTime', '09:00');
+    }
+    if (!form.endTime) {
+      handleChange('endTime', '17:00');
+    }
+  }, []);
+
   const selectedRoom = props.rooms.find((r) => r.id === form.roomId);
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -217,7 +226,7 @@ function BookingForm(props: BookingFormProps) {
               value={form.roomId?.toString()}
               onValueChange={(val) => handleChange('roomId', Number(val))}
             >
-              <SelectTrigger>
+              <SelectTrigger className='w-full'>
                 <SelectValue placeholder='Pilih...' />
               </SelectTrigger>
               <SelectContent>
@@ -345,7 +354,7 @@ function BookingForm(props: BookingFormProps) {
                     <SelectTrigger className='w-full'>
                       <SelectValue placeholder='Jam' />
                     </SelectTrigger>
-                    <SelectContent position='popper' className='max-h-[200px]'>
+                    <SelectContent position='popper' className='max-h-50'>
                       {Array.from({ length: 9 }, (_, i) => {
                         const hour = (i + 9).toString().padStart(2, '0');
                         return (
@@ -366,7 +375,7 @@ function BookingForm(props: BookingFormProps) {
                     <SelectTrigger className='w-full'>
                       <SelectValue placeholder='Menit' />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className='max-h-50'>
                       {['00', '15', '30', '45'].map((minute) => (
                         <SelectItem key={minute} value={minute}>
                           {minute}
@@ -389,7 +398,7 @@ function BookingForm(props: BookingFormProps) {
                     <SelectTrigger className='w-full'>
                       <SelectValue placeholder='Jam' />
                     </SelectTrigger>
-                    <SelectContent position='popper' className='max-h-[200px]'>
+                    <SelectContent position='popper' className='max-h-50'>
                       {Array.from({ length: 9 }, (_, i) => {
                         const hour = (i + 9).toString().padStart(2, '0');
                         return (
@@ -410,7 +419,7 @@ function BookingForm(props: BookingFormProps) {
                     <SelectTrigger className='w-full'>
                       <SelectValue placeholder='Menit' />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className='max-h-50'>
                       {['00', '15', '30', '45'].map((minute) => (
                         <SelectItem key={minute} value={minute}>
                           {minute}

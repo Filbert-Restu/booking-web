@@ -10,7 +10,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/shared/components/ui/select';
-import { PlusCircle, Pencil, Search, ToggleRight, ToggleLeft, Trash2 } from 'lucide-react';
+import {
+  PlusCircle,
+  Pencil,
+  Search,
+  ToggleRight,
+  ToggleLeft,
+  Trash2,
+  Eye,
+} from 'lucide-react';
 import {
   Table,
   TableBody,
@@ -33,10 +41,6 @@ function RouteComponent() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    fetchRooms();
-  }, []);
-
   const fetchRooms = async () => {
     try {
       setLoading(true);
@@ -55,13 +59,9 @@ function RouteComponent() {
     }
   };
 
-  const handleAddRoom = () => {
-    navigate({ to: '/admin/manajemen-ruang/add' });
-  };
-
-  const handleEditRoom = (id: number) => {
-    navigate({ to: '/admin/manajemen-ruang/edit', search: { id: String(id) } });
-  };
+  useEffect(() => {
+    fetchRooms();
+  }, []);
 
   const handleToggleStatus = async (room: Room) => {
     const newStatus = room.status === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE';
@@ -69,8 +69,8 @@ function RouteComponent() {
     try {
       await roomService.updateRoom(room.id, { status: newStatus });
       // Update local state
-      setRooms(prev =>
-        prev.map(r => (r.id === room.id ? { ...r, status: newStatus } : r))
+      setRooms((prev) =>
+        prev.map((r) => (r.id === room.id ? { ...r, status: newStatus } : r)),
       );
     } catch (err) {
       console.error('Failed to toggle room status:', err);
@@ -85,7 +85,7 @@ function RouteComponent() {
 
     try {
       await roomService.deleteRoom(room.id);
-      setRooms(prev => prev.filter(r => r.id !== room.id));
+      setRooms((prev) => prev.filter((r) => r.id !== room.id));
       alert('Ruangan berhasil dihapus');
     } catch (err) {
       console.error('Failed to delete room:', err);
@@ -111,7 +111,9 @@ function RouteComponent() {
   if (loading) {
     return (
       <div className='p-6 flex justify-center items-center min-h-screen'>
-        <div className='text-lg font-semibold text-gray-700'>Memuat data ruangan...</div>
+        <div className='text-lg font-semibold text-gray-700'>
+          Memuat data ruangan...
+        </div>
       </div>
     );
   }
@@ -132,10 +134,12 @@ function RouteComponent() {
       <div className='flex flex-col md:flex-row md:items-center md:justify-between gap-4'>
         <div>
           <h1 className='text-2xl font-bold text-gray-900'>Manajemen Ruang</h1>
-          <p className='text-gray-600 mt-1'>Kelola data ruang yang tersedia untuk peminjaman.</p>
+          <p className='text-gray-600 mt-1'>
+            Kelola data ruang yang tersedia untuk peminjaman.
+          </p>
         </div>
         <Button
-          onClick={handleAddRoom}
+          onClick={() => navigate({ to: '/admin/manajemen-ruang/add' })}
           className='flex items-center gap-2'
           variant='default'
         >
@@ -192,8 +196,13 @@ function RouteComponent() {
           <TableBody>
             {visibleRooms.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={7} className='h-24 text-center text-gray-500'>
-                  {searchTerm ? 'Tidak ada ruangan yang cocok dengan pencarian' : 'Belum ada data ruangan'}
+                <TableCell
+                  colSpan={7}
+                  className='h-24 text-center text-gray-500'
+                >
+                  {searchTerm
+                    ? 'Tidak ada ruangan yang cocok dengan pencarian'
+                    : 'Belum ada data ruangan'}
                 </TableCell>
               </TableRow>
             ) : (
@@ -204,26 +213,37 @@ function RouteComponent() {
                   <TableCell>{room.name}</TableCell>
                   <TableCell>{room.capacity || '-'}</TableCell>
                   <TableCell>
-                    {Array.isArray(room.facilities) && room.facilities.length > 0
+                    {Array.isArray(room.facilities) &&
+                    room.facilities.length > 0
                       ? room.facilities.join(', ')
                       : '-'}
                   </TableCell>
                   <TableCell>
                     <span
-                      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${room.status === 'ACTIVE'
+                      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                        room.status === 'ACTIVE'
                           ? 'bg-green-100 text-green-800'
                           : room.status === 'MAINTENANCE'
                             ? 'bg-yellow-100 text-yellow-800'
                             : 'bg-gray-100 text-gray-800'
-                        }`}
+                      }`}
                     >
-                      {room.status === 'ACTIVE' ? 'Aktif' : room.status === 'MAINTENANCE' ? 'Maintenance' : 'Nonaktif'}
+                      {room.status === 'ACTIVE'
+                        ? 'Aktif'
+                        : room.status === 'MAINTENANCE'
+                          ? 'Maintenance'
+                          : 'Nonaktif'}
                     </span>
                   </TableCell>
                   <TableCell>
                     <div className='flex items-center justify-center gap-2'>
                       <button
-                        onClick={() => handleEditRoom(room.id)}
+                        onClick={() =>
+                          navigate({
+                            to: '/admin/manajemen-ruang/edit',
+                            search: { id: String(room.id) },
+                          })
+                        }
                         className='p-1.5 hover:bg-gray-100 rounded-md transition-colors'
                         title='Edit ruangan'
                       >
@@ -232,13 +252,25 @@ function RouteComponent() {
                       <button
                         onClick={() => handleToggleStatus(room)}
                         className='p-1.5 hover:bg-gray-100 rounded-md transition-colors'
-                        title={room.status === 'ACTIVE' ? 'Nonaktifkan' : 'Aktifkan'}
+                        title={
+                          room.status === 'ACTIVE' ? 'Nonaktifkan' : 'Aktifkan'
+                        }
                       >
                         {room.status === 'ACTIVE' ? (
                           <ToggleRight className='w-4 h-4 text-green-600' />
                         ) : (
                           <ToggleLeft className='w-4 h-4 text-gray-400' />
                         )}
+                      </button>
+                      <button
+                        onClick={() =>
+                          navigate({
+                            to: '/admin/manajemen-ruang/detail',
+                            search: { id: String(room.id) },
+                          })
+                        }
+                      >
+                        <Eye className='w-4 h-4 text-blue-600' />
                       </button>
                       <button
                         onClick={() => handleDeleteRoom(room)}

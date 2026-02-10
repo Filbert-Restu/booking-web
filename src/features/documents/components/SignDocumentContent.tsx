@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from '@tanstack/react-router';
 import {
   Card,
@@ -14,8 +14,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/shared/components/ui/select';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/shared/components/ui/dialog';
+import { Textarea } from '@/shared/components/ui/textarea';
 import { signatureService } from '@/services/signature.service';
-import { documentService } from '@/services/document.service';
+import { documentService, type Document } from '@/services/document.service';
 import api from '@/lib/axios';
 import { AxiosError } from 'axios';
 import { SignatureUpload } from '@/shared/components/common/SignatureUpload';
@@ -38,75 +47,110 @@ export function SignDocumentContent({
     useState<DocumentType>('approval-sheet');
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [reviseDialogOpen, setReviseDialogOpen] = useState(false);
+  const [reviseNote, setReviseNote] = useState('');
+  const [document, setDocument] = useState<Document | null>(null);
 
-  useEffect(() => {
-    loadSignature();
-    if (documentId) {
-      loadDocumentPreview(selectedDocType);
+  // Refs to track blob URLs for cleanup
+  const pdfUrlRef = useRef<string | null>(null);
+  const signatureUrlRef = useRef<string | null>(null);
+
+  const loadDocument = useCallback(async () => {
+    if (!documentId) return;
+
+    try {
+      const doc = await documentService.getDocument(documentId);
+      setDocument(doc);
+    } catch (err) {
+      console.error('Failed to load document:', err);
     }
-  }, []);
+  }, [documentId]);
 
-  useEffect(() => {
-    if (documentId && selectedDocType) {
-      loadDocumentPreview(selectedDocType);
-    }
-  }, [selectedDocType, documentId]);
-
-  const loadSignature = async () => {
+  const loadSignature = useCallback(async () => {
     try {
       const sig = await signatureService.getSignature();
       if (sig) {
-        // Revoke old blob URL before creating new one
-        if (signature) {
+        // Get the signature file URL from backend with signature ID
+        const url = await signatureService.getSignatureFileUrl(sig.id);
+
+        // Revoke old blob URL before setting new one
+        if (
+          signatureUrlRef.current &&
+          signatureUrlRef.current.startsWith('blob:')
+        ) {
           try {
-            window.URL.revokeObjectURL(signature);
-          } catch (e) {
+            window.URL.revokeObjectURL(signatureUrlRef.current);
+          } catch {
             // Ignore errors
           }
         }
 
-        // Get the signature file URL from backend with signature ID
-        const url = await signatureService.getSignatureFileUrl(sig.id);
+        signatureUrlRef.current = url;
         setSignature(url);
       }
-    } catch (err) {
+    } catch {
       console.log('No signature found');
     }
-  };
+  }, []);
 
-  const loadDocumentPreview = async (docType: DocumentType) => {
-    if (!documentId) return;
+  const loadDocumentPreview = useCallback(
+    async (docType: DocumentType) => {
+      if (!documentId) return;
 
-    try {
-      setLoading(true);
-      // Clean up previous URL
-      if (pdfUrl) {
-        window.URL.revokeObjectURL(pdfUrl);
+      try {
+        setLoading(true);
+
+        // Clean up previous URL before creating new one
+        if (pdfUrlRef.current) {
+          try {
+            window.URL.revokeObjectURL(pdfUrlRef.current);
+          } catch {
+            // Ignore cleanup errors
+          }
+        }
+
+        const response = await api.get(
+          `/documents/${documentId}/file/${docType}/pdf`,
+          {
+            responseType: 'blob',
+          },
+        );
+
+        const blob = new Blob([response.data], { type: 'application/pdf' });
+        const url = window.URL.createObjectURL(blob);
+
+        pdfUrlRef.current = url;
+        setPdfUrl(url);
+      } catch (err) {
+        console.error('Failed to load document preview:', err);
+        const error = err as AxiosError<{ message?: string }>;
+        if (error.response?.status === 404) {
+          pdfUrlRef.current = null;
+          setPdfUrl(null);
+          alert(`Dokumen ${docType} belum tersedia`);
+        } else {
+          alert('Gagal memuat preview dokumen');
+        }
+      } finally {
+        setLoading(false);
       }
+    },
+    [documentId],
+  );
 
-      const response = await api.get(
-        `/documents/${documentId}/file/${docType}/pdf`,
-        {
-          responseType: 'blob',
-        },
-      );
-
-      const blob = new Blob([response.data], { type: 'application/pdf' });
-      const url = window.URL.createObjectURL(blob);
-      setPdfUrl(url);
-    } catch (err) {
-      console.error('Failed to load document preview:', err);
-      const error = err as AxiosError<any>;
-      if (error.response?.status === 404) {
-        setPdfUrl(null);
-        alert(`Dokumen ${docType} belum tersedia`);
-      } else {
-        alert('Gagal memuat preview dokumen');
-      }
-    } finally {
-      setLoading(false);
+  useEffect(() => {
+    loadSignature();
+    if (documentId) {
+      loadDocument();
+      loadDocumentPreview(selectedDocType);
     }
-  };
+  }, [
+    documentId,
+    selectedDocType,
+    loadDocument,
+    loadDocumentPreview,
+    loadSignature,
+  ]);
 
   const handleEmbedSignature = async () => {
     if (!signature) {
@@ -125,10 +169,11 @@ export function SignDocumentContent({
         type: selectedDocType,
       });
       alert('Tanda tangan berhasil dibubuhkan ke dokumen (belum disetujui)');
-      await loadDocumentPreview(selectedDocType);
+      // Reload the document preview to show updated signature
+      loadDocumentPreview(selectedDocType);
     } catch (err) {
       console.error('Failed to embed signature:', err);
-      const error = err as AxiosError<any>;
+      const error = err as AxiosError<{ message?: string }>;
       alert(error.response?.data?.message || 'Gagal membubuhkan tanda tangan');
     } finally {
       setLoading(false);
@@ -157,14 +202,58 @@ export function SignDocumentContent({
       alert('✅ Dokumen berhasil ditandatangani dan disetujui!');
 
       if (returnPath) {
-        navigate({ to: returnPath as any });
+        navigate({ to: returnPath });
       } else {
-        navigate({ to: '/' as any });
+        navigate({ to: '/' });
       }
     } catch (err) {
       console.error('Failed to approve document:', err);
-      const error = err as AxiosError<any>;
+      const error = err as AxiosError<{ message?: string }>;
       alert(error.response?.data?.message || 'Gagal menyetujui dokumen');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleReviseDocument = () => {
+    setReviseDialogOpen(true);
+  };
+
+  const handleSubmitRevise = async () => {
+    if (!reviseNote.trim()) {
+      alert('Silakan masukkan catatan revisi');
+      return;
+    }
+
+    if (!documentId || !document) {
+      alert('Document ID tidak ditemukan');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      await documentService.reviseDocument(
+        documentId,
+        document.creator_id,
+        reviseNote,
+      );
+
+      alert('📝 Dokumen berhasil dikembalikan untuk revisi!');
+      setReviseDialogOpen(false);
+      setReviseNote('');
+
+      if (returnPath) {
+        navigate({ to: returnPath });
+      } else {
+        navigate({ to: '/' });
+      }
+    } catch (err) {
+      console.error('Failed to revise document:', err);
+      const error = err as AxiosError<{ message?: string }>;
+      alert(
+        error.response?.data?.message ||
+          'Gagal mengembalikan dokumen untuk revisi',
+      );
     } finally {
       setLoading(false);
     }
@@ -173,14 +262,26 @@ export function SignDocumentContent({
   // Cleanup on unmount
   useEffect(() => {
     return () => {
-      if (pdfUrl) {
-        window.URL.revokeObjectURL(pdfUrl);
+      // Cleanup using refs to get latest values
+      if (pdfUrlRef.current) {
+        try {
+          window.URL.revokeObjectURL(pdfUrlRef.current);
+        } catch {
+          // Ignore cleanup errors
+        }
       }
-      if (signature) {
-        window.URL.revokeObjectURL(signature);
+      if (
+        signatureUrlRef.current &&
+        signatureUrlRef.current.startsWith('blob:')
+      ) {
+        try {
+          window.URL.revokeObjectURL(signatureUrlRef.current);
+        } catch {
+          // Ignore cleanup errors
+        }
       }
     };
-  }, [pdfUrl, signature]);
+  }, []); // Empty dependency array - cleanup runs only on unmount
 
   return (
     <div className='p-6 max-w-7xl mx-auto'>
@@ -247,24 +348,32 @@ export function SignDocumentContent({
               </div>
             )}
 
-            {/* Buttons: embed signature (no approve) + approve */}
+            {/* Buttons: embed signature (no approve) + approve + revise */}
             {signature && pdfUrl && (
-              <div className='flex gap-2'>
+              <div className='flex gap-2 flex-wrap'>
                 <Button
                   onClick={handleEmbedSignature}
                   disabled={loading}
                   variant='outline'
-                  className='flex-1'
+                  className='flex-1 min-w-40'
                 >
                   {loading ? 'Memproses...' : 'Bubuhkan Tanda Tangan'}
                 </Button>
                 <Button
                   onClick={handleApproveDocument}
                   disabled={loading}
-                  className='flex-1'
+                  className='flex-1 min-w-40'
                   size='lg'
                 >
                   {loading ? 'Memproses...' : 'Setujui dan Tandatangani'}
+                </Button>
+                <Button
+                  onClick={handleReviseDocument}
+                  disabled={loading}
+                  variant='destructive'
+                  className='flex-1 min-w-40'
+                >
+                  {loading ? 'Memproses...' : 'Kembalikan untuk Revisi'}
                 </Button>
               </div>
             )}
@@ -281,9 +390,9 @@ export function SignDocumentContent({
         <Button
           onClick={() => {
             if (returnPath) {
-              navigate({ to: returnPath as any });
+              navigate({ to: returnPath });
             } else {
-              navigate({ to: '/' as any });
+              navigate({ to: '/' });
             }
           }}
           variant='outline'
@@ -291,6 +400,47 @@ export function SignDocumentContent({
           Kembali
         </Button>
       </div>
+
+      {/* Dialog untuk Catatan Revisi */}
+      <Dialog open={reviseDialogOpen} onOpenChange={setReviseDialogOpen}>
+        <DialogContent className='sm:max-w-125'>
+          <DialogHeader>
+            <DialogTitle>Kembalikan Dokumen untuk Revisi</DialogTitle>
+            <DialogDescription>
+              Masukkan catatan revisi untuk dokumen ini. Dokumen akan
+              dikembalikan ke pembuat dengan catatan Anda.
+            </DialogDescription>
+          </DialogHeader>
+          <div className='grid gap-4 py-4'>
+            <Textarea
+              placeholder='Masukkan alasan pengembalian dan saran perbaikan...'
+              value={reviseNote}
+              onChange={(e) => setReviseNote(e.target.value)}
+              rows={5}
+              className='resize-none'
+            />
+          </div>
+          <DialogFooter>
+            <Button
+              variant='outline'
+              onClick={() => {
+                setReviseDialogOpen(false);
+                setReviseNote('');
+              }}
+              disabled={loading}
+            >
+              Batal
+            </Button>
+            <Button
+              onClick={handleSubmitRevise}
+              disabled={!reviseNote.trim() || loading}
+              variant='destructive'
+            >
+              {loading ? 'Memproses...' : 'Kembalikan untuk Revisi'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -36,39 +36,37 @@ function RouteComponent() {
     try {
       setLoading(true);
 
-      // Create room data
+      const formData = new FormData();
+
+      formData.append('name', namaRuang);
+      formData.append('code', kodeRuang);
+      formData.append('capacity', String(parseInt(kuotaRuang)));
+      formData.append('description', catatan);
+      formData.append('status', 'ACTIVE');
+
       const facilitiesArray = fasilitas
         .split(',')
-        .map(f => f.trim())
-        .filter(f => f.length > 0);
+        .map((f) => f.trim())
+        .filter((f) => f.length > 0);
 
-      const roomData = {
-        name: namaRuang,
-        code: kodeRuang,
-        capacity: parseInt(kuotaRuang) || 10,
-        description: catatan,
-        facilities: facilitiesArray,
-        status: 'ACTIVE' as const,
-      };
+      facilitiesArray.forEach((f, index) => {
+        formData.append(`facilities[${index}]`, f);
+      });
 
-      const newRoom = await roomService.createRoom(roomData);
-
-      // Upload photo if provided
-      if (fotoRuang && newRoom.id) {
-        try {
-          await roomService.uploadImage(newRoom.id, fotoRuang);
-        } catch (err) {
-          console.error('Failed to upload image:', err);
-          // Continue even if image upload fails
-        }
+      if (fotoRuang) {
+        formData.append('images[]', fotoRuang);
       }
+
+      await roomService.createRoom(formData);
 
       alert('Ruangan baru berhasil ditambahkan!');
       navigate({ to: '/admin/manajemen-ruang' });
     } catch (err) {
       console.error('Failed to create room:', err);
       if (err instanceof AxiosError) {
-        alert(err.response?.data?.message || 'Gagal menambahkan ruangan');
+        const message =
+          err.response?.data?.message || 'Gagal menambahkan ruangan';
+        alert(message);
       } else {
         alert('Terjadi kesalahan saat menambahkan ruangan');
       }
@@ -86,7 +84,9 @@ function RouteComponent() {
       <div className='w-full max-w-xl bg-white rounded-lg shadow-md border border-gray-200 p-6 space-y-6'>
         <div className='flex items-start justify-between'>
           <div>
-            <h1 className='text-xl font-semibold text-gray-900'>Tambah Ruangan Baru</h1>
+            <h1 className='text-xl font-semibold text-gray-900'>
+              Tambah Ruangan Baru
+            </h1>
           </div>
           <button
             type='button'
@@ -104,7 +104,7 @@ function RouteComponent() {
               htmlFor='kode-ruangan'
               className='block text-sm font-medium text-gray-700'
             >
-              Kode Ruangan *
+              Kode Ruangan <span className='text-red-600'>*</span>
             </label>
             <Input
               id='kode-ruangan'
@@ -120,7 +120,7 @@ function RouteComponent() {
               htmlFor='nama-ruangan'
               className='block text-sm font-medium text-gray-700'
             >
-              Nama Ruangan *
+              Nama Ruangan <span className='text-red-600'>*</span>
             </label>
             <Input
               id='nama-ruangan'
@@ -136,7 +136,7 @@ function RouteComponent() {
               htmlFor='kuota-ruangan'
               className='block text-sm font-medium text-gray-700'
             >
-              Kapasitas Ruangan
+              Kapasitas Ruangan <span className='text-red-600'>*</span>
             </label>
             <Input
               id='kuota-ruangan'
@@ -153,7 +153,8 @@ function RouteComponent() {
               htmlFor='fasilitas'
               className='block text-sm font-medium text-gray-700'
             >
-              Fasilitas (pisahkan dengan koma)
+              Fasilitas (pisahkan dengan koma){' '}
+              <span className='text-red-600'>*</span>
             </label>
             <textarea
               id='fasilitas'
@@ -170,7 +171,7 @@ function RouteComponent() {
               htmlFor='catatan'
               className='block text-sm font-medium text-gray-700'
             >
-              Deskripsi/Catatan
+              Deskripsi/Catatan <span className='text-red-600'>*</span>
             </label>
             <textarea
               id='catatan'
@@ -187,7 +188,7 @@ function RouteComponent() {
               htmlFor='foto-ruangan'
               className='block text-sm font-medium text-gray-700'
             >
-              Foto Ruangan
+              Foto Ruangan <span className='text-red-600'>*</span>
             </label>
             <input
               id='foto-ruangan'
@@ -197,7 +198,9 @@ function RouteComponent() {
               className='block w-full text-sm text-gray-900 file:mr-4 file:rounded-md file:border-0 file:bg-gray-100 file:px-4 file:py-2 file:text-sm file:font-medium file:text-gray-700 hover:file:bg-gray-200'
             />
             {fotoRuang && (
-              <p className='text-sm text-gray-500 mt-1'>File: {fotoRuang.name}</p>
+              <p className='text-sm text-gray-500 mt-1'>
+                File: {fotoRuang.name}
+              </p>
             )}
           </div>
 
