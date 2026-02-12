@@ -26,30 +26,33 @@ interface User {
 
 // Role to path mapping
 const rolePathMap: Record<string, string> = {
-  'Admin': '/admin/',
+  'Super Admin': '/admin/',
   'Wakil Dekan 1': '/wadek1/',
-  'Kemahasiswaan': '/kemahasiswaan/',
+  Kemahasiswaan: '/kemahasiswaan/',
   'Sumber Daya': '/sumber-daya/',
   'Dosen Pendamping Himpunan': '/dosen-pendamping/',
   'Ketua Departemen': '/ketua-departemen/',
   'Ketua Ormawa': '/ketua-ormawa/',
-  'Senat': '/senat/', // Senat punya route sendiri
-  'Sekretaris': '/peminjam/',
-  'Peminjam': '/peminjam/',
+  Senat: '/senat/', // Senat punya route sendiri
+  Sekretaris: '/peminjam/',
+  Peminjam: '/peminjam/',
 };
 
 // Role to variant mapping
-const roleVariantMap: Record<string, 'default' | 'secondary' | 'outline' | 'destructive' | 'ghost'> = {
-  'Admin': 'destructive',
+const roleVariantMap: Record<
+  string,
+  'default' | 'secondary' | 'outline' | 'destructive' | 'ghost'
+> = {
+  'Super Admin': 'destructive',
   'Wakil Dekan 1': 'default',
-  'Kemahasiswaan': 'secondary',
+  Kemahasiswaan: 'secondary',
   'Sumber Daya': 'secondary',
   'Dosen Pendamping Himpunan': 'default',
   'Ketua Departemen': 'default',
   'Ketua Ormawa': 'outline',
-  'Senat': 'outline',
-  'Sekretaris': 'ghost',
-  'Peminjam': 'outline',
+  Senat: 'outline',
+  Sekretaris: 'ghost',
+  Peminjam: 'outline',
 };
 
 async function loginAsUser(user: User) {
@@ -93,7 +96,9 @@ function RouteComponent() {
         setUsers(response.data);
       } catch (error) {
         console.error('Failed to fetch users:', error);
-        setFetchError('Gagal mengambil data users. Pastikan server backend berjalan.');
+        setFetchError(
+          'Gagal mengambil data users. Pastikan server backend berjalan.',
+        );
       } finally {
         setIsFetching(false);
       }
@@ -110,13 +115,15 @@ function RouteComponent() {
 
   // Group users by role
   const adminUsers = users.filter(
-    (u) => u.role === 'Admin' || u.role === 'Wakil Dekan 1',
+    (u) => u.role === 'Super Admin' || u.role === 'Wakil Dekan 1',
   );
   const staffUsers = users.filter(
     (u) => u.role === 'Kemahasiswaan' || u.role === 'Sumber Daya',
   );
   const departemenUsers = users.filter((u) => u.role === 'Ketua Departemen');
-  const dosenPendampingUsers = users.filter((u) => u.role === 'Dosen Pendamping Himpunan');
+  const dosenPendampingUsers = users.filter(
+    (u) => u.role === 'Dosen Pendamping Himpunan',
+  );
   const ketuaOrmawa = users.filter(
     (u) => u.role === 'Ketua Ormawa' || u.role === 'Senat',
   );
@@ -183,7 +190,9 @@ function RouteComponent() {
         <p className='text-sm text-gray-500 mt-1'>
           Password semua user:{' '}
           <code className='bg-gray-100 px-2 py-1 rounded'>password</code>
-          <span className='ml-4 text-green-600'>✓ Data dari database ({users.length} users)</span>
+          <span className='ml-4 text-green-600'>
+            ✓ Data dari database ({users.length} users)
+          </span>
         </p>
       </div>
 
@@ -218,9 +227,7 @@ function RouteComponent() {
         <Card>
           <CardHeader>
             <CardTitle>Ketua Departemen</CardTitle>
-            <CardDescription>
-              Ketua Departemen di FSM
-            </CardDescription>
+            <CardDescription>Ketua Departemen di FSM</CardDescription>
           </CardHeader>
           <CardContent className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3'>
             {departemenUsers.map(renderUserButton)}
@@ -233,9 +240,7 @@ function RouteComponent() {
         <Card>
           <CardHeader>
             <CardTitle>Dosen Pendamping</CardTitle>
-            <CardDescription>
-              Dosen Pendamping Himpunan dan UKM
-            </CardDescription>
+            <CardDescription>Dosen Pendamping Himpunan dan UKM</CardDescription>
           </CardHeader>
           <CardContent className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3'>
             {dosenPendampingUsers.map(renderUserButton)}
@@ -261,9 +266,7 @@ function RouteComponent() {
         <Card>
           <CardHeader>
             <CardTitle>Sekretaris Organisasi</CardTitle>
-            <CardDescription>
-              Sekretaris HMD, BEM, dan UKM
-            </CardDescription>
+            <CardDescription>Sekretaris HMD, BEM, dan UKM</CardDescription>
           </CardHeader>
           <CardContent className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3'>
             {sekretarisAll.map(renderUserButton)}

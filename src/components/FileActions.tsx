@@ -1,7 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
 import PdfPreview from './PdfPreview';
 import api from '@/lib/axios';
-import { FileText } from 'lucide-react'; // Pastikan import ini ada
+import { FileText, Loader2 } from 'lucide-react'; // Pastikan import ini ada
 
 export type FileType = 'proposal' | 'executive-summary' | 'approval-sheet';
 
@@ -24,33 +24,10 @@ const FileActions: React.FC<FileActionsProps> = ({
   pdfPreview,
   setPdfPreview,
 }) => {
-  // --- FUNGSI DOWNLOAD DOCX (DISIMPAN TAPI TIDAK DIPAKAI) ---
-  /* const downloadDocxFile = async (fileType: FileType) => {
-    try {
-      const response = await api.get(`/documents/${docId}/file/${fileType}`, {
-        responseType: 'blob',
-      });
-      const blob = new Blob([response.data], {
-        type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-      });
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      const fileName = `${fileType}_${docId}.docx`;
-      link.setAttribute('download', fileName);
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      window.URL.revokeObjectURL(url);
-    } catch (error) {
-      console.error('Download failed:', error);
-      alert('Gagal mengunduh file');
-    }
-  }; 
-  */
-
+  const [loadingType, setLoadingType] = useState<FileType | null>(null);
   // Open PDF preview in modal
   const openPdfPreview = async (fileType: FileType) => {
+    setLoadingType(fileType);
     try {
       const response = await api.get(
         `/documents/${docId}/file/${fileType}/pdf`,
@@ -66,6 +43,22 @@ const FileActions: React.FC<FileActionsProps> = ({
     } catch (error) {
       console.error('PDF preview failed:', error);
       alert('Gagal membuka preview PDF');
+    } finally {
+      setLoadingType(null);
+    }
+  };
+
+  // Helper untuk mendapatkan nama yang lebih readable
+  const getFileName = (type: FileType) => {
+    switch (type) {
+      case 'proposal':
+        return 'Proposal';
+      case 'executive-summary':
+        return 'Executive Summary';
+      case 'approval-sheet':
+        return 'Lembar Pengesahan';
+      default:
+        return type;
     }
   };
 
@@ -82,28 +75,32 @@ const FileActions: React.FC<FileActionsProps> = ({
   };
 
   return (
-    <div className='flex gap-1 items-center justify-center'>
+    <div className='flex flex-col gap-2 items-start'>
       {fileTypes.map(({ type, hasFile }) =>
         hasFile ? (
           <React.Fragment key={type}>
-            {/* Hanya satu tombol: 
-                - Fungsinya: openPdfPreview (Buka PDF)
-                - Tampilannya: FileText (Seperti Icon DOCX sebelumnya)
-            */}
+            {/* Button dengan icon dan text dalam satu baris */}
             <button
               onClick={() => openPdfPreview(type)}
-              className='p-1 hover:bg-gray-100 rounded transition-colors'
-              title={`Lihat Preview ${type.replace('-', ' ')}`}
+              className='flex items-center hover:bg-gray-200 rounded transition-colors w-full text-left border border-gray-200'
+              title={`Lihat Preview ${getFileName(type)}`}
+              disabled={loadingType !== null}
             >
-              {/* Icon Docx (FileText) tapi fungsinya buka PDF */}
-              <FileText className={`w-4 h-4 ${getIconColor(type)}`} />
+              {loadingType === type ? (
+                <Loader2 className='w-4 h-4 animate-spin text-gray-600' />
+              ) : (
+                <FileText className={`w-4 h-4 ${getIconColor(type)}`} />
+              )}
+              <span className={`text-sm ${getIconColor(type)} font-medium`}>
+                {getFileName(type)}
+              </span>
             </button>
           </React.Fragment>
         ) : null,
       )}
 
       {fileTypes.every(({ hasFile }) => !hasFile) && (
-        <span className='text-xs text-gray-400'>-</span>
+        <span className='text-sm text-gray-400'>Tidak ada dokumen</span>
       )}
 
       {/* PDF Preview Modal */}

@@ -375,7 +375,7 @@ function RouteComponent() {
 
               <div>
                 <label className='block text-sm font-medium text-gray-700 mb-1'>
-                  Sifat
+                  Sifat <span className='text-red-500'>*</span>
                 </label>
                 <Input
                   value={sifat}
@@ -387,7 +387,7 @@ function RouteComponent() {
 
               <div>
                 <label className='block text-sm font-medium text-gray-700 mb-1'>
-                  Bentuk
+                  Bentuk <span className='text-red-500'>*</span>
                 </label>
                 <Input
                   value={bentuk}
@@ -411,7 +411,7 @@ function RouteComponent() {
 
               <div>
                 <label className='block text-sm font-medium text-gray-700 mb-1'>
-                  Manfaat
+                  Manfaat <span className='text-red-500'>*</span>
                 </label>
                 <Input
                   value={manfaat}
@@ -423,7 +423,7 @@ function RouteComponent() {
 
               <div>
                 <label className='block text-sm font-medium text-gray-700 mb-1'>
-                  Sasaran
+                  Sasaran <span className='text-red-500'>*</span>
                 </label>
                 <Input
                   value={sasaran}
@@ -435,7 +435,7 @@ function RouteComponent() {
 
               <div>
                 <label className='block text-sm font-medium text-gray-700 mb-1'>
-                  Tempat
+                  Tempat <span className='text-red-500'>*</span>
                 </label>
                 <Input
                   value={tempat}
@@ -447,7 +447,7 @@ function RouteComponent() {
 
               <div>
                 <label className='block text-sm font-medium text-gray-700 mb-1'>
-                  Alat
+                  Alat Yang Dibutuhkan <span className='text-red-500'>*</span>
                 </label>
                 <Input
                   value={alat}
@@ -459,7 +459,7 @@ function RouteComponent() {
 
               <div>
                 <label className='block text-sm font-medium text-gray-700 mb-1'>
-                  Undangan
+                  Undangan <span className='text-red-500'>*</span>
                 </label>
                 <Input
                   value={undangan}
@@ -473,9 +473,10 @@ function RouteComponent() {
             {/* Upload Proposal */}
             <div className='space-y-2'>
               <label className='block text-sm font-medium text-gray-700'>
-                Unggah Proposal (Opsional)
+                Unggah Proposal <span className='text-red-500'>*</span>
               </label>
               <Input
+                required
                 type='file'
                 accept='.pdf'
                 onChange={(e) => {

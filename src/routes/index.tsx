@@ -1,7 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router';
-
-import FullCalendar from '@fullcalendar/react';
-import dayGridPlugin from '@fullcalendar/daygrid'; // a plugin!
+// a plugin!
 import { TopBar } from '@/shared/layouts/TopBar';
 
 export const Route = createFileRoute('/')({
@@ -12,12 +10,33 @@ function RouteComponent() {
   return (
     <div>
       <TopBar />
-      <div className='flex flex-col items-center justify-center min-h-screen p-4 m-auto'>
-        <div className='w-full max-w-6xl'>
-          <h1 className='text-center text-3xl font-bold mb-8'>
-            Welcome to the Booking App
+      <div className='relative h-screen w-full flex items-center justify-center p-4 m-auto'>
+        {/* Background image with low saturation */}
+        <img
+          src='/hero.png'
+          alt='Hero background'
+          className='absolute inset-0 w-full h-full object-cover filter saturate-50 brightness-95'
+        />
+        {/* Dark overlay to increase text contrast */}
+        <div className='absolute inset-0 bg-black/30' />
+
+        <div className='relative z-10 w-full max-w-4xl text-center px-4'>
+          <h1 className='text-white text-4xl md:text-5xl font-semibold mb-3'>
+            Sederhana. Cepat. Terpercaya.
           </h1>
-          <FullCalendar plugins={[dayGridPlugin]} initialView='dayGridMonth' />
+          <p className='text-white/90 text-lg md:text-xl'>
+            Pesan ruang dan fasilitas instan — minimalis, tanpa ribet.
+          </p>
+          <div className='mt-6 flex justify-center'>
+            <a
+              href='/login'
+              role='button'
+              className='inline-flex items-center px-6 py-3 bg-primary text-white rounded-lg shadow-md hover:shadow-lg transition focus:outline-none focus-visible:ring-2 focus-visible:ring-white/80 hover:saturate-80 hover:brightness-95 font-medium text-lg'
+              aria-label='Pinjam ruang'
+            >
+              Pinjam Ruang Sekarang
+            </a>
+          </div>
         </div>
       </div>
     </div>

@@ -1,14 +1,10 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { useEffect, useState } from 'react';
-import { Clock, Users, CheckCircle } from 'lucide-react';
+import { Clock } from 'lucide-react';
 import { AxiosError } from 'axios';
 import { StatCard } from '@/shared/components/common/StatCard';
 import { Approval } from '@/features/approvals';
 import type { ActorRole } from '@/features/approvals';
-import type {
-  ApprovalDocType,
-  ApprovalModeType,
-} from '../_shared/approval-mock';
 import { documentService } from '@/services/document.service';
 import {
   mapDocumentsToApprovalItems,
@@ -60,20 +56,20 @@ function RouteComponent() {
       bgLight: 'bg-yellow-50',
     },
     {
-      title: 'Total Pengaju',
-      value: String(approvalItems.length),
-      icon: Users,
-      textColor: 'text-blue-600',
-      bgLight: 'bg-blue-50',
-    },
-    {
-      title: 'Total Diapprove',
+      title: 'Disetujui',
       value: String(
         approvalItems.filter((b) => b.status === 'approved').length,
       ),
-      icon: CheckCircle,
+      icon: Clock,
       textColor: 'text-green-600',
       bgLight: 'bg-green-50',
+    },
+    {
+      title: 'Total Dokumen',
+      value: String(approvalItems.length),
+      icon: Clock,
+      textColor: 'text-sky-600',
+      bgLight: 'bg-sky-50',
     },
   ];
 
@@ -86,9 +82,6 @@ function RouteComponent() {
         id,
         '',
         note || 'Disetujui oleh Kemahasiswaan',
-      );
-      alert(
-        '✅ Dokumen berhasil disetujui!\n\nDokumen telah diteruskan ke step berikutnya.',
       );
       await fetchDocuments();
     } catch (err) {
@@ -111,7 +104,6 @@ function RouteComponent() {
     try {
       const doc = await documentService.getDocument(id);
       await documentService.reviseDocument(id, doc.creator_id, note);
-      alert('Dokumen dikembalikan untuk revisi!');
       await fetchDocuments();
     } catch (err) {
       console.error('Failed to revise document:', err);
@@ -123,30 +115,14 @@ function RouteComponent() {
     }
   };
 
-  const handleOpenDoc = (payload: {
-    doc: ApprovalDocType;
-    mode: ApprovalModeType;
-    booking: { id: number };
-  }) => {
-    if (payload.mode === 'preview') {
-      navigate({
-        to: '/preview-document', // UBAH INI (sebelumnya /preview-dokumen)
-        search: {
-          doc: payload.doc,
-          id: payload.booking.id,
-          return: '/kemahasiswaan',
-        } as any, // Kita bahas cara menghapus 'as any' di Langkah 2
-      });
-    } else if (payload.mode === 'sign') {
-      navigate({
-        to: '/sign-document', // UBAH INI (sebelumnya /tanda-tangan)
-        search: {
-          doc: payload.doc,
-          id: payload.booking.id,
-          return: '/kemahasiswaan',
-        } as any,
-      });
-    }
+  const handleOpenDoc = (documentId: number) => {
+    navigate({
+      to: '/preview-document',
+      search: {
+        documentId,
+        return: '/kemahasiswaan',
+      },
+    });
   };
 
   if (loading) {
@@ -183,7 +159,7 @@ function RouteComponent() {
         </p>
       </div>
 
-      <div className='grid grid-cols-1 md:grid-cols-3 gap-4 mb-6'>
+      <div className='grid grid-cols-3 gap-4 mb-6'>
         {stats.map((stat, index) => (
           <StatCard
             key={index}
@@ -212,7 +188,6 @@ function RouteComponent() {
             actorRole={actorRole}
             onOpenDoc={handleOpenDoc}
             showOrganisasi={true}
-            showProposal={true}
           />
         )}
       </div>

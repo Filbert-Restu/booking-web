@@ -19,26 +19,39 @@ export function TemplatePreview({
 }: TemplatePreviewProps) {
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const [placeholders, setPlaceholders] = useState<string[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [errorHint, setErrorHint] = useState<string | null>(null);
   const [useFallback, setUseFallback] = useState(false);
 
+  // Load preview when file or templateId changes
   useEffect(() => {
-    loadPreview();
+    if (file || templateId) {
+      loadPreview();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [file, templateId]);
+
+  // Cleanup PDF blob URL when it changes or on unmount
+  useEffect(() => {
     return () => {
-      // Cleanup PDF URL
       if (pdfUrl) {
-        URL.revokeObjectURL(pdfUrl);
+        try {
+          URL.revokeObjectURL(pdfUrl);
+        } catch {
+          // ignore
+        }
       }
     };
-  }, [file, templateId]);
+  }, [pdfUrl]);
 
   const loadPreview = async () => {
     try {
       setIsLoading(true);
       setError(null);
+      setErrorHint(null);
 
-      // If new file is selected, preview that
+      // If new file is selected, preview that (no PDF conversion needed)
       if (file) {
         await extractPlaceholders();
         setIsLoading(false);
@@ -55,6 +68,21 @@ export function TemplatePreview({
             },
           );
 
+          // Check if response is actually a PDF or an error JSON
+          const contentType = response.headers['content-type'] || '';
+
+          if (contentType.includes('application/json')) {
+            // Backend returned JSON error, parse it
+            const text = await (response.data as Blob).text();
+            const errorData = JSON.parse(text);
+            console.warn('PDF conversion failed:', errorData);
+            setError(errorData.message || 'Gagal konversi PDF');
+            setErrorHint(errorData.hint || null);
+            setUseFallback(true);
+            await extractPlaceholders();
+            return;
+          }
+
           // Create blob URL for PDF
           const blob = new Blob([response.data], { type: 'application/pdf' });
           const url = URL.createObjectURL(blob);
@@ -66,6 +94,23 @@ export function TemplatePreview({
           return;
         } catch (pdfError: any) {
           console.warn('PDF preview not available, falling back:', pdfError);
+
+          // Try to extract error message from response
+          if (pdfError.response?.data) {
+            try {
+              let errorData = pdfError.response.data;
+              // If blob, convert to text first
+              if (errorData instanceof Blob) {
+                const text = await errorData.text();
+                errorData = JSON.parse(text);
+              }
+              setError(errorData.message || 'Gagal konversi PDF');
+              setErrorHint(errorData.hint || null);
+            } catch {
+              setError('LibreOffice tidak tersedia untuk konversi PDF');
+            }
+          }
+
           // If PDF conversion fails, fall back
           setUseFallback(true);
         }
@@ -79,6 +124,14 @@ export function TemplatePreview({
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleRetry = () => {
+    setUseFallback(false);
+    setError(null);
+    setErrorHint(null);
+    setPdfUrl(null);
+    loadPreview();
   };
 
   const extractPlaceholders = async () => {
@@ -154,14 +207,27 @@ export function TemplatePreview({
         <div className='bg-yellow-50 border border-yellow-200 rounded-lg p-4'>
           <div className='flex items-start gap-3'>
             <AlertCircle className='w-5 h-5 text-yellow-600 mt-0.5' />
-            <div>
+            <div className='flex-1'>
               <p className='text-sm font-medium text-yellow-900'>
                 Preview PDF Tidak Tersedia
               </p>
               <p className='text-xs text-yellow-700 mt-1'>
-                Server belum dikonfigurasi untuk konversi PDF. Silakan download
-                file DOCX untuk melihat template.
+                {error ||
+                  'Server belum dikonfigurasi untuk konversi PDF. Silakan download file DOCX untuk melihat template.'}
               </p>
+              {errorHint && (
+                <p className='text-xs text-yellow-600 mt-2 font-mono bg-yellow-100 p-2 rounded'>
+                  💡 {errorHint}
+                </p>
+              )}
+              <Button
+                variant='outline'
+                size='sm'
+                onClick={handleRetry}
+                className='mt-3'
+              >
+                🔄 Coba Lagi
+              </Button>
             </div>
           </div>
         </div>

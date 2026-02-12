@@ -42,6 +42,17 @@ export function TopBar({
 }: TopBarProps) {
   const [user, setUser] = useState<User | null>(null);
 
+  const handleLogout = async () => {
+    try {
+      await api.post('/logout');
+    } catch (e) {
+      // ignore network errors
+    }
+    localStorage.removeItem('token');
+    setUser(null);
+    window.location.href = '/';
+  };
+
   // Fetch current user info
   useEffect(() => {
     const fetchUser = async () => {
@@ -76,26 +87,34 @@ export function TopBar({
           <h3 className='text-white text-sm font-bold'>
             {title || 'Sistem Peminjaman Ruang'}
           </h3>
-          <p className='text-white/90 text-xs'>
-            Fakultas Sains dan Matematika
-          </p>
+          <p className='text-white/90 text-xs'>Fakultas Sains dan Matematika</p>
         </div>
       </div>
       <div className='flex items-center gap-4'>
-        {user && (
-          <div className='text-white text-right'>
-            <p className='text-sm font-semibold'>{user.name}</p>
-            <p className='text-xs text-white/80'>
-              {user.role?.name || 'User'} {user.unit?.name ? `- ${user.unit.name}` : ''}
-            </p>
-          </div>
+        {user ? (
+          <>
+            <div className='text-white text-right sm:block'>
+              <p className='text-sm font-semibold'>{user.name}</p>
+              <p className='text-xs text-white/80'>
+                {user.role?.name || 'User'}{' '}
+              </p>
+            </div>
+
+            <button
+              onClick={handleLogout}
+              className='inline-flex items-center gap-2 bg-white text-primary px-3 py-2 rounded-lg shadow-sm hover:bg-gray-100 transition text-sm'
+            >
+              Logout
+            </button>
+          </>
+        ) : (
+          <Link
+            to={actionHref}
+            className='flex items-center gap-4 bg-white text-primary px-4 py-2 rounded-xl font-semibold hover:bg-gray-200 transition text-sm'
+          >
+            {actionLabel}
+          </Link>
         )}
-        <Link
-          to={actionHref}
-          className='flex items-center gap-4 bg-white text-primary px-4 py-2 rounded-xl font-semibold hover:bg-gray-200 transition text-sm'
-        >
-          {actionLabel}
-        </Link>
       </div>
     </header>
   );

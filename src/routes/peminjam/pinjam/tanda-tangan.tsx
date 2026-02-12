@@ -4,22 +4,20 @@ import { AxiosError } from 'axios';
 import { Stepper } from '@/shared/components/common/Stepper';
 import { Button } from '@/shared/components/ui/button/button';
 import { Checkbox } from '@/shared/components/ui/checkbox';
-import {
-  FileText,
-  Edit,
-  AlertCircle,
-  Download,
-  RefreshCw,
-  Eye,
-  X,
-  ChevronDown,
-  ChevronUp,
-} from 'lucide-react';
+import { Download, RefreshCw } from 'lucide-react';
 import { documentService } from '@/services/document.service';
 import { bookingService } from '@/services/booking.service';
 import { signatureService } from '@/services/signature.service';
 import { useBookingContext } from '@/contexts/BookingContext';
 import type { Signature } from '@/services/signature.service';
+import { SignatureUpload } from '@/shared/components/common/SignatureUpload';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/shared/components/ui/select';
 import api from '@/lib/axios';
 
 export const Route = createFileRoute('/peminjam/pinjam/tanda-tangan')({
@@ -62,38 +60,13 @@ function RouteComponent() {
     executiveSummary?: string;
     approvalSheet?: string;
   }>({});
-  const [pdfUrls, setPdfUrls] = useState<{
-    proposal?: string;
-    executiveSummary?: string;
-    approvalSheet?: string;
-  }>({});
-  const [loadingPreview, setLoadingPreview] = useState<{
-    proposal: boolean;
-    executiveSummary: boolean;
-    approvalSheet: boolean;
-  }>({
-    proposal: false,
-    executiveSummary: false,
-    approvalSheet: false,
-  });
-  const [fullscreenPreview, setFullscreenPreview] = useState<{
-    isOpen: boolean;
-    type: 'proposal' | 'executiveSummary' | 'approvalSheet' | null;
-    title: string;
-  }>({
-    isOpen: false,
-    type: null,
-    title: '',
-  });
-  const [expandedPreviews, setExpandedPreviews] = useState<{
-    proposal: boolean;
-    executiveSummary: boolean;
-    approvalSheet: boolean;
-  }>({
-    proposal: false,
-    executiveSummary: false,
-    approvalSheet: false,
-  });
+
+  // Simplified preview state - single document type selector
+  type DocumentType = 'proposal' | 'executive-summary' | 'approval-sheet';
+  const [selectedDocType, setSelectedDocType] =
+    useState<DocumentType>('proposal');
+  const [pdfUrl, setPdfUrl] = useState<string | null>(null);
+  const [pdfLoading, setPdfLoading] = useState(false);
 
   // Load user signature on mount
   useEffect(() => {
@@ -116,16 +89,11 @@ function RouteComponent() {
   }, []);
 
   // Load file as PDF blob URL with authentication
-  const loadFilePreview = async (
-    fileType: 'proposal' | 'executive-summary' | 'approval-sheet',
-    stateKey: 'proposal' | 'executiveSummary' | 'approvalSheet',
-  ) => {
+  const loadFilePreview = async (fileType: DocumentType) => {
     if (!formData.document_id) return;
 
     try {
-      setLoadingPreview((prev) => ({ ...prev, [stateKey]: true }));
-
-      // Request PDF version of the file
+      setPdfLoading(true);
       const apiPath = `/documents/${formData.document_id}/file/${fileType}/pdf`;
 
       const response = await api.get(apiPath, {
@@ -136,66 +104,34 @@ function RouteComponent() {
         type: 'application/pdf',
       });
       const blobUrl = URL.createObjectURL(blob);
-
-      setPdfUrls((prev) => ({ ...prev, [stateKey]: blobUrl }));
+      setPdfUrl(blobUrl);
     } catch (error) {
       if (error instanceof AxiosError) {
-        alert(
-          `Gagal memuat preview: ${error.response?.data?.message || error.message}`,
-        );
+        if (error.response?.status === 404) {
+          setPdfUrl(null);
+        } else {
+          alert(
+            `Gagal memuat preview: ${error.response?.data?.message || error.message}`,
+          );
+        }
       }
     } finally {
-      setLoadingPreview((prev) => ({ ...prev, [stateKey]: false }));
+      setPdfLoading(false);
     }
   };
 
-  // Load proposal preview on mount
+  // Load preview when document type changes
   useEffect(() => {
-    if (formData.document_id) {
-      loadFilePreview('proposal', 'proposal');
+    if (formData.document_id && selectedDocType) {
+      loadFilePreview(selectedDocType);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [formData.document_id]);
+  }, [formData.document_id, selectedDocType]);
 
-  // Load generated documents preview when URLs change
-  useEffect(() => {
-    if (generatedUrls.executiveSummary) {
-      loadFilePreview('executive-summary', 'executiveSummary');
-    }
-    if (generatedUrls.approvalSheet) {
-      loadFilePreview('approval-sheet', 'approvalSheet');
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [generatedUrls]);
-
-  // Manual reload signature
-  const handleReloadSignature = async () => {
-    try {
-      setLoadingSignature(true);
-      const sig = await signatureService.getSignature();
-      setSignature(sig);
-      if (sig) {
-        alert(
-          '✅ Tanda tangan berhasil dimuat!\n\nAnda bisa generate dokumen sekarang.',
-        );
-      } else {
-        alert(
-          '⚠️ Tanda tangan tidak ditemukan.\n\nSilakan upload tanda tangan terlebih dahulu.',
-        );
-      }
-    } catch (error) {
-      if (error instanceof AxiosError) {
-        alert(
-          `Gagal memuat tanda tangan: ${
-            error.response?.data?.message || error.message
-          }`,
-        );
-      } else {
-        alert('Gagal memuat tanda tangan');
-      }
-    } finally {
-      setLoadingSignature(false);
-    }
+  // Reload signature when SignatureUpload component uploads/updates
+  const handleSignatureUploaded = async (sig: Signature) => {
+    setSignature(sig);
+    setLoadingSignature(false);
   };
 
   // Generate documents from templates
@@ -467,37 +403,6 @@ function RouteComponent() {
     }
   };
 
-  const handleEditSignature = () => {
-    // Navigate to global signature management page
-    navigate({
-      to: '/tanda-tangan',
-      search: {
-        return: '/peminjam/pinjam/tanda-tangan',
-        autoApprove: undefined,
-      },
-    });
-  };
-
-  // Reload signature when user returns to this page
-  useEffect(() => {
-    const reloadSignature = async () => {
-      try {
-        setLoadingSignature(true);
-        const sig = await signatureService.getSignature();
-        setSignature(sig);
-      } finally {
-        setLoadingSignature(false);
-      }
-    };
-
-    // Listen for focus event (when user returns to this tab/page)
-    window.addEventListener('focus', reloadSignature);
-
-    return () => {
-      window.removeEventListener('focus', reloadSignature);
-    };
-  }, []);
-
   const steps = [
     { number: 1, title: 'Detail Tempat' },
     { number: 2, title: 'Proposal' },
@@ -515,32 +420,23 @@ function RouteComponent() {
           </h2>
 
           <div className='space-y-6'>
+            {/* Signature Upload Component */}
+            <SignatureUpload
+              onSignatureUploaded={handleSignatureUploaded}
+              className='border border-gray-200 rounded-lg'
+            />
+
             {/* Generate Documents Button */}
-            <div className='border border-green-200 rounded-lg p-6 bg-green-50'>
-              <div className='flex items-center justify-between'>
-                <div>
-                  <h3 className='text-sm font-medium text-green-900 mb-1'>
-                    Generate Dokumen dari Template
+            <div className='border border-gray-200 rounded-lg p-4'>
+              <div className='flex items-center justify-between gap-4'>
+                <div className='flex-1'>
+                  <h3 className='text-sm font-medium text-gray-900'>
+                    Generate Dokumen
                   </h3>
-                  <p className='text-xs text-green-700'>
-                    Generate Executive Summary dan Lembar Pengesahan otomatis
-                    dari template. Tanda tangan Anda sebagai pengaju akan
-                    otomatis tertanam di dokumen.
+                  <p className='text-xs text-gray-600 mt-1'>
+                    Generate Executive Summary dan Lembar Pengesahan dengan
+                    tanda tangan
                   </p>
-                  {loadingSignature ? (
-                    <p className='text-xs text-gray-500 mt-1'>
-                      Memeriksa tanda tangan...
-                    </p>
-                  ) : signature ? (
-                    <p className='text-xs text-green-600 mt-1 font-medium'>
-                      ✅ Tanda tangan tersedia - Siap generate!
-                    </p>
-                  ) : (
-                    <p className='text-xs text-red-600 mt-1 font-medium'>
-                      ⚠️ Tanda tangan belum diupload - Upload dulu sebelum
-                      generate!
-                    </p>
-                  )}
                 </div>
                 <Button
                   type='button'
@@ -551,471 +447,113 @@ function RouteComponent() {
                     loadingSignature ||
                     !signature
                   }
-                  className='flex items-center gap-2 bg-green-600 hover:bg-green-700 disabled:opacity-50'
+                  className='bg-green-600 hover:bg-green-700 disabled:opacity-50'
                 >
-                  <FileText className='h-4 w-4' />
-                  {generatingDocs ? 'Generating...' : 'Generate Dokumen'}
+                  {generatingDocs ? 'Generating...' : 'Generate'}
                 </Button>
               </div>
-              {generatedUrls.executiveSummary && (
-                <div className='mt-4 pt-4 border-t border-green-300'>
-                  <p className='text-xs text-green-900 font-medium mb-2'>
-                    ✅ Dokumen berhasil digenerate!
-                  </p>
-                  <div className='flex gap-2'>
-                    <button
-                      onClick={() =>
-                        handleDownloadGenerated(
-                          generatedUrls.executiveSummary!,
-                          `executive-summary-${formData.document_id}.docx`,
-                        )
-                      }
-                      disabled={downloadingFile !== null}
-                      className='text-xs text-green-700 underline hover:text-green-900 disabled:opacity-50'
-                    >
-                      {downloadingFile?.includes('executive')
-                        ? 'Downloading...'
-                        : 'Download Executive Summary'}
-                    </button>
-                    <span className='text-green-300'>|</span>
-                    <button
-                      onClick={() =>
-                        handleDownloadGenerated(
-                          generatedUrls.approvalSheet!,
-                          `lembar-pengesahan-${formData.document_id}.docx`,
-                        )
-                      }
-                      disabled={downloadingFile !== null}
-                      className='text-xs text-green-700 underline hover:text-green-900 disabled:opacity-50'
-                    >
-                      {downloadingFile?.includes('lembar')
-                        ? 'Downloading...'
-                        : 'Download Lembar Pengesahan'}
-                    </button>
+            </div>
+
+            {/* Preview Dokumen - Simplified like SignDocumentContent */}
+            <div className='border border-gray-200 rounded-lg p-4'>
+              <div className='flex items-center justify-between mb-4'>
+                <h3 className='text-sm font-medium text-gray-900'>
+                  Preview Dokumen
+                </h3>
+                <Select
+                  value={selectedDocType}
+                  onValueChange={(val) =>
+                    setSelectedDocType(val as DocumentType)
+                  }
+                >
+                  <SelectTrigger className='w-50'>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value='proposal'>Proposal</SelectItem>
+                    <SelectItem value='executive-summary'>
+                      Executive Summary
+                    </SelectItem>
+                    <SelectItem value='approval-sheet'>
+                      Lembar Pengesahan
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Preview PDF */}
+              {pdfLoading && (
+                <div className='flex items-center justify-center h-150 border rounded-lg bg-gray-50'>
+                  <div className='text-center text-gray-500'>
+                    <RefreshCw className='h-8 w-8 mx-auto mb-2 animate-spin' />
+                    <p className='text-sm'>Memuat dokumen...</p>
                   </div>
+                </div>
+              )}
+              {!pdfLoading && pdfUrl && (
+                <div className='border rounded-lg overflow-hidden'>
+                  <iframe
+                    src={pdfUrl}
+                    className='w-full h-150'
+                    title='Document Preview'
+                  />
+                </div>
+              )}
+              {!pdfLoading && !pdfUrl && (
+                <div className='flex items-center justify-center h-150 border rounded-lg bg-gray-50'>
+                  <p className='text-sm text-gray-500'>
+                    {selectedDocType === 'proposal'
+                      ? 'Proposal tidak tersedia'
+                      : 'Dokumen belum digenerate'}
+                  </p>
+                </div>
+              )}
+
+              {/* Download Button */}
+              {pdfUrl && (
+                <div className='mt-4'>
+                  <Button
+                    size='sm'
+                    variant='outline'
+                    onClick={() => {
+                      if (selectedDocType === 'proposal') {
+                        handleDownloadFile('proposal');
+                      } else if (selectedDocType === 'executive-summary') {
+                        if (generatedUrls.executiveSummary) {
+                          handleDownloadGenerated(
+                            generatedUrls.executiveSummary,
+                            `executive-summary-${formData.document_id}.docx`,
+                          );
+                        }
+                      } else if (selectedDocType === 'approval-sheet') {
+                        if (generatedUrls.approvalSheet) {
+                          handleDownloadGenerated(
+                            generatedUrls.approvalSheet,
+                            `lembar-pengesahan-${formData.document_id}.docx`,
+                          );
+                        }
+                      }
+                    }}
+                    disabled={downloadingFile !== null}
+                    className='w-full'
+                  >
+                    <Download className='h-4 w-4 mr-2' />
+                    {downloadingFile !== null
+                      ? 'Downloading...'
+                      : `Download ${selectedDocType === 'proposal' ? 'Proposal' : selectedDocType === 'executive-summary' ? 'Executive Summary' : 'Lembar Pengesahan'}`}
+                  </Button>
                 </div>
               )}
             </div>
 
-            {/* Info Box */}
-            <div className='bg-blue-50 border border-blue-200 rounded-lg p-4'>
-              <div className='flex gap-3'>
-                <AlertCircle className='h-5 w-5 text-blue-600 shrink-0 mt-0.5' />
-                <div className='text-sm text-blue-900'>
-                  <p className='font-medium mb-2'>
-                    Langkah-langkah Generate Dokumen dengan Tanda Tangan:
-                  </p>
-                  <ol className='list-decimal list-inside space-y-2 text-xs'>
-                    <li>
-                      <strong>Upload Tanda Tangan (WAJIB):</strong>
-                      <br />
-                      <span className='ml-5'>
-                        • Klik tombol "{!signature ? 'Upload' : 'Kelola'} Tanda
-                        Tangan" di bawah
-                        <br />• Upload gambar tanda tangan Anda (PNG/JPG)
-                        <br />• Klik Simpan
-                        <br />• Kembali ke halaman ini (browser akan otomatis
-                        reload status)
-                      </span>
-                    </li>
-                    <li>
-                      <strong>Verifikasi Tanda Tangan:</strong>
-                      <br />
-                      <span className='ml-5'>
-                        • Pastikan muncul tanda "✅ Tanda tangan sudah diupload"
-                        <br />• Jika belum muncul, klik tombol "Refresh"
-                      </span>
-                    </li>
-                    <li>
-                      <strong>Generate Dokumen:</strong>
-                      <br />
-                      <span className='ml-5'>
-                        • Klik tombol "Generate Dokumen" (hijau)
-                        <br />• Tanda tangan Anda akan otomatis tertanam di
-                        dokumen
-                      </span>
-                    </li>
-                    <li>
-                      <strong>Download & Verifikasi:</strong>
-                      <br />
-                      <span className='ml-5'>
-                        • Download dokumen yang sudah digenerate
-                        <br />• Buka dengan Microsoft Word untuk verifikasi TTD
-                        muncul
-                      </span>
-                    </li>
-                    <li className='text-gray-600 italic'>
-                      Catatan: Tanda tangan approver akan ditambahkan otomatis
-                      setelah mereka menyetujui dokumen
-                    </li>
-                  </ol>
-                </div>
-              </div>
-            </div>
-
-            {/* Signature Management Button */}
-            <div
-              className={`border rounded-lg p-6 ${
-                !signature
-                  ? 'border-orange-300 bg-orange-50'
-                  : 'border-gray-200 bg-gray-50'
-              }`}
-            >
-              <div className='flex items-center justify-between'>
-                <div className='flex-1'>
-                  <h3
-                    className={`text-sm font-medium mb-1 ${
-                      !signature ? 'text-orange-900' : 'text-gray-900'
-                    }`}
-                  >
-                    Tanda Tangan Digital
-                    {!signature && ' - WAJIB'}
-                  </h3>
-                  <p
-                    className={`text-xs ${
-                      !signature ? 'text-orange-700' : 'text-gray-600'
-                    }`}
-                  >
-                    {!signature
-                      ? '⚠️ Anda harus mengupload tanda tangan sebelum generate dokumen'
-                      : 'Kelola tanda tangan digital Anda yang akan digunakan untuk dokumen'}
-                  </p>
-                  {signature && (
-                    <p className='text-xs text-green-600 mt-1 font-medium'>
-                      ✅ Tanda tangan sudah diupload (ID: {signature.id})
-                    </p>
-                  )}
-                </div>
-                <div className='flex gap-2'>
-                  <Button
-                    type='button'
-                    variant='outline'
-                    onClick={handleReloadSignature}
-                    disabled={loadingSignature}
-                    className='flex items-center gap-2'
-                  >
-                    <RefreshCw
-                      className={`h-4 w-4 ${loadingSignature ? 'animate-spin' : ''}`}
-                    />
-                    {loadingSignature ? 'Loading...' : 'Refresh'}
-                  </Button>
-                  <Button
-                    type='button'
-                    variant={!signature ? 'default' : 'outline'}
-                    onClick={handleEditSignature}
-                    className={`flex items-center gap-2 ${
-                      !signature ? 'bg-orange-600 hover:bg-orange-700' : ''
-                    }`}
-                  >
-                    <Edit className='h-4 w-4' />
-                    {!signature ? 'Upload Tanda Tangan' : 'Kelola Tanda Tangan'}
-                  </Button>
-                </div>
-              </div>
-            </div>
-
-            {/* Preview & Download Dokumen */}
-            <div className='grid grid-cols-1 gap-4'>
-              {/* Proposal Preview */}
-              <div className='border border-gray-200 rounded-lg overflow-hidden'>
-                <div className='bg-gray-800 px-4 py-3 flex items-center justify-between'>
-                  <div className='flex items-center gap-2'>
-                    <FileText className='h-4 w-4 text-white' />
-                    <h3 className='text-sm font-medium text-white'>Proposal</h3>
-                  </div>
-                  <div className='flex gap-1'>
-                    <Button
-                      type='button'
-                      size='sm'
-                      variant='ghost'
-                      onClick={() =>
-                        setExpandedPreviews((prev) => ({
-                          ...prev,
-                          proposal: !prev.proposal,
-                        }))
-                      }
-                      className='text-white hover:bg-gray-700 h-8 px-2'
-                      title={expandedPreviews.proposal ? 'Collapse' : 'Expand'}
-                    >
-                      {expandedPreviews.proposal ? (
-                        <ChevronUp className='h-3 w-3' />
-                      ) : (
-                        <ChevronDown className='h-3 w-3' />
-                      )}
-                    </Button>
-                    <Button
-                      type='button'
-                      size='sm'
-                      variant='ghost'
-                      onClick={() =>
-                        setFullscreenPreview({
-                          isOpen: true,
-                          type: 'proposal',
-                          title: 'Proposal',
-                        })
-                      }
-                      disabled={!pdfUrls.proposal}
-                      className='text-white hover:bg-gray-700 h-8 px-2'
-                      title='Fullscreen'
-                    >
-                      <Eye className='h-3 w-3' />
-                    </Button>
-                    <Button
-                      type='button'
-                      size='sm'
-                      variant='ghost'
-                      onClick={() => handleDownloadFile('proposal')}
-                      disabled={
-                        downloadingFile !== null || !formData.document_id
-                      }
-                      className='text-white hover:bg-gray-700 h-8 px-2'
-                      title='Download Proposal'
-                    >
-                      <Download className='h-3 w-3' />
-                    </Button>
-                  </div>
-                </div>
-                {expandedPreviews.proposal && (
-                  <div className='bg-gray-100 min-h-150 relative'>
-                    {loadingPreview.proposal ? (
-                      <div className='absolute inset-0 flex items-center justify-center'>
-                        <div className='text-center text-gray-500'>
-                          <RefreshCw className='h-8 w-8 mx-auto mb-2 animate-spin' />
-                          <p className='text-xs'>Memuat preview...</p>
-                        </div>
-                      </div>
-                    ) : pdfUrls.proposal ? (
-                      <iframe
-                        src={pdfUrls.proposal}
-                        className='w-full h-150 border-0'
-                        title='Proposal Preview'
-                      />
-                    ) : (
-                      <div className='absolute inset-0 flex items-center justify-center'>
-                        <div className='text-center text-gray-500'>
-                          <FileText className='h-12 w-12 mx-auto mb-2 opacity-50' />
-                          <p className='text-xs'>Preview tidak tersedia</p>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-
-              {/* Executive Summary Preview */}
-              <div className='border border-gray-200 rounded-lg overflow-hidden'>
-                <div className='bg-blue-800 px-4 py-3 flex items-center justify-between'>
-                  <div className='flex items-center gap-2'>
-                    <FileText className='h-4 w-4 text-white' />
-                    <h3 className='text-sm font-medium text-white'>
-                      Executive Summary
-                    </h3>
-                  </div>
-                  <div className='flex gap-1'>
-                    <Button
-                      type='button'
-                      size='sm'
-                      variant='ghost'
-                      onClick={() =>
-                        setExpandedPreviews((prev) => ({
-                          ...prev,
-                          executiveSummary: !prev.executiveSummary,
-                        }))
-                      }
-                      className='text-white hover:bg-blue-700 h-8 px-2'
-                      title={
-                        expandedPreviews.executiveSummary
-                          ? 'Collapse'
-                          : 'Expand'
-                      }
-                    >
-                      {expandedPreviews.executiveSummary ? (
-                        <ChevronUp className='h-3 w-3' />
-                      ) : (
-                        <ChevronDown className='h-3 w-3' />
-                      )}
-                    </Button>
-                    <Button
-                      type='button'
-                      size='sm'
-                      variant='ghost'
-                      onClick={() =>
-                        setFullscreenPreview({
-                          isOpen: true,
-                          type: 'executiveSummary',
-                          title: 'Executive Summary',
-                        })
-                      }
-                      disabled={!pdfUrls.executiveSummary}
-                      className='text-white hover:bg-blue-700 h-8 px-2'
-                      title='Fullscreen'
-                    >
-                      <Eye className='h-3 w-3' />
-                    </Button>
-                    <Button
-                      type='button'
-                      size='sm'
-                      variant='ghost'
-                      onClick={() =>
-                        generatedUrls.executiveSummary &&
-                        handleDownloadGenerated(
-                          generatedUrls.executiveSummary,
-                          `executive-summary-${formData.document_id}.docx`,
-                        )
-                      }
-                      disabled={
-                        downloadingFile !== null ||
-                        !generatedUrls.executiveSummary
-                      }
-                      className='text-white hover:bg-blue-700 h-8 px-2'
-                      title='Download'
-                    >
-                      <Download className='h-3 w-3' />
-                    </Button>
-                  </div>
-                </div>
-                {expandedPreviews.executiveSummary && (
-                  <div className='bg-gray-100 min-h-150 relative'>
-                    {loadingPreview.executiveSummary ? (
-                      <div className='absolute inset-0 flex items-center justify-center'>
-                        <div className='text-center text-gray-500'>
-                          <RefreshCw className='h-8 w-8 mx-auto mb-2 animate-spin' />
-                          <p className='text-xs'>Memuat preview...</p>
-                        </div>
-                      </div>
-                    ) : pdfUrls.executiveSummary ? (
-                      <iframe
-                        src={pdfUrls.executiveSummary}
-                        className='w-full h-150 border-0'
-                        title='Executive Summary Preview'
-                      />
-                    ) : (
-                      <div className='absolute inset-0 flex items-center justify-center'>
-                        <div className='text-center text-gray-500'>
-                          <FileText className='h-12 w-12 mx-auto mb-2 opacity-50' />
-                          <p className='text-xs mb-2'>Belum digenerate</p>
-                          <p className='text-orange-600 text-xs font-medium'>
-                            ⬆️ Generate dokumen terlebih dahulu
-                          </p>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-
-              {/* Lembar Pengesahan Preview */}
-              <div className='border border-gray-200 rounded-lg overflow-hidden'>
-                <div className='bg-green-800 px-4 py-3 flex items-center justify-between'>
-                  <div className='flex items-center gap-2'>
-                    <FileText className='h-4 w-4 text-white' />
-                    <h3 className='text-sm font-medium text-white'>
-                      Lembar Pengesahan
-                    </h3>
-                  </div>
-                  <div className='flex gap-1'>
-                    <Button
-                      type='button'
-                      size='sm'
-                      variant='ghost'
-                      onClick={() =>
-                        setExpandedPreviews((prev) => ({
-                          ...prev,
-                          approvalSheet: !prev.approvalSheet,
-                        }))
-                      }
-                      className='text-white hover:bg-green-700 h-8 px-2'
-                      title={
-                        expandedPreviews.approvalSheet ? 'Collapse' : 'Expand'
-                      }
-                    >
-                      {expandedPreviews.approvalSheet ? (
-                        <ChevronUp className='h-3 w-3' />
-                      ) : (
-                        <ChevronDown className='h-3 w-3' />
-                      )}
-                    </Button>
-                    <Button
-                      type='button'
-                      size='sm'
-                      variant='ghost'
-                      onClick={() =>
-                        setFullscreenPreview({
-                          isOpen: true,
-                          type: 'approvalSheet',
-                          title: 'Lembar Pengesahan',
-                        })
-                      }
-                      disabled={!pdfUrls.approvalSheet}
-                      className='text-white hover:bg-green-700 h-8 px-2'
-                      title='Fullscreen'
-                    >
-                      <Eye className='h-3 w-3' />
-                    </Button>
-                    <Button
-                      type='button'
-                      size='sm'
-                      variant='ghost'
-                      onClick={() =>
-                        generatedUrls.approvalSheet &&
-                        handleDownloadGenerated(
-                          generatedUrls.approvalSheet,
-                          `lembar-pengesahan-${formData.document_id}.docx`,
-                        )
-                      }
-                      disabled={
-                        downloadingFile !== null || !generatedUrls.approvalSheet
-                      }
-                      className='text-white hover:bg-green-700 h-8 px-2'
-                      title='Download'
-                    >
-                      <Download className='h-3 w-3' />
-                    </Button>
-                  </div>
-                </div>
-                {expandedPreviews.approvalSheet && (
-                  <div className='bg-gray-100 min-h-150 relative'>
-                    {loadingPreview.approvalSheet ? (
-                      <div className='absolute inset-0 flex items-center justify-center'>
-                        <div className='text-center text-gray-500'>
-                          <RefreshCw className='h-8 w-8 mx-auto mb-2 animate-spin' />
-                          <p className='text-xs'>Memuat preview...</p>
-                        </div>
-                      </div>
-                    ) : pdfUrls.approvalSheet ? (
-                      <iframe
-                        src={pdfUrls.approvalSheet}
-                        className='w-full h-150 border-0'
-                        title='Lembar Pengesahan Preview'
-                      />
-                    ) : (
-                      <div className='absolute inset-0 flex items-center justify-center'>
-                        <div className='text-center text-gray-500'>
-                          <FileText className='h-12 w-12 mx-auto mb-2 opacity-50' />
-                          <p className='text-xs mb-2'>Belum digenerate</p>
-                          <p className='text-orange-600 text-xs font-medium'>
-                            ⬆️ Generate dokumen terlebih dahulu
-                          </p>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Konfirmasi Tanda Tangan */}
+            {/* Konfirmasi Dokumen */}
             <div className='border border-gray-200 rounded-lg p-4'>
-              <h3 className='text-sm font-medium text-gray-900 mb-4'>
-                Konfirmasi Tanda Tangan
+              <h3 className='text-sm font-medium text-gray-900 mb-3'>
+                Konfirmasi Dokumen
               </h3>
-              <p className='text-xs text-gray-600 mb-4'>
-                Centang kotak di bawah ini untuk mengkonfirmasi bahwa dokumen
-                sudah digenerate dengan tanda tangan Anda tertanam di dalamnya:
-              </p>
 
-              <div className='space-y-3'>
-                <div className='flex items-start space-x-3 p-3 bg-gray-50 rounded-lg'>
+              <div className='space-y-2'>
+                <div className='flex items-center space-x-3'>
                   <Checkbox
                     id='ttd-lembar-pengesahan'
                     checked={ttdLembarPengesahan}
@@ -1026,18 +564,13 @@ function RouteComponent() {
                   />
                   <label
                     htmlFor='ttd-lembar-pengesahan'
-                    className={`text-sm leading-relaxed cursor-pointer ${!generatedUrls.approvalSheet ? 'text-gray-400' : ''}`}
+                    className={`text-sm cursor-pointer ${!generatedUrls.approvalSheet ? 'text-gray-400' : ''}`}
                   >
-                    Lembar Pengesahan sudah digenerate dengan tanda tangan saya
-                    {!generatedUrls.approvalSheet && (
-                      <span className='block text-xs text-orange-600 mt-1'>
-                        ⚠️ Generate dokumen terlebih dahulu
-                      </span>
-                    )}
+                    Lembar Pengesahan sudah digenerate
                   </label>
                 </div>
 
-                <div className='flex items-start space-x-3 p-3 bg-gray-50 rounded-lg'>
+                <div className='flex items-center space-x-3'>
                   <Checkbox
                     id='ttd-executive-summary'
                     checked={ttdExecutiveSummary}
@@ -1048,24 +581,12 @@ function RouteComponent() {
                   />
                   <label
                     htmlFor='ttd-executive-summary'
-                    className={`text-sm leading-relaxed cursor-pointer ${!generatedUrls.executiveSummary ? 'text-gray-400' : ''}`}
+                    className={`text-sm cursor-pointer ${!generatedUrls.executiveSummary ? 'text-gray-400' : ''}`}
                   >
-                    Executive Summary sudah digenerate dengan tanda tangan saya
-                    {!generatedUrls.executiveSummary && (
-                      <span className='block text-xs text-orange-600 mt-1'>
-                        ⚠️ Generate dokumen terlebih dahulu
-                      </span>
-                    )}
+                    Executive Summary sudah digenerate
                   </label>
                 </div>
               </div>
-
-              {!isAllSignaturesComplete && (
-                <p className='text-xs text-red-600 mt-3'>
-                  ⚠️ Harap centang kedua konfirmasi di atas sebelum mengajukan
-                  peminjaman
-                </p>
-              )}
             </div>
 
             {/* Navigation Buttons */}
@@ -1089,34 +610,6 @@ function RouteComponent() {
           </div>
         </div>
       </div>
-
-      {/* Fullscreen PDF Preview Modal */}
-      {fullscreenPreview.isOpen && fullscreenPreview.type && (
-        <div className='fixed inset-0 z-50 bg-black bg-opacity-90 flex flex-col'>
-          <div className='bg-gray-900 px-6 py-4 flex items-center justify-between border-b border-gray-700'>
-            <h2 className='text-lg font-semibold text-white'>
-              {fullscreenPreview.title}
-            </h2>
-            <Button
-              type='button'
-              variant='ghost'
-              onClick={() =>
-                setFullscreenPreview({ isOpen: false, type: null, title: '' })
-              }
-              className='text-white hover:bg-gray-800 h-10 w-10 p-0'
-            >
-              <X className='h-5 w-5' />
-            </Button>
-          </div>
-          <div className='flex-1 p-4'>
-            <iframe
-              src={pdfUrls[fullscreenPreview.type]}
-              className='w-full h-full border-0 rounded-lg'
-              title={`${fullscreenPreview.title} Fullscreen`}
-            />
-          </div>
-        </div>
-      )}
     </div>
   );
 }

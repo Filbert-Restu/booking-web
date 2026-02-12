@@ -250,7 +250,7 @@ function RouteComponent() {
               <div className='bg-orange-50 border border-orange-200 rounded-lg p-3 space-y-2'>
                 {/* Header dengan icon dan status */}
                 <div className='flex items-center gap-2'>
-                  <AlertCircle className='w-4 h-4 text-orange-500 flex-shrink-0' />
+                  <AlertCircle className='w-4 h-4 text-orange-500 shrink-0' />
                   <span className='text-sm font-medium text-orange-800'>
                     Perlu Revisi
                   </span>
@@ -266,7 +266,7 @@ function RouteComponent() {
                 {/* Catatan revisi */}
                 <div className='bg-white border border-orange-200 rounded-md p-2'>
                   <div className='flex items-start gap-2'>
-                    <MessageCircle className='w-3 h-3 text-orange-500 mt-0.5 flex-shrink-0' />
+                    <MessageCircle className='w-3 h-3 text-orange-500 mt-0.5 shrink-0' />
                     <div>
                       <div className='text-xs font-medium text-orange-700 mb-1'>
                         Catatan Revisi:
@@ -320,11 +320,11 @@ function RouteComponent() {
     <div className='space-y-4 md:space-y-6 p-2 md:p-0'>
       <div className='flex justify-between items-center gap-3'>
         <h1 className='text-xl md:text-2xl font-bold text-gray-900'>
-          Riwayat Pengajuan
+          Daftar Pengajuan
         </h1>
-        <Button onClick={handleAjukanPinjam} size='lg' className='gap-2'>
+        <Button onClick={handleAjukanPinjam} s ize='lg' className='gap-2'>
           <Plus className='w-4 h-4 md:w-5 md:h-5' />
-          <span className='text-sm md:text-base'>Ajukan Pinjam</span>
+          <span className='text-sm md:text-base'>Ajukan Peminjaman</span>
         </Button>
       </div>
 

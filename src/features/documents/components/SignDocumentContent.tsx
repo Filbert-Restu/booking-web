@@ -84,14 +84,14 @@ export function SignDocumentContent({
 
   // Debounce timeouts
   const timeoutsRef = useRef<{
-    signature?: NodeJS.Timeout;
-    document?: NodeJS.Timeout;
-    pdf?: NodeJS.Timeout;
+    signature?: number;
+    document?: number;
+    pdf?: number;
   }>({});
 
   // Memoized stable functions to prevent useEffect re-triggers
   const loadDocument = useMemo(() => {
-    let timeoutId: NodeJS.Timeout;
+    let timeoutId: number;
 
     return () => {
       if (
@@ -133,7 +133,7 @@ export function SignDocumentContent({
   }, [documentId]);
 
   const loadSignature = useMemo(() => {
-    let timeoutId: NodeJS.Timeout;
+    let timeoutId: number;
 
     return () => {
       if (globalLockRef.current.signature || signatureLoadedRef.current) {
@@ -190,7 +190,7 @@ export function SignDocumentContent({
   }, []);
 
   const loadDocumentPreview = useMemo(() => {
-    let timeoutId: NodeJS.Timeout;
+    let timeoutId: number;
 
     return (docType: DocumentType) => {
       if (!documentId || globalLockRef.current.pdf) {

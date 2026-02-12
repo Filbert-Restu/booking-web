@@ -220,35 +220,65 @@ function RouteComponent() {
   return (
     <div className='space-y-6'>
       {/* Header */}
-      <div className='flex items-center justify-between'>
-        <div className='flex items-center gap-4'>
-          <Button variant='outline' onClick={handleBack}>
-            <ArrowLeft className='w-4 h-4 mr-2' />
-            Kembali
+      <div className='flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between'>
+        <div className='flex items-center gap-3'>
+          <Button
+            variant='outline'
+            size='sm'
+            onClick={handleBack}
+            className='shrink-0'
+          >
+            <ArrowLeft className='w-4 h-4 sm:mr-2' />
+            <span className='hidden sm:inline'>Kembali</span>
           </Button>
-          <div>
-            <h1 className='text-2xl font-bold text-gray-900'>Edit Template</h1>
-            <p className='text-gray-600 mt-1'>
+          <div className='min-w-0'>
+            <h1 className='text-lg sm:text-2xl font-bold text-gray-900 truncate'>
+              Edit Template
+            </h1>
+            <p className='text-sm text-gray-600 truncate'>
               {getTemplateTypeLabel(template.template_type)} • v
               {template.version}
             </p>
           </div>
         </div>
 
-        <div className='flex items-center gap-2'>
+        <div className='flex flex-wrap items-center gap-2'>
           {!template.is_active && (
-            <Button variant='outline' onClick={handleActivate}>
-              <CheckCircle className='w-4 h-4 mr-2' />
-              Aktifkan Template
+            <Button
+              variant='outline'
+              size='sm'
+              onClick={handleActivate}
+              className='flex-1 sm:flex-none'
+            >
+              <CheckCircle className='w-4 h-4 sm:mr-2' />
+              <span className='hidden sm:inline'>Aktifkan Template</span>
+              <span className='sm:hidden'>Aktifkan</span>
             </Button>
           )}
-          <Button variant='outline' onClick={handleDownload}>
-            <Download className='w-4 h-4 mr-2' />
-            Download
+          <Button
+            variant='outline'
+            size='sm'
+            onClick={handleDownload}
+            className='flex-1 sm:flex-none'
+          >
+            <Download className='w-4 h-4 sm:mr-2' />
+            <span className='hidden sm:inline'>Download</span>
           </Button>
-          <Button onClick={handleSave} disabled={isSaving}>
-            <Save className='w-4 h-4 mr-2' />
-            {isSaving ? 'Menyimpan...' : 'Simpan Perubahan'}
+          <Button
+            size='sm'
+            onClick={handleSave}
+            disabled={isSaving}
+            className='flex-1 sm:flex-none'
+          >
+            <Save className='w-4 h-4 sm:mr-2' />
+            {isSaving ? (
+              'Menyimpan...'
+            ) : (
+              <>
+                <span className='hidden sm:inline'>Simpan Perubahan</span>
+                <span className='sm:hidden'>Simpan</span>
+              </>
+            )}
           </Button>
         </div>
       </div>
@@ -348,11 +378,6 @@ function RouteComponent() {
                 </div>
               </div>
             </div>
-          </div>
-
-          {/* Placeholder Status */}
-          <div className='bg-white border rounded-lg p-6'>
-            <PlaceholderStatus template={template} onUpdate={fetchTemplate} />
           </div>
         </div>
 
