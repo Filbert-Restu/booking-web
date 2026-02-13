@@ -57,4 +57,69 @@ export const documentHelpers = {
       ? String(doc.content.ketua_pelaksana_hp)
       : '-';
   },
+
+  // --- 3. Deadline & Hold Window (14 hari) ---
+  /**
+   * Hitung deadline pengajuan (14 hari dari created_at)
+   */
+  getDeadline: (doc: Document) => {
+    const createdAt = new Date(doc.created_at);
+    const deadline = new Date(createdAt);
+    deadline.setDate(deadline.getDate() + 14);
+    return deadline;
+  },
+
+  /**
+   * Hitung sisa hari hingga deadline
+   */
+  getDaysRemaining: (doc: Document) => {
+    const now = new Date();
+    const deadline = documentHelpers.getDeadline(doc);
+    const diffTime = deadline.getTime() - now.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays;
+  },
+
+  /**
+   * Status deadline: 'expired' | 'critical' | 'warning' | 'safe'
+   */
+  getDeadlineStatus: (doc: Document) => {
+    // Hanya cek untuk dokumen yang belum selesai
+    if (doc.status === 'APPROVED' || doc.status === 'REJECTED') {
+      return 'safe';
+    }
+
+    const daysRemaining = documentHelpers.getDaysRemaining(doc);
+    
+    if (daysRemaining < 0) return 'expired';
+    if (daysRemaining <= 2) return 'critical';
+    if (daysRemaining <= 5) return 'warning';
+    return 'safe';
+  },
+
+  /**
+   * Format text untuk deadline warning
+   */
+  getDeadlineText: (doc: Document) => {
+    const daysRemaining = documentHelpers.getDaysRemaining(doc);
+    const deadline = documentHelpers.getDeadline(doc);
+    
+    if (daysRemaining < 0) {
+      return `Expired ${Math.abs(daysRemaining)} hari lalu`;
+    }
+    if (daysRemaining === 0) {
+      return 'Deadline hari ini!';
+    }
+    if (daysRemaining === 1) {
+      return '1 hari lagi';
+    }
+    
+    const deadlineStr = deadline.toLocaleDateString('id-ID', {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
+    });
+    
+    return `${daysRemaining} hari lagi (${deadlineStr})`;
+  },
 };

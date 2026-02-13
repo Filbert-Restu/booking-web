@@ -289,32 +289,41 @@ function RouteComponent() {
   }
 
   return (
-    <div className='container mx-auto px-4 py-8 max-w-7xl'>
+    <div className='container mx-auto px-2 sm:px-4 py-2 sm:py-4 max-w-7xl'>
       {/* Header */}
-      <div className='mb-6'>
-        <h1 className='text-2xl font-bold text-gray-900 mb-2'>
+      <div className='mb-4 sm:mb-6'>
+        <h1 className='text-xl sm:text-2xl font-bold text-gray-900 mb-1 sm:mb-2'>
           Manajemen Unit
         </h1>
-        <p className='text-gray-600'>
-          Kelola data unit organisasi (Fakultas, Prodi, HIMA)
+        <p className='text-sm sm:text-base text-gray-600'>
+          Kelola unit organisasi dalam sistem
         </p>
       </div>
 
-      {/* Actions Bar */}
-      <div className='flex flex-row justify-between gap-4 mb-6'>
-        <div className='relative flex-1 max-w-md'>
-          <Search className='absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400' />
+      {error && (
+        <div className='bg-red-50 border border-red-200 rounded-lg p-4 mb-4'>
+          <p className='text-red-700'>{error}</p>
+        </div>
+      )}
+
+      {/* Search and Add Button */}
+      <div className='mb-4 sm:mb-6 flex flex-row justify-between gap-2'>
+        <div className='relative flex-1'>
+          <Search className='absolute left-2 sm:left-3 top-1/2 -translate-y-1/2 h-3 w-3 sm:h-4 sm:w-4 text-gray-400' />
           <Input
             type='text'
-            placeholder='Cari unit berdasarkan nama, kode, atau kategori...'
+            placeholder='Cari unit...'
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className='pl-10'
+            className='pl-7 sm:pl-10 text-sm h-9 sm:h-10'
           />
         </div>
-        <Button onClick={handleCreate} className='whitespace-nowrap'>
-          <Plus className='mr-2 h-4 w-4' />
-          Tambah Unit
+        <Button
+          onClick={handleCreate}
+          className='whitespace-nowrap h-10 sm:h-11 px-4 sm:px-6 text-sm sm:text-base'
+        >
+          <Plus className='h-5 w-5 mr-2' />
+          <span>Tambah Unit</span>
         </Button>
       </div>
 
@@ -324,15 +333,13 @@ function RouteComponent() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className='hidden sm:table-cell'>ID</TableHead>
-                <TableHead>Nama Unit</TableHead>
-                <TableHead className='hidden md:table-cell'>Kode</TableHead>
-                <TableHead className='hidden lg:table-cell'>Kategori</TableHead>
-                <TableHead className='hidden xl:table-cell'>
-                  Parent Unit
-                </TableHead>
-                <TableHead className='hidden lg:table-cell'>Dibuat</TableHead>
-                <TableHead className='text-right'>Aksi</TableHead>
+                <TableHead className='hidden sm:table-cell w-8 sm:w-12 text-center text-xs sm:text-sm'>ID</TableHead>
+                <TableHead className='text-xs sm:text-sm w-[25%]'>Nama Unit</TableHead>
+                <TableHead className='hidden md:table-cell text-xs sm:text-sm w-[15%]'>Kode</TableHead>
+                <TableHead className='hidden lg:table-cell text-xs sm:text-sm w-[15%]'>Kategori</TableHead>
+                <TableHead className='hidden xl:table-cell text-xs sm:text-sm w-[20%]'>Parent Unit</TableHead>
+                <TableHead className='hidden lg:table-cell text-xs sm:text-sm w-[12%]'>Dibuat</TableHead>
+                <TableHead className='text-center text-xs sm:text-sm w-20 sm:w-auto'>Aksi</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -350,13 +357,13 @@ function RouteComponent() {
               ) : (
                 filteredUnits.map((unit) => (
                   <TableRow key={unit.id}>
-                    <TableCell className='hidden sm:table-cell text-sm text-gray-900'>
+                    <TableCell className='hidden sm:table-cell text-center text-xs sm:text-sm py-2 sm:py-3'>
                       {unit.id}
                     </TableCell>
-                    <TableCell className='text-sm font-medium text-gray-900'>
+                    <TableCell className='text-xs sm:text-sm font-medium text-gray-900 py-2 sm:py-3'>
                       <div>{unit.name}</div>
-                      <div className='md:hidden text-xs text-gray-500 mt-1'>
-                        <code className='bg-gray-100 px-1 py-0.5 rounded'>
+                      <div className='md:hidden text-[10px] text-gray-500 mt-0.5'>
+                        <code className='bg-gray-100 px-1 py-0.5 rounded text-[10px]'>
                           {unit.code}
                         </code>
                       </div>
@@ -364,49 +371,49 @@ function RouteComponent() {
                         {getCategoryBadge(unit.category)}
                       </div>
                     </TableCell>
-                    <TableCell className='hidden md:table-cell text-sm text-gray-500'>
+                    <TableCell className='hidden md:table-cell text-xs sm:text-sm text-gray-500 py-2 sm:py-3'>
                       <code className='bg-gray-100 px-2 py-1 rounded text-xs'>
                         {unit.code}
                       </code>
                     </TableCell>
-                    <TableCell className='hidden lg:table-cell text-sm text-gray-500'>
+                    <TableCell className='hidden lg:table-cell text-xs sm:text-sm text-gray-500 py-2 sm:py-3'>
                       {getCategoryBadge(unit.category)}
                     </TableCell>
-                    <TableCell className='hidden xl:table-cell text-sm text-gray-500'>
+                    <TableCell className='hidden xl:table-cell text-xs sm:text-sm text-gray-500 py-2 sm:py-3'>
                       {unit.parent?.name || '-'}
                     </TableCell>
-                    <TableCell className='hidden lg:table-cell text-sm text-gray-500'>
+                    <TableCell className='hidden lg:table-cell text-xs sm:text-sm text-gray-500 py-2 sm:py-3'>
                       {new Date(unit.created_at).toLocaleDateString('id-ID', {
                         day: 'numeric',
                         month: 'short',
                         year: 'numeric',
                       })}
                     </TableCell>
-                    <TableCell>
-                      <div className='flex items-center justify-end gap-2'>
+                    <TableCell className='py-2 sm:py-3'>
+                      <div className='flex items-center justify-center gap-1 sm:gap-2'>
                         <Button
                           variant='ghost'
                           size='sm'
                           onClick={() => handleDetail(unit)}
-                          className='h-8 w-8 p-0'
+                          className='h-6 w-6 sm:h-8 sm:w-8 p-0'
                         >
-                          <Eye className='h-4 w-4' />
+                          <Eye className='h-3 w-3 sm:h-4 sm:w-4' />
                         </Button>
                         <Button
                           variant='ghost'
                           size='sm'
                           onClick={() => handleEdit(unit)}
-                          className='h-8 w-8 p-0'
+                          className='h-6 w-6 sm:h-8 sm:w-8 p-0'
                         >
-                          <Pencil className='h-4 w-4' />
+                          <Pencil className='h-3 w-3 sm:h-4 sm:w-4' />
                         </Button>
                         <Button
                           variant='ghost'
                           size='sm'
                           onClick={() => handleDelete(unit)}
-                          className='h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50'
+                          className='h-6 w-6 sm:h-8 sm:w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50'
                         >
-                          <Trash2 className='h-4 w-4' />
+                          <Trash2 className='h-3 w-3 sm:h-4 sm:w-4' />
                         </Button>
                       </div>
                     </TableCell>
@@ -531,7 +538,7 @@ function RouteComponent() {
                 Batal
               </Button>
               <Button type='submit' disabled={isSubmitting}>
-                {isSubmitting ? 'Menyimpan...' : 'Simpan'}
+                {isSubmitting ? 'Menyimpan...' : 'Tambah'}
               </Button>
             </DialogFooter>
           </form>

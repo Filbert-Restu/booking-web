@@ -13,7 +13,7 @@ function RouteComponent() {
       <div className='relative h-screen w-full flex items-center justify-center p-4 m-auto'>
         {/* Background image with low saturation */}
         <img
-          src='/hero.png'
+          src='/gambar fsm.jpg'
           alt='Hero background'
           className='absolute inset-0 w-full h-full object-cover filter saturate-50 brightness-95'
         />
@@ -22,10 +22,10 @@ function RouteComponent() {
 
         <div className='relative z-10 w-full max-w-4xl text-center px-4'>
           <h1 className='text-white text-4xl md:text-5xl font-semibold mb-3'>
-            Sederhana. Cepat. Terpercaya.
+            Sistem Peminjaman Tempat FSM
           </h1>
           <p className='text-white/90 text-lg md:text-xl'>
-            Pesan ruang dan fasilitas instan — minimalis, tanpa ribet.
+            Fasilitas Peminjaman Tempat untuk Organisasi Mahasiswa Fakultas Sains dan Matematika
           </p>
           <div className='mt-6 flex justify-center'>
             <a

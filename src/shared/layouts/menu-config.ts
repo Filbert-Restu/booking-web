@@ -241,14 +241,14 @@ export const menuConfigurations: Record<UserRole, MenuConfig> = {
             icon: Home,
           },
           {
-            title: 'Ajukan Peminjaman',
-            url: '/peminjam/pinjam',
-            icon: CalendarCheck,
-          },
-          {
             title: 'Reservasi Ruang',
             url: '/peminjam/reservasi',
             icon: ClipboardList,
+          },
+          {
+            title: 'Ajukan Peminjaman',
+            url: '/peminjam/pinjam',
+            icon: CalendarCheck,
           },
         ],
       },

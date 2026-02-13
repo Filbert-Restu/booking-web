@@ -404,16 +404,15 @@ function RouteComponent() {
   }
 
   return (
-    <div className='container mx-auto p-3 sm:p-6'>
+    <div className='container mx-auto px-2 sm:px-4 py-2 sm:py-4 max-w-7xl'>
+      {/* Header */}
       <div className='mb-4 sm:mb-6'>
-        <div>
-          <h1 className='text-2xl sm:text-3xl font-bold'>
-            Workflow Management
-          </h1>
-          <p className='text-gray-600 mt-1 text-sm sm:text-base'>
-            Kelola workflow approval untuk berbagai kategori unit
-          </p>
-        </div>
+        <h1 className='text-xl sm:text-2xl font-bold text-gray-900 mb-1 sm:mb-2'>
+          Manajemen Alur
+        </h1>
+        <p className='text-sm sm:text-base text-gray-600'>
+          Kelola workflow approval untuk berbagai kategori unit
+        </p>
       </div>
 
       {error && (
@@ -423,24 +422,23 @@ function RouteComponent() {
       )}
 
       {/* Search and Create Button */}
-      <div className='mb-4 flex flex-row items-center gap-2'>
+      <div className='mb-4 sm:mb-6 flex flex-row justify-between gap-2'>
         <div className='relative flex-1'>
-          <Search className='absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4' />
+          <Search className='absolute left-2 sm:left-3 top-1/2 -translate-y-1/2 h-3 w-3 sm:h-4 sm:w-4 text-gray-400' />
           <Input
             type='text'
             placeholder='Cari workflow...'
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className='pl-10 h-10'
+            className='pl-7 sm:pl-10 text-sm h-9 sm:h-10'
           />
         </div>
         <Button
           onClick={handleCreateWorkflow}
-          className='whitespace-nowrap h-10 flex-shrink-0'
+          className='whitespace-nowrap h-10 sm:h-11 px-4 sm:px-6 text-sm sm:text-base'
         >
-          <Plus className='mr-2 h-4 w-4' />
-          <span className='hidden sm:inline'>Buat Workflow Baru</span>
-          <span className='sm:hidden'>Buat</span>
+          <Plus className='h-5 w-5 mr-2' />
+          <span>Buat Workflow</span>
         </Button>
       </div>
 

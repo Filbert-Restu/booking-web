@@ -126,7 +126,7 @@ function RouteComponent() {
             Batal
           </Button>
           <Button type='submit' className='flex items-center'>
-            Simpan
+            Tambah
           </Button>
         </div>
       </form>

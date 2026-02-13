@@ -26,9 +26,9 @@ interface User {
 
 // Role to path mapping
 const rolePathMap: Record<string, string> = {
-  'Super Admin': '/admin/',
+  'Admin': '/admin/',
   'Wakil Dekan 1': '/wadek1/',
-  Kemahasiswaan: '/kemahasiswaan/',
+  'Kemahasiswaan': '/kemahasiswaan/',
   'Sumber Daya': '/sumber-daya/',
   'Dosen Pendamping Himpunan': '/dosen-pendamping/',
   'Ketua Departemen': '/ketua-departemen/',
@@ -43,7 +43,7 @@ const roleVariantMap: Record<
   string,
   'default' | 'secondary' | 'outline' | 'destructive' | 'ghost'
 > = {
-  'Super Admin': 'destructive',
+  'Admin': 'destructive',
   'Wakil Dekan 1': 'default',
   Kemahasiswaan: 'secondary',
   'Sumber Daya': 'secondary',
@@ -115,7 +115,7 @@ function RouteComponent() {
 
   // Group users by role
   const adminUsers = users.filter(
-    (u) => u.role === 'Super Admin' || u.role === 'Wakil Dekan 1',
+    (u) => u.role === 'Admin' || u.role === 'Wakil Dekan 1',
   );
   const staffUsers = users.filter(
     (u) => u.role === 'Kemahasiswaan' || u.role === 'Sumber Daya',

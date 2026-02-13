@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { useState, useMemo, useCallback } from 'react'; // Tambah useMemo
-import { Plus, FilePlus, AlertCircle, MessageCircle } from 'lucide-react';
+import { Plus, FilePlus, AlertCircle, MessageCircle, Clock, AlertTriangle } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/shared/components/ui/button/button';
 
@@ -114,12 +114,12 @@ function RouteComponent() {
     () => [
       {
         header: 'No',
-        className: 'text-center w-[4%]',
+        className: 'text-center w-[3%]',
         cell: (_, index) => index + 1,
       },
       {
         header: 'Tgl Pengajuan',
-        className: 'w-[8%]',
+        className: 'w-[7%]',
         cell: (doc) =>
           new Date(doc.created_at).toLocaleDateString('id-ID', {
             day: '2-digit',
@@ -128,8 +128,50 @@ function RouteComponent() {
           }),
       },
       {
+        header: 'Deadline',
+        className: 'w-[9%]',
+        cell: (doc) => {
+          const deadlineStatus = documentHelpers.getDeadlineStatus(doc);
+          const deadlineText = documentHelpers.getDeadlineText(doc);
+
+          // Jangan tampilkan deadline untuk dokumen yang sudah selesai
+          if (doc.status === 'APPROVED' || doc.status === 'REJECTED') {
+            return <span className='text-xs text-gray-400'>-</span>;
+          }
+
+          // Warna berdasarkan status
+          const getColorClasses = () => {
+            switch (deadlineStatus) {
+              case 'expired':
+                return 'bg-red-100 text-red-800 border-red-300';
+              case 'critical':
+                return 'bg-orange-100 text-orange-800 border-orange-300';
+              case 'warning':
+                return 'bg-yellow-100 text-yellow-800 border-yellow-300';
+              default:
+                return 'bg-green-100 text-green-800 border-green-300';
+            }
+          };
+
+          // Icon berdasarkan status
+          const getIcon = () => {
+            if (deadlineStatus === 'expired' || deadlineStatus === 'critical') {
+              return <AlertTriangle className='w-3 h-3 shrink-0' />;
+            }
+            return <Clock className='w-3 h-3 shrink-0' />;
+          };
+
+          return (
+            <div className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-md border text-xs font-medium ${getColorClasses()}`}>
+              {getIcon()}
+              <span className='whitespace-nowrap'>{deadlineText}</span>
+            </div>
+          );
+        },
+      },
+      {
         header: 'Nama Kegiatan',
-        className: 'w-[18%] font-medium',
+        className: 'w-[16%] font-medium',
         cell: (doc) => (
           <div className='line-clamp-2'>
             {documentHelpers.getEventName(doc)}
@@ -138,7 +180,7 @@ function RouteComponent() {
       },
       {
         header: 'Ketua Pelaksana',
-        className: 'w-[12%]',
+        className: 'w-[11%]',
         cell: (doc) => (
           <div className='line-clamp-1'>
             {documentHelpers.getKetuaPelaksanaNama(doc)}
@@ -147,22 +189,22 @@ function RouteComponent() {
       },
       {
         header: 'NIM',
-        className: 'w-[8%]',
+        className: 'w-[7%]',
         cell: (doc) => documentHelpers.getKetuaPelaksanaNim(doc),
       },
       {
         header: 'No HP',
-        className: 'w-[9%]',
+        className: 'w-[8%]',
         cell: (doc) => documentHelpers.getKetuaPelaksanaHp(doc),
       },
       {
         header: 'Tgl Acara',
-        className: 'w-[8%]',
+        className: 'w-[7%]',
         cell: (doc) => documentHelpers.getBookingDate(doc),
       },
       {
         header: 'Jam Pelaksanaan',
-        className: 'w-[10%]',
+        className: 'w-[9%]',
         cell: (doc) => {
           const content = doc.content || {};
           const startTime = content.start_time;
@@ -318,11 +360,25 @@ function RouteComponent() {
 
   return (
     <div className='space-y-4 md:space-y-6 p-2 md:p-0'>
+      {/* Info Box - Deadline Policy */}
+      <div className='bg-blue-50 border border-blue-200 rounded-lg p-4 flex items-start gap-3'>
+        <AlertCircle className='w-5 h-5 text-blue-600 shrink-0 mt-0.5' />
+        <div className='flex-1'>
+          <h3 className='text-sm font-semibold text-blue-900 mb-1'>
+            Perhatian: Batas Waktu Pengajuan
+          </h3>
+          <p className='text-sm text-blue-800'>
+            Setiap pengajuan peminjaman (baik melalui <strong>Reservasi</strong> atau <strong>Ajukan Peminjaman Langsung</strong>) memiliki <strong>batas waktu 14 hari (2 minggu)</strong> sejak tanggal pengajuan untuk diselesaikan hingga status <strong>APPROVED</strong> atau <strong>REJECTED</strong>. 
+            Pastikan Anda melengkapi dan mengajukan dokumen tepat waktu!
+          </p>
+        </div>
+      </div>
+
       <div className='flex justify-between items-center gap-3'>
         <h1 className='text-xl md:text-2xl font-bold text-gray-900'>
           Daftar Pengajuan
         </h1>
-        <Button onClick={handleAjukanPinjam} s ize='lg' className='gap-2'>
+        <Button onClick={handleAjukanPinjam} size='lg' className='gap-2'>
           <Plus className='w-4 h-4 md:w-5 md:h-5' />
           <span className='text-sm md:text-base'>Ajukan Peminjaman</span>
         </Button>

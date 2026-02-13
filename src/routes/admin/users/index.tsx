@@ -291,7 +291,7 @@ function RouteComponent() {
   }
 
   return (
-    <div className='container mx-auto px-2 sm:px-4 py-4 sm:py-8 max-w-7xl'>
+    <div className='container mx-auto px-2 sm:px-4 py-2 sm:py-4 max-w-7xl'>
       {/* Header */}
       <div className='mb-4 sm:mb-6'>
         <h1 className='text-xl sm:text-2xl font-bold text-gray-900 mb-1 sm:mb-2'>
@@ -567,7 +567,7 @@ function RouteComponent() {
                 Batal
               </Button>
               <Button type='submit' disabled={isSubmitting}>
-                {isSubmitting ? 'Menyimpan...' : 'Simpan'}
+                {isSubmitting ? 'Menyimpan...' : 'Tambah'}
               </Button>
             </DialogFooter>
           </form>
