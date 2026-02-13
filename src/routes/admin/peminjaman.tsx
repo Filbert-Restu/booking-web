@@ -21,6 +21,16 @@ import {
     TableRow,
 } from '@/shared/components/ui/table';
 import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from '@/shared/components/ui/alert-dialog';
+import {
     roomService,
     type RoomBooking,
 } from '@/services/room.service';
@@ -43,6 +53,8 @@ function RouteComponent() {
     const [statusFilter, setStatusFilter] = useState<string>(status);
     const [selectedBooking, setSelectedBooking] = useState<RoomBooking | null>(null);
     const [deleting, setDeleting] = useState<number | null>(null);
+    const [bookingToDelete, setBookingToDelete] = useState<RoomBooking | null>(null);
+    const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
     useEffect(() => {
         fetchBookings();
@@ -66,14 +78,15 @@ function RouteComponent() {
         }
     };
 
-    const handleDelete = async (bookingId: number) => {
-        if (!confirm('Apakah Anda yakin ingin menghapus peminjaman ini?')) return;
+    const confirmDelete = async () => {
+        if (!bookingToDelete) return;
 
         try {
-            setDeleting(bookingId);
-            await roomService.deleteBooking(bookingId);
-            setBookings((prev) => prev.filter((b) => b.id !== bookingId));
-            if (selectedBooking?.id === bookingId) setSelectedBooking(null);
+            setDeleting(bookingToDelete.id);
+            await roomService.deleteBooking(bookingToDelete.id);
+            setBookings((prev) => prev.filter((b) => b.id !== bookingToDelete.id));
+            if (selectedBooking?.id === bookingToDelete.id) setSelectedBooking(null);
+            setIsDeleteDialogOpen(false);
         } catch (err) {
             console.error('Failed to delete booking:', err);
             if (err instanceof AxiosError) {
@@ -83,7 +96,13 @@ function RouteComponent() {
             }
         } finally {
             setDeleting(null);
+            setBookingToDelete(null);
         }
+    };
+
+    const handleDeleteClick = (booking: RoomBooking) => {
+        setBookingToDelete(booking);
+        setIsDeleteDialogOpen(true);
     };
 
     const getStatusBadge = (status: string) => {
@@ -239,7 +258,7 @@ function RouteComponent() {
                                                 <Button
                                                     variant='ghost'
                                                     size='sm'
-                                                    onClick={() => handleDelete(item.id)}
+                                                    onClick={() => handleDeleteClick(item)}
                                                     disabled={deleting === item.id || item.status === 'APPROVED'}
                                                     title={item.status === 'APPROVED' ? 'Tidak bisa hapus yang sudah approved' : 'Hapus'}
                                                 >
@@ -290,7 +309,8 @@ function RouteComponent() {
                                     variant='destructive'
                                     size='sm'
                                     onClick={() => {
-                                        handleDelete(selectedBooking.id);
+                                        setSelectedBooking(null);
+                                        handleDeleteClick(selectedBooking);
                                     }}
                                     disabled={deleting === selectedBooking.id}
                                 >
@@ -305,6 +325,29 @@ function RouteComponent() {
                     </div>
                 </div>
             )}
+
+            {/* Delete Confirmation Dialog */}
+            <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Hapus Peminjaman</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            Apakah Anda yakin ingin menghapus data peminjaman ini?
+                            <br />
+                            Tindakan ini tidak dapat dibatalkan.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>Batal</AlertDialogCancel>
+                        <AlertDialogAction
+                            onClick={confirmDelete}
+                            className='bg-red-600 hover:bg-red-700'
+                        >
+                            {deleting ? 'Menghapus...' : 'Hapus'}
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </div>
     );
 }

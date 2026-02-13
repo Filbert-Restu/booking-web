@@ -34,7 +34,12 @@ export function WorkflowStepDeleteDialog({
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel>Batal</AlertDialogCancel>
-          <AlertDialogAction onClick={onConfirm}>Hapus</AlertDialogAction>
+          <AlertDialogAction
+            onClick={onConfirm}
+            className='bg-red-600 hover:bg-red-700'
+          >
+            Hapus
+          </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>

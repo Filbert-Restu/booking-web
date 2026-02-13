@@ -57,14 +57,6 @@ function RouteComponent() {
             setRooms(data);
             if (data.length > 0 && !selectedRoom) {
                 setSelectedRoom(data[0].code);
-                // Auto-fetch schedule for the first room
-                try {
-                    const schedule = await roomService.getRoomSchedule(data[0].id, firstDay, lastDay);
-                    setRoomBookings(schedule.bookings || []);
-                    setShowRoomDetails(true);
-                } catch (scheduleErr) {
-                    console.error('Failed to auto-fetch schedule:', scheduleErr);
-                }
             }
         } catch (err) {
             console.error('Failed to fetch rooms:', err);
@@ -110,7 +102,11 @@ function RouteComponent() {
             setLoading(true);
             const room = rooms.find(r => r.code === selectedRoom);
             if (room) {
-                const schedule = await roomService.getRoomSchedule(room.id, startDate, endDate);
+                // Jika input kosong, gunakan default bulan ini untuk fetch jadwal
+                const start = startDate || firstDay;
+                const end = endDate || lastDay;
+
+                const schedule = await roomService.getRoomSchedule(room.id, start, end);
                 setRoomBookings(schedule.bookings || []);
                 setShowRoomDetails(true);
             }
@@ -125,8 +121,8 @@ function RouteComponent() {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        if (!borrowerId.trim() || !borrowerName.trim() || !activity.trim()) {
-            alert('NIM/NIP Peminjam, Nama Peminjam, dan Aktivitas wajib diisi!');
+        if (!borrowerId.trim() || !borrowerName.trim() || !activity.trim() || !startDate || !startTime || !endTime) {
+            alert('Semua field wajib diisi!');
             return;
         }
 
@@ -187,6 +183,9 @@ function RouteComponent() {
             getUnitCode(item),
             getBorrowerName(item),
             item.booking_date,
+            `${item.start_time} - ${item.end_time}`,
+            item.start_time, // Added as per instruction
+            item.end_time,   // Added as per instruction
         ]
             .join(' ')
             .toLowerCase()
@@ -234,7 +233,10 @@ function RouteComponent() {
                                 <Input
                                     placeholder='Masukkan NIM/NIP'
                                     value={borrowerId}
-                                    onChange={(e) => setBorrowerId(e.target.value)}
+                                    onChange={(e) => {
+                                        const value = e.target.value.replace(/\D/g, '');
+                                        if (value.length <= 18) setBorrowerId(value);
+                                    }}
                                     required
                                 />
                             </div>

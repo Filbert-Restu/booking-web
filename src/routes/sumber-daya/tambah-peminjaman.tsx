@@ -195,6 +195,9 @@ function RouteComponent() {
 			getUnitCode(item),
 			getBorrowerName(item),
 			item.booking_date,
+			`${item.start_time} - ${item.end_time}`,
+			item.start_time,
+			item.end_time,
 		]
 			.join(' ')
 			.toLowerCase()
@@ -242,7 +245,10 @@ function RouteComponent() {
 								<Input
 									placeholder='Masukkan NIM/NIP'
 									value={borrowerId}
-									onChange={(e) => setBorrowerId(e.target.value)}
+									onChange={(e) => {
+										const value = e.target.value.replace(/\D/g, '');
+										if (value.length <= 18) setBorrowerId(value);
+									}}
 									required
 								/>
 							</div>

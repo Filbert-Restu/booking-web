@@ -71,6 +71,7 @@ function RouteComponent() {
     capacity: '10',
     description: '',
     facilities: '',
+    status: 'ACTIVE' as Room['status'],
   });
   const [roomImage, setRoomImage] = useState<File | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -116,6 +117,7 @@ function RouteComponent() {
       capacity: '10',
       description: '',
       facilities: '',
+      status: 'ACTIVE',
     });
     setRoomImage(null);
     setFormError('');
@@ -132,6 +134,7 @@ function RouteComponent() {
       facilities: Array.isArray(room.facilities)
         ? room.facilities.join(', ')
         : '',
+      status: room.status,
     });
     setRoomImage(null);
     setFormError('');
@@ -225,6 +228,7 @@ function RouteComponent() {
         capacity: parseInt(formData.capacity) || 10,
         description: formData.description,
         facilities: facilitiesArray,
+        status: formData.status,
       };
 
       await roomService.updateRoom(selectedRoom.id, roomData);
@@ -657,6 +661,29 @@ function RouteComponent() {
                   rows={3}
                   className='block w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500'
                 />
+              </div>
+              <div className='grid gap-2'>
+                <label htmlFor='edit-status' className='text-sm font-medium'>
+                  Status Ruangan <span className='text-red-500'>*</span>
+                </label>
+                <Select
+                  value={formData.status}
+                  onValueChange={(value) =>
+                    setFormData({
+                      ...formData,
+                      status: value as Room['status'],
+                    })
+                  }
+                >
+                  <SelectTrigger id='edit-status'>
+                    <SelectValue placeholder='Pilih Status' />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value='ACTIVE'>Aktif</SelectItem>
+                    <SelectItem value='MAINTENANCE'>Maintenance</SelectItem>
+                    <SelectItem value='INACTIVE'>Nonaktif</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
               <div className='grid gap-2'>
                 <label htmlFor='edit-image' className='text-sm font-medium'>
