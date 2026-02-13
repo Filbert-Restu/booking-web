@@ -48,13 +48,18 @@ export const menuConfigurations: Record<UserRole, MenuConfig> = {
         label: 'Ruang',
         items: [
           {
+            title: 'Daftar Peminjaman',
+            url: '/admin/peminjaman',
+            icon: ClipboardList,
+          },
+          {
             title: 'Peminjaman Ruang',
             url: '/admin/peminjaman-ruang',
             icon: Calendar,
           },
           {
             title: 'Manajemen Ruang',
-            url: '/admin/manajemen-ruang',
+            url: '/admin/rooms',
             icon: Building2,
           },
         ],

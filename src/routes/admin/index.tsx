@@ -1,34 +1,61 @@
-import { createFileRoute } from '@tanstack/react-router';
+import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { Clock, DoorOpen, Users } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import { StatCard } from '@/shared/components/common/StatCard';
 import BookingCalendar from '@/features/bookings/BookingCalendar';
+import {
+  dashboardService,
+  type DashboardStats,
+} from '@/services/dashboard.service';
 
 export const Route = createFileRoute('/admin/')({
   component: RouteComponent,
 });
 
 function RouteComponent() {
-  const stats = [
+  const navigate = useNavigate();
+  const [stats, setStats] = useState<DashboardStats | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const data = await dashboardService.getStats();
+        setStats(data);
+      } catch (error) {
+        console.error('Failed to fetch dashboard stats:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchStats();
+  }, []);
+
+  const statCards = [
     {
       title: 'Pending Approval',
-      value: '12',
+      value: isLoading ? '...' : stats?.pending_approvals?.toString() || '0',
       icon: Clock,
       textColor: 'text-yellow-600',
       bgLight: 'bg-yellow-50',
+      onClick: () => navigate({ to: '/admin/peminjaman', search: { status: 'PENDING' } as any }),
     },
     {
       title: 'Total Ruangan Aktif',
-      value: '24',
+      value: isLoading ? '...' : stats?.active_rooms?.toString() || '0',
       icon: DoorOpen,
       textColor: 'text-blue-600',
       bgLight: 'bg-blue-50',
+      onClick: () => navigate({ to: '/admin/rooms' }),
     },
     {
       title: 'Total User',
-      value: '156',
+      value: isLoading ? '...' : stats?.total_users?.toString() || '0',
       icon: Users,
       textColor: 'text-green-600',
       bgLight: 'bg-green-50',
+      onClick: () => navigate({ to: '/admin/users' }),
     },
   ];
 
@@ -41,8 +68,8 @@ function RouteComponent() {
         </p>
       </div>
 
-      <div className='grid grid-cols-3 md:grid-cols-3 gap-4'>
-        {stats.map((stat, index) => (
+      <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8'>
+        {statCards.map((stat, index) => (
           <StatCard
             key={index}
             title={stat.title}
@@ -50,6 +77,7 @@ function RouteComponent() {
             icon={stat.icon}
             textColor={stat.textColor}
             bgLight={stat.bgLight}
+            onClick={stat.onClick}
           />
         ))}
       </div>

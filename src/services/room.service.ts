@@ -12,6 +12,7 @@ export interface Room {
   building?: string;
   floor?: string;
   images?: string[];
+  image_url?: string;
   created_at: string;
   updated_at: string;
   is_available?: boolean;
@@ -54,7 +55,25 @@ export interface RoomBooking {
     id: number;
     name: string;
     email: string;
+    unit?: {
+      id: number;
+      name: string;
+      code: string;
+    };
   };
+  room?: {
+    id: number;
+    name: string;
+    code: string;
+    capacity?: number;
+  };
+  booked_by_user?: {
+    id: number;
+    name: string;
+    email: string;
+    unit_code?: string;
+    unit_name?: string;
+  } | null;
 }
 
 export interface AvailabilityResponse {
@@ -225,5 +244,36 @@ export const roomService = {
     await api.delete(`/rooms/${roomId}/images`, {
       data: { path },
     });
+  },
+
+  /**
+   * Get all room bookings with optional filters
+   */
+  async getBookings(filters?: {
+    room_id?: number;
+    status?: string;
+    date_from?: string;
+    date_to?: string;
+    my_bookings?: boolean;
+  }): Promise<RoomBooking[]> {
+    const params = new URLSearchParams();
+    if (filters) {
+      Object.entries(filters).forEach(([key, value]) => {
+        if (value !== undefined && value !== null) {
+          params.append(key, String(value));
+        }
+      });
+    }
+    const response = await api.get<{ success: boolean; data: RoomBooking[] }>(
+      `/room-bookings${params.toString() ? `?${params.toString()}` : ''}`,
+    );
+    return response.data.data;
+  },
+
+  /**
+   * Delete a room booking (soft delete)
+   */
+  async deleteBooking(id: number): Promise<void> {
+    await api.delete(`/room-bookings/${id}`);
   },
 };

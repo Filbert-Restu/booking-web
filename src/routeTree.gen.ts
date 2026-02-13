@@ -57,15 +57,15 @@ import { Route as KemahasiswaanRiwayatPersetujuanRouteImport } from './routes/ke
 import { Route as DosenPendampingSignDocumentRouteImport } from './routes/dosen-pendamping/sign-document'
 import { Route as DosenPendampingRiwayatPersetujuanRouteImport } from './routes/dosen-pendamping/riwayat-persetujuan'
 import { Route as DosenPendampingPreviewDocumentRouteImport } from './routes/dosen-pendamping/preview-document'
+import { Route as AdminPeminjamanRouteImport } from './routes/admin/peminjaman'
 import { Route as PeminjamPinjamIndexRouteImport } from './routes/peminjam/pinjam/index'
 import { Route as KemahasiswaanTemplateDokumenIndexRouteImport } from './routes/kemahasiswaan/template-dokumen.index'
 import { Route as AdminWorkflowsIndexRouteImport } from './routes/admin/workflows/index'
 import { Route as AdminUsersIndexRouteImport } from './routes/admin/users/index'
 import { Route as AdminUnitsIndexRouteImport } from './routes/admin/units/index'
 import { Route as AdminRoomsIndexRouteImport } from './routes/admin/rooms/index'
-import { Route as AdminRoomBookingsIndexRouteImport } from './routes/admin/room-bookings/index'
 import { Route as AdminRolesIndexRouteImport } from './routes/admin/roles/index'
-import { Route as AdminManajemenRuangIndexRouteImport } from './routes/admin/manajemen-ruang/index'
+import { Route as AdminPeminjamanRuangIndexRouteImport } from './routes/admin/peminjaman-ruang/index'
 import { Route as PeminjamPinjamTandaTanganRouteImport } from './routes/peminjam/pinjam/tanda-tangan'
 import { Route as PeminjamPinjamProposalRouteImport } from './routes/peminjam/pinjam/proposal'
 import { Route as PeminjamPinjamEditDokumenRouteImport } from './routes/peminjam/pinjam/edit-dokumen'
@@ -73,9 +73,6 @@ import { Route as PeminjamPinjamDetailTempatRouteImport } from './routes/peminja
 import { Route as AdminUsersEditRouteImport } from './routes/admin/users/edit'
 import { Route as AdminUsersDetailRouteImport } from './routes/admin/users/detail'
 import { Route as AdminUsersAddRouteImport } from './routes/admin/users/add'
-import { Route as AdminManajemenRuangEditRouteImport } from './routes/admin/manajemen-ruang/edit'
-import { Route as AdminManajemenRuangDetailRouteImport } from './routes/admin/manajemen-ruang/detail'
-import { Route as AdminManajemenRuangAddRouteImport } from './routes/admin/manajemen-ruang/add'
 import { Route as PeminjamPinjamAjukanIndexRouteImport } from './routes/peminjam/pinjam/ajukan/index'
 import { Route as KemahasiswaanTemplateDokumenTemplateIdEditRouteImport } from './routes/kemahasiswaan/template-dokumen.$templateId.edit'
 
@@ -333,6 +330,11 @@ const DosenPendampingPreviewDocumentRoute =
     path: '/preview-document',
     getParentRoute: () => DosenPendampingRouteRoute,
   } as any)
+const AdminPeminjamanRoute = AdminPeminjamanRouteImport.update({
+  id: '/peminjaman',
+  path: '/peminjaman',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
 const PeminjamPinjamIndexRoute = PeminjamPinjamIndexRouteImport.update({
   id: '/pinjam/',
   path: '/pinjam/',
@@ -364,20 +366,15 @@ const AdminRoomsIndexRoute = AdminRoomsIndexRouteImport.update({
   path: '/rooms/',
   getParentRoute: () => AdminRouteRoute,
 } as any)
-const AdminRoomBookingsIndexRoute = AdminRoomBookingsIndexRouteImport.update({
-  id: '/room-bookings/',
-  path: '/room-bookings/',
-  getParentRoute: () => AdminRouteRoute,
-} as any)
 const AdminRolesIndexRoute = AdminRolesIndexRouteImport.update({
   id: '/roles/',
   path: '/roles/',
   getParentRoute: () => AdminRouteRoute,
 } as any)
-const AdminManajemenRuangIndexRoute =
-  AdminManajemenRuangIndexRouteImport.update({
-    id: '/manajemen-ruang/',
-    path: '/manajemen-ruang/',
+const AdminPeminjamanRuangIndexRoute =
+  AdminPeminjamanRuangIndexRouteImport.update({
+    id: '/peminjaman-ruang/',
+    path: '/peminjaman-ruang/',
     getParentRoute: () => AdminRouteRoute,
   } as any)
 const PeminjamPinjamTandaTanganRoute =
@@ -418,22 +415,6 @@ const AdminUsersAddRoute = AdminUsersAddRouteImport.update({
   path: '/users/add',
   getParentRoute: () => AdminRouteRoute,
 } as any)
-const AdminManajemenRuangEditRoute = AdminManajemenRuangEditRouteImport.update({
-  id: '/manajemen-ruang/edit',
-  path: '/manajemen-ruang/edit',
-  getParentRoute: () => AdminRouteRoute,
-} as any)
-const AdminManajemenRuangDetailRoute =
-  AdminManajemenRuangDetailRouteImport.update({
-    id: '/manajemen-ruang/detail',
-    path: '/manajemen-ruang/detail',
-    getParentRoute: () => AdminRouteRoute,
-  } as any)
-const AdminManajemenRuangAddRoute = AdminManajemenRuangAddRouteImport.update({
-  id: '/manajemen-ruang/add',
-  path: '/manajemen-ruang/add',
-  getParentRoute: () => AdminRouteRoute,
-} as any)
 const PeminjamPinjamAjukanIndexRoute =
   PeminjamPinjamAjukanIndexRouteImport.update({
     id: '/pinjam/ajukan/',
@@ -463,6 +444,7 @@ export interface FileRoutesByFullPath {
   '/preview-document': typeof PreviewDocumentRoute
   '/sign-document': typeof SignDocumentRoute
   '/tanda-tangan': typeof TandaTanganRoute
+  '/admin/peminjaman': typeof AdminPeminjamanRoute
   '/dosen-pendamping/preview-document': typeof DosenPendampingPreviewDocumentRoute
   '/dosen-pendamping/riwayat-persetujuan': typeof DosenPendampingRiwayatPersetujuanRoute
   '/dosen-pendamping/sign-document': typeof DosenPendampingSignDocumentRoute
@@ -496,9 +478,6 @@ export interface FileRoutesByFullPath {
   '/senat/': typeof SenatIndexRoute
   '/sumber-daya/': typeof SumberDayaIndexRoute
   '/wadek1/': typeof Wadek1IndexRoute
-  '/admin/manajemen-ruang/add': typeof AdminManajemenRuangAddRoute
-  '/admin/manajemen-ruang/detail': typeof AdminManajemenRuangDetailRoute
-  '/admin/manajemen-ruang/edit': typeof AdminManajemenRuangEditRoute
   '/admin/users/add': typeof AdminUsersAddRoute
   '/admin/users/detail': typeof AdminUsersDetailRoute
   '/admin/users/edit': typeof AdminUsersEditRoute
@@ -506,9 +485,8 @@ export interface FileRoutesByFullPath {
   '/peminjam/pinjam/edit-dokumen': typeof PeminjamPinjamEditDokumenRoute
   '/peminjam/pinjam/proposal': typeof PeminjamPinjamProposalRoute
   '/peminjam/pinjam/tanda-tangan': typeof PeminjamPinjamTandaTanganRoute
-  '/admin/manajemen-ruang': typeof AdminManajemenRuangIndexRoute
+  '/admin/peminjaman-ruang': typeof AdminPeminjamanRuangIndexRoute
   '/admin/roles': typeof AdminRolesIndexRoute
-  '/admin/room-bookings': typeof AdminRoomBookingsIndexRoute
   '/admin/rooms': typeof AdminRoomsIndexRoute
   '/admin/units': typeof AdminUnitsIndexRoute
   '/admin/users': typeof AdminUsersIndexRoute
@@ -525,6 +503,7 @@ export interface FileRoutesByTo {
   '/preview-document': typeof PreviewDocumentRoute
   '/sign-document': typeof SignDocumentRoute
   '/tanda-tangan': typeof TandaTanganRoute
+  '/admin/peminjaman': typeof AdminPeminjamanRoute
   '/dosen-pendamping/preview-document': typeof DosenPendampingPreviewDocumentRoute
   '/dosen-pendamping/riwayat-persetujuan': typeof DosenPendampingRiwayatPersetujuanRoute
   '/dosen-pendamping/sign-document': typeof DosenPendampingSignDocumentRoute
@@ -558,9 +537,6 @@ export interface FileRoutesByTo {
   '/senat': typeof SenatIndexRoute
   '/sumber-daya': typeof SumberDayaIndexRoute
   '/wadek1': typeof Wadek1IndexRoute
-  '/admin/manajemen-ruang/add': typeof AdminManajemenRuangAddRoute
-  '/admin/manajemen-ruang/detail': typeof AdminManajemenRuangDetailRoute
-  '/admin/manajemen-ruang/edit': typeof AdminManajemenRuangEditRoute
   '/admin/users/add': typeof AdminUsersAddRoute
   '/admin/users/detail': typeof AdminUsersDetailRoute
   '/admin/users/edit': typeof AdminUsersEditRoute
@@ -568,9 +544,8 @@ export interface FileRoutesByTo {
   '/peminjam/pinjam/edit-dokumen': typeof PeminjamPinjamEditDokumenRoute
   '/peminjam/pinjam/proposal': typeof PeminjamPinjamProposalRoute
   '/peminjam/pinjam/tanda-tangan': typeof PeminjamPinjamTandaTanganRoute
-  '/admin/manajemen-ruang': typeof AdminManajemenRuangIndexRoute
+  '/admin/peminjaman-ruang': typeof AdminPeminjamanRuangIndexRoute
   '/admin/roles': typeof AdminRolesIndexRoute
-  '/admin/room-bookings': typeof AdminRoomBookingsIndexRoute
   '/admin/rooms': typeof AdminRoomsIndexRoute
   '/admin/units': typeof AdminUnitsIndexRoute
   '/admin/users': typeof AdminUsersIndexRoute
@@ -597,6 +572,7 @@ export interface FileRoutesById {
   '/preview-document': typeof PreviewDocumentRoute
   '/sign-document': typeof SignDocumentRoute
   '/tanda-tangan': typeof TandaTanganRoute
+  '/admin/peminjaman': typeof AdminPeminjamanRoute
   '/dosen-pendamping/preview-document': typeof DosenPendampingPreviewDocumentRoute
   '/dosen-pendamping/riwayat-persetujuan': typeof DosenPendampingRiwayatPersetujuanRoute
   '/dosen-pendamping/sign-document': typeof DosenPendampingSignDocumentRoute
@@ -630,9 +606,6 @@ export interface FileRoutesById {
   '/senat/': typeof SenatIndexRoute
   '/sumber-daya/': typeof SumberDayaIndexRoute
   '/wadek1/': typeof Wadek1IndexRoute
-  '/admin/manajemen-ruang/add': typeof AdminManajemenRuangAddRoute
-  '/admin/manajemen-ruang/detail': typeof AdminManajemenRuangDetailRoute
-  '/admin/manajemen-ruang/edit': typeof AdminManajemenRuangEditRoute
   '/admin/users/add': typeof AdminUsersAddRoute
   '/admin/users/detail': typeof AdminUsersDetailRoute
   '/admin/users/edit': typeof AdminUsersEditRoute
@@ -640,9 +613,8 @@ export interface FileRoutesById {
   '/peminjam/pinjam/edit-dokumen': typeof PeminjamPinjamEditDokumenRoute
   '/peminjam/pinjam/proposal': typeof PeminjamPinjamProposalRoute
   '/peminjam/pinjam/tanda-tangan': typeof PeminjamPinjamTandaTanganRoute
-  '/admin/manajemen-ruang/': typeof AdminManajemenRuangIndexRoute
+  '/admin/peminjaman-ruang/': typeof AdminPeminjamanRuangIndexRoute
   '/admin/roles/': typeof AdminRolesIndexRoute
-  '/admin/room-bookings/': typeof AdminRoomBookingsIndexRoute
   '/admin/rooms/': typeof AdminRoomsIndexRoute
   '/admin/units/': typeof AdminUnitsIndexRoute
   '/admin/users/': typeof AdminUsersIndexRoute
@@ -670,6 +642,7 @@ export interface FileRouteTypes {
     | '/preview-document'
     | '/sign-document'
     | '/tanda-tangan'
+    | '/admin/peminjaman'
     | '/dosen-pendamping/preview-document'
     | '/dosen-pendamping/riwayat-persetujuan'
     | '/dosen-pendamping/sign-document'
@@ -703,9 +676,6 @@ export interface FileRouteTypes {
     | '/senat/'
     | '/sumber-daya/'
     | '/wadek1/'
-    | '/admin/manajemen-ruang/add'
-    | '/admin/manajemen-ruang/detail'
-    | '/admin/manajemen-ruang/edit'
     | '/admin/users/add'
     | '/admin/users/detail'
     | '/admin/users/edit'
@@ -713,9 +683,8 @@ export interface FileRouteTypes {
     | '/peminjam/pinjam/edit-dokumen'
     | '/peminjam/pinjam/proposal'
     | '/peminjam/pinjam/tanda-tangan'
-    | '/admin/manajemen-ruang'
+    | '/admin/peminjaman-ruang'
     | '/admin/roles'
-    | '/admin/room-bookings'
     | '/admin/rooms'
     | '/admin/units'
     | '/admin/users'
@@ -732,6 +701,7 @@ export interface FileRouteTypes {
     | '/preview-document'
     | '/sign-document'
     | '/tanda-tangan'
+    | '/admin/peminjaman'
     | '/dosen-pendamping/preview-document'
     | '/dosen-pendamping/riwayat-persetujuan'
     | '/dosen-pendamping/sign-document'
@@ -765,9 +735,6 @@ export interface FileRouteTypes {
     | '/senat'
     | '/sumber-daya'
     | '/wadek1'
-    | '/admin/manajemen-ruang/add'
-    | '/admin/manajemen-ruang/detail'
-    | '/admin/manajemen-ruang/edit'
     | '/admin/users/add'
     | '/admin/users/detail'
     | '/admin/users/edit'
@@ -775,9 +742,8 @@ export interface FileRouteTypes {
     | '/peminjam/pinjam/edit-dokumen'
     | '/peminjam/pinjam/proposal'
     | '/peminjam/pinjam/tanda-tangan'
-    | '/admin/manajemen-ruang'
+    | '/admin/peminjaman-ruang'
     | '/admin/roles'
-    | '/admin/room-bookings'
     | '/admin/rooms'
     | '/admin/units'
     | '/admin/users'
@@ -803,6 +769,7 @@ export interface FileRouteTypes {
     | '/preview-document'
     | '/sign-document'
     | '/tanda-tangan'
+    | '/admin/peminjaman'
     | '/dosen-pendamping/preview-document'
     | '/dosen-pendamping/riwayat-persetujuan'
     | '/dosen-pendamping/sign-document'
@@ -836,9 +803,6 @@ export interface FileRouteTypes {
     | '/senat/'
     | '/sumber-daya/'
     | '/wadek1/'
-    | '/admin/manajemen-ruang/add'
-    | '/admin/manajemen-ruang/detail'
-    | '/admin/manajemen-ruang/edit'
     | '/admin/users/add'
     | '/admin/users/detail'
     | '/admin/users/edit'
@@ -846,9 +810,8 @@ export interface FileRouteTypes {
     | '/peminjam/pinjam/edit-dokumen'
     | '/peminjam/pinjam/proposal'
     | '/peminjam/pinjam/tanda-tangan'
-    | '/admin/manajemen-ruang/'
+    | '/admin/peminjaman-ruang/'
     | '/admin/roles/'
-    | '/admin/room-bookings/'
     | '/admin/rooms/'
     | '/admin/units/'
     | '/admin/users/'
@@ -1215,6 +1178,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DosenPendampingPreviewDocumentRouteImport
       parentRoute: typeof DosenPendampingRouteRoute
     }
+    '/admin/peminjaman': {
+      id: '/admin/peminjaman'
+      path: '/peminjaman'
+      fullPath: '/admin/peminjaman'
+      preLoaderRoute: typeof AdminPeminjamanRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
     '/peminjam/pinjam/': {
       id: '/peminjam/pinjam/'
       path: '/pinjam'
@@ -1257,13 +1227,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminRoomsIndexRouteImport
       parentRoute: typeof AdminRouteRoute
     }
-    '/admin/room-bookings/': {
-      id: '/admin/room-bookings/'
-      path: '/room-bookings'
-      fullPath: '/admin/room-bookings'
-      preLoaderRoute: typeof AdminRoomBookingsIndexRouteImport
-      parentRoute: typeof AdminRouteRoute
-    }
     '/admin/roles/': {
       id: '/admin/roles/'
       path: '/roles'
@@ -1271,11 +1234,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminRolesIndexRouteImport
       parentRoute: typeof AdminRouteRoute
     }
-    '/admin/manajemen-ruang/': {
-      id: '/admin/manajemen-ruang/'
-      path: '/manajemen-ruang'
-      fullPath: '/admin/manajemen-ruang'
-      preLoaderRoute: typeof AdminManajemenRuangIndexRouteImport
+    '/admin/peminjaman-ruang/': {
+      id: '/admin/peminjaman-ruang/'
+      path: '/peminjaman-ruang'
+      fullPath: '/admin/peminjaman-ruang'
+      preLoaderRoute: typeof AdminPeminjamanRuangIndexRouteImport
       parentRoute: typeof AdminRouteRoute
     }
     '/peminjam/pinjam/tanda-tangan': {
@@ -1327,27 +1290,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminUsersAddRouteImport
       parentRoute: typeof AdminRouteRoute
     }
-    '/admin/manajemen-ruang/edit': {
-      id: '/admin/manajemen-ruang/edit'
-      path: '/manajemen-ruang/edit'
-      fullPath: '/admin/manajemen-ruang/edit'
-      preLoaderRoute: typeof AdminManajemenRuangEditRouteImport
-      parentRoute: typeof AdminRouteRoute
-    }
-    '/admin/manajemen-ruang/detail': {
-      id: '/admin/manajemen-ruang/detail'
-      path: '/manajemen-ruang/detail'
-      fullPath: '/admin/manajemen-ruang/detail'
-      preLoaderRoute: typeof AdminManajemenRuangDetailRouteImport
-      parentRoute: typeof AdminRouteRoute
-    }
-    '/admin/manajemen-ruang/add': {
-      id: '/admin/manajemen-ruang/add'
-      path: '/manajemen-ruang/add'
-      fullPath: '/admin/manajemen-ruang/add'
-      preLoaderRoute: typeof AdminManajemenRuangAddRouteImport
-      parentRoute: typeof AdminRouteRoute
-    }
     '/peminjam/pinjam/ajukan/': {
       id: '/peminjam/pinjam/ajukan/'
       path: '/pinjam/ajukan'
@@ -1366,16 +1308,13 @@ declare module '@tanstack/react-router' {
 }
 
 interface AdminRouteRouteChildren {
+  AdminPeminjamanRoute: typeof AdminPeminjamanRoute
   AdminIndexRoute: typeof AdminIndexRoute
-  AdminManajemenRuangAddRoute: typeof AdminManajemenRuangAddRoute
-  AdminManajemenRuangDetailRoute: typeof AdminManajemenRuangDetailRoute
-  AdminManajemenRuangEditRoute: typeof AdminManajemenRuangEditRoute
   AdminUsersAddRoute: typeof AdminUsersAddRoute
   AdminUsersDetailRoute: typeof AdminUsersDetailRoute
   AdminUsersEditRoute: typeof AdminUsersEditRoute
-  AdminManajemenRuangIndexRoute: typeof AdminManajemenRuangIndexRoute
+  AdminPeminjamanRuangIndexRoute: typeof AdminPeminjamanRuangIndexRoute
   AdminRolesIndexRoute: typeof AdminRolesIndexRoute
-  AdminRoomBookingsIndexRoute: typeof AdminRoomBookingsIndexRoute
   AdminRoomsIndexRoute: typeof AdminRoomsIndexRoute
   AdminUnitsIndexRoute: typeof AdminUnitsIndexRoute
   AdminUsersIndexRoute: typeof AdminUsersIndexRoute
@@ -1383,16 +1322,13 @@ interface AdminRouteRouteChildren {
 }
 
 const AdminRouteRouteChildren: AdminRouteRouteChildren = {
+  AdminPeminjamanRoute: AdminPeminjamanRoute,
   AdminIndexRoute: AdminIndexRoute,
-  AdminManajemenRuangAddRoute: AdminManajemenRuangAddRoute,
-  AdminManajemenRuangDetailRoute: AdminManajemenRuangDetailRoute,
-  AdminManajemenRuangEditRoute: AdminManajemenRuangEditRoute,
   AdminUsersAddRoute: AdminUsersAddRoute,
   AdminUsersDetailRoute: AdminUsersDetailRoute,
   AdminUsersEditRoute: AdminUsersEditRoute,
-  AdminManajemenRuangIndexRoute: AdminManajemenRuangIndexRoute,
+  AdminPeminjamanRuangIndexRoute: AdminPeminjamanRuangIndexRoute,
   AdminRolesIndexRoute: AdminRolesIndexRoute,
-  AdminRoomBookingsIndexRoute: AdminRoomBookingsIndexRoute,
   AdminRoomsIndexRoute: AdminRoomsIndexRoute,
   AdminUnitsIndexRoute: AdminUnitsIndexRoute,
   AdminUsersIndexRoute: AdminUsersIndexRoute,

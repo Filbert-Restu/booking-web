@@ -20,40 +20,32 @@ import {
 	TableHeader,
 	TableRow,
 } from '@/shared/components/ui/table';
-import { roomService, type Room } from '@/services/room.service';
+import { roomService, type Room, type RoomBooking } from '@/services/room.service';
 import { documentService } from '@/services/document.service';
 
 export const Route = createFileRoute('/sumber-daya/tambah-peminjaman')({
 	component: RouteComponent,
 });
 
-// Using RoomBooking from roomService but with additional fields
-interface LocalRoomBooking {
-	id: number;
-	borrower_id?: string;
-	borrower_name?: string;
-	booked_by?: number;
-	booking_date: string;
-	start_time: string;
-	end_time: string;
-	status: 'PENDING' | 'APPROVED' | 'REJECTED' | 'CANCELLED' | 'COMPLETED';
-	purpose?: string;
-}
 
 function RouteComponent() {
 	const [rooms, setRooms] = useState<Room[]>([]);
 	const [selectedRoom, setSelectedRoom] = useState<string>('');
-	const [roomBookings, setRoomBookings] = useState<LocalRoomBooking[]>([]);
+	const [roomBookings, setRoomBookings] = useState<RoomBooking[]>([]);
 	const [search, setSearch] = useState('');
 	const [showRoomDetails, setShowRoomDetails] = useState(false);
 	const [loading, setLoading] = useState(false);
 
 	const [borrowerId, setBorrowerId] = useState('');
 	const [borrowerName, setBorrowerName] = useState('');
-	const [startTime, setStartTime] = useState('09:30');
-	const [endTime, setEndTime] = useState('11:30');
-	const [startDate, setStartDate] = useState('2026-01-31');
-	const [endDate, setEndDate] = useState('2026-01-31');
+	const [startTime, setStartTime] = useState('');
+	const [endTime, setEndTime] = useState('');
+	// Default: awal bulan ini sampai akhir bulan ini
+	const now = new Date();
+	const firstDay = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
+	const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().split('T')[0];
+	const [startDate, setStartDate] = useState('');
+	const [endDate, setEndDate] = useState('');
 	const [activity, setActivity] = useState('');
 
 	useEffect(() => {
@@ -66,13 +58,21 @@ function RouteComponent() {
 			setRooms(data);
 			if (data.length > 0 && !selectedRoom) {
 				setSelectedRoom(data[0].code);
+				// Auto-fetch schedule for the first room
+				try {
+					const schedule = await roomService.getRoomSchedule(data[0].id, firstDay, lastDay);
+					setRoomBookings(schedule.bookings || []);
+					setShowRoomDetails(true);
+				} catch (scheduleErr) {
+					console.error('Failed to auto-fetch schedule:', scheduleErr);
+				}
 			}
 		} catch (err) {
 			console.error('Failed to fetch rooms:', err);
 		}
 	};
 
-	const getStatusBadge = (status: 'PENDING' | 'APPROVED' | 'REJECTED' | 'CANCELLED' | 'COMPLETED') => {
+	const getStatusBadge = (status: RoomBooking['status']) => {
 		const statusConfig = {
 			PENDING: { bg: 'bg-yellow-100', text: 'text-yellow-800', label: 'Pending' },
 			APPROVED: { bg: 'bg-green-100', text: 'text-green-800', label: 'Approved' },
@@ -86,6 +86,19 @@ function RouteComponent() {
 				{config.label}
 			</span>
 		);
+	};
+
+	// Helper: extract borrower name from booking
+	const getBorrowerName = (booking: RoomBooking): string => {
+		if (booking.booked_by_user?.name) return booking.booked_by_user.name;
+		if (booking.bookedBy?.name) return booking.bookedBy.name;
+		return '-';
+	};
+
+	// Helper: extract unit code from booking
+	const getUnitCode = (booking: RoomBooking): string => {
+		if (booking.booked_by_user?.unit_code) return booking.booked_by_user.unit_code;
+		return '-';
 	};
 
 	const handleSearch = async () => {
@@ -179,8 +192,8 @@ function RouteComponent() {
 
 	const filteredBookings = roomBookings.filter((item) =>
 		[
-			item.borrower_id,
-			item.borrower_name,
+			getUnitCode(item),
+			getBorrowerName(item),
 			item.booking_date,
 		]
 			.join(' ')
@@ -346,7 +359,7 @@ function RouteComponent() {
 									<TableHeader>
 										<TableRow>
 											<TableHead className='w-12 text-center'>No</TableHead>
-											<TableHead>NIM/NIP Peminjam</TableHead>
+											<TableHead>Kode Unit</TableHead>
 											<TableHead>Nama Peminjam</TableHead>
 											<TableHead>Tanggal</TableHead>
 											<TableHead>Waktu</TableHead>
@@ -369,9 +382,9 @@ function RouteComponent() {
 													<TableCell className='text-center'>
 														{index + 1}
 													</TableCell>
-													<TableCell>{item.borrower_id}</TableCell>
-													<TableCell>{item.borrower_name}</TableCell>
-													<TableCell>{item.booking_date}</TableCell>
+													<TableCell>{getUnitCode(item)}</TableCell>
+													<TableCell>{getBorrowerName(item)}</TableCell>
+													<TableCell>{new Date(item.booking_date).toLocaleDateString('id-ID')}</TableCell>
 													<TableCell>{item.start_time} - {item.end_time}</TableCell>
 													<TableCell>
 														{getStatusBadge(item.status)}

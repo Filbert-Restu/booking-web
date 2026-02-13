@@ -1,12 +1,24 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { useEffect, useState } from 'react';
+import type { ChangeEvent, FormEvent } from 'react';
 import { AxiosError } from 'axios';
-import api from '@/lib/axios';
 import { Button } from '@/shared/components/ui/button/button';
 import { Input } from '@/shared/components/ui/input';
-import { Label } from '@/shared/components/ui/label';
-import { Textarea } from '@/shared/components/ui/textarea';
-import { Plus, Search, Eye, Edit, Trash2, Calendar } from 'lucide-react';
+import {
+  Plus,
+  Pencil,
+  Search,
+  Trash2,
+  Eye,
+} from 'lucide-react';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/shared/components/ui/table';
 import {
   Dialog,
   DialogContent,
@@ -21,9 +33,10 @@ import {
   AlertDialogCancel,
   AlertDialogContent,
   AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
   AlertDialogTitle,
 } from '@/shared/components/ui/alert-dialog';
-import { Card, CardContent } from '@/shared/components/ui/card';
 import {
   Select,
   SelectContent,
@@ -31,775 +44,753 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/shared/components/ui/select';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/shared/components/ui/table';
+import { roomService, type Room } from '@/services/room.service';
 
 export const Route = createFileRoute('/admin/rooms/')({
   component: RouteComponent,
 });
 
-interface Room {
-  id: number;
-  name: string;
-  code: string;
-  capacity?: number;
-  location?: string;
-  building?: string;
-  floor?: string;
-  status: 'ACTIVE' | 'MAINTENANCE' | 'INACTIVE';
-  description?: string;
-  images?: string[];
-  created_at?: string;
-  updated_at?: string;
-}
-
-interface RoomBooking {
-  id: number;
-  room_id: number;
-  document_id: number;
-  booking_date: string;
-  start_time: string;
-  end_time: string;
-  purpose: string;
-  status: string;
-  booked_by?: number;
-}
-
 function RouteComponent() {
   const [rooms, setRooms] = useState<Room[]>([]);
-  const [filteredRooms, setFilteredRooms] = useState<Room[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedStatus, setSelectedStatus] = useState<string | null>(null);
 
   // Modal states
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
-  const [selectedRoom, setSelectedRoom] = useState<Room | null>(null);
 
   // Form states
-  const [formData, setFormData] = useState<{
-    name: string;
-    code: string;
-    capacity: string;
-    location: string;
-    building: string;
-    floor: string;
-    description: string;
-    status: 'ACTIVE' | 'MAINTENANCE' | 'INACTIVE';
-  }>({
+  const [selectedRoom, setSelectedRoom] = useState<Room | null>(null);
+  const [formData, setFormData] = useState({
     name: '',
     code: '',
-    capacity: '',
-    location: '',
-    building: '',
-    floor: '',
+    capacity: '10',
     description: '',
-    status: 'ACTIVE',
+    facilities: '',
   });
+  const [roomImage, setRoomImage] = useState<File | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [formError, setFormError] = useState('');
 
-  const [scheduleData, setScheduleData] = useState({
-    startDate: new Date().toISOString().split('T')[0],
-    endDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
-      .toISOString()
-      .split('T')[0],
-    bookings: [] as RoomBooking[],
-  });
+  const [selectedStatus, setSelectedStatus] = useState<Room['status'] | 'all'>('all');
 
-  // Load rooms
+  // Debounce search query
   useEffect(() => {
-    loadRooms();
-  }, []);
+    const timer = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+    }, 300);
 
-  // Filter rooms
-  useEffect(() => {
-    let filtered = rooms;
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
 
-    // Filter by status
-    if (selectedStatus) {
-      filtered = filtered.filter((room) => room.status === selectedStatus);
-    }
-
-    // Filter by search query
-    if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase();
-      filtered = filtered.filter(
-        (room) =>
-          room.name.toLowerCase().includes(query) ||
-          room.code.toLowerCase().includes(query) ||
-          (room.location && room.location.toLowerCase().includes(query)) ||
-          (room.building && room.building.toLowerCase().includes(query)),
-      );
-    }
-
-    setFilteredRooms(filtered);
-  }, [searchQuery, selectedStatus, rooms]);
-
-  const loadRooms = async () => {
+  const fetchRooms = async () => {
     try {
-      setIsLoading(true);
-      const response = await api.get<{ success: boolean; data: Room[] }>(
-        '/rooms',
-      );
-      setRooms(response.data.data);
-      setFilteredRooms(response.data.data);
+      setLoading(true);
       setError(null);
+      const rooms = await roomService.getRooms();
+      setRooms(rooms);
     } catch (err) {
-      const error = err as AxiosError<{ message: string }>;
-      setError(error.response?.data?.message || 'Gagal memuat ruangan');
+      console.error('Failed to fetch rooms:', err);
+      if (err instanceof AxiosError) {
+        setError(err.response?.data?.message || 'Gagal memuat data ruangan');
+      } else {
+        setError('Terjadi kesalahan saat memuat data');
+      }
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
-  const handleCreateRoom = () => {
+  useEffect(() => {
+    fetchRooms();
+  }, []);
+
+  const handleCreate = () => {
     setFormData({
       name: '',
       code: '',
-      capacity: '',
-      location: '',
-      building: '',
-      floor: '',
+      capacity: '10',
       description: '',
-      status: 'ACTIVE',
+      facilities: '',
     });
+    setRoomImage(null);
+    setFormError('');
     setIsCreateModalOpen(true);
   };
 
-  const handleEditRoom = (room: Room) => {
+  const handleEdit = (room: Room) => {
     setSelectedRoom(room);
     setFormData({
       name: room.name,
       code: room.code,
-      capacity: room.capacity?.toString() || '',
-      location: room.location || '',
-      building: room.building || '',
-      floor: room.floor || '',
+      capacity: String(room.capacity || 10),
       description: room.description || '',
-      status: room.status,
+      facilities: Array.isArray(room.facilities)
+        ? room.facilities.join(', ')
+        : '',
     });
+    setRoomImage(null);
+    setFormError('');
     setIsEditModalOpen(true);
   };
 
-  const handleViewRoom = (room: Room) => {
+  const handleDetail = (room: Room) => {
     setSelectedRoom(room);
     setIsDetailModalOpen(true);
   };
 
-  const handleDeleteRoom = (room: Room) => {
+  const handleDelete = (room: Room) => {
     setSelectedRoom(room);
     setIsDeleteDialogOpen(true);
   };
 
-  const handleViewSchedule = async (room: Room) => {
-    setSelectedRoom(room);
-    try {
-      const response = await api.get<{
-        success: boolean;
-        data: { bookings: RoomBooking[] };
-      }>(`/rooms/${room.id}/schedule`, {
-        params: {
-          start_date: scheduleData.startDate,
-          end_date: scheduleData.endDate,
-        },
-      });
-      setScheduleData({
-        ...scheduleData,
-        bookings: response.data.data.bookings,
-      });
-      setIsScheduleModalOpen(true);
-    } catch (err) {
-      const error = err as AxiosError<{ message: string }>;
-      alert(error.response?.data?.message || 'Gagal memuat jadwal ruangan');
-    }
+  const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0] ?? null;
+    setRoomImage(file);
   };
 
-  const submitCreateRoom = async () => {
-    if (!formData.name || !formData.code) {
-      alert('Harap isi nama dan kode ruangan');
+  const handleSubmitCreate = async (e: FormEvent) => {
+    e.preventDefault();
+    setFormError('');
+
+    if (!formData.name.trim() || !formData.code.trim()) {
+      setFormError('Nama ruangan dan kode ruangan wajib diisi!');
       return;
     }
 
     try {
-      await api.post('/rooms', {
-        name: formData.name,
-        code: formData.code,
-        capacity: formData.capacity ? parseInt(formData.capacity) : null,
-        location: formData.location || null,
-        building: formData.building || null,
-        floor: formData.floor || null,
-        description: formData.description || null,
-        status: formData.status,
+      setIsSubmitting(true);
+
+      const data = new FormData();
+      data.append('name', formData.name);
+      data.append('code', formData.code);
+      data.append('capacity', String(parseInt(formData.capacity)));
+      data.append('description', formData.description);
+      data.append('status', 'ACTIVE');
+
+      const facilitiesArray = formData.facilities
+        .split(',')
+        .map((f) => f.trim())
+        .filter((f) => f.length > 0);
+
+      facilitiesArray.forEach((f, index) => {
+        data.append(`facilities[${index}]`, f);
       });
+
+      if (roomImage) {
+        data.append('images[]', roomImage);
+      }
+
+      await roomService.createRoom(data);
 
       setIsCreateModalOpen(false);
-      loadRooms();
-      alert('Ruangan berhasil dibuat');
+      fetchRooms();
     } catch (err) {
+      console.error('Failed to create room:', err);
       const error = err as AxiosError<{ message: string }>;
-      alert(error.response?.data?.message || 'Gagal membuat ruangan');
+      setFormError(
+        error.response?.data?.message || 'Gagal menambahkan ruangan',
+      );
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
-  const submitEditRoom = async () => {
-    if (!selectedRoom || !formData.name || !formData.code) {
+  const handleSubmitEdit = async (e: FormEvent) => {
+    e.preventDefault();
+    setFormError('');
+
+    if (!selectedRoom) return;
+
+    if (!formData.name.trim() || !formData.code.trim()) {
+      setFormError('Nama ruangan dan kode ruangan wajib diisi!');
       return;
     }
 
     try {
-      await api.put(`/rooms/${selectedRoom.id}`, {
+      setIsSubmitting(true);
+
+      const facilitiesArray = formData.facilities
+        .split(',')
+        .map((f) => f.trim())
+        .filter((f) => f.length > 0);
+
+      const roomData = {
         name: formData.name,
         code: formData.code,
-        capacity: formData.capacity ? parseInt(formData.capacity) : null,
-        location: formData.location || null,
-        building: formData.building || null,
-        floor: formData.floor || null,
-        description: formData.description || null,
-        status: formData.status,
-      });
+        capacity: parseInt(formData.capacity) || 10,
+        description: formData.description,
+        facilities: facilitiesArray,
+      };
+
+      await roomService.updateRoom(selectedRoom.id, roomData);
+
+      if (roomImage) {
+        try {
+          await roomService.uploadImage(selectedRoom.id, roomImage);
+        } catch (err) {
+          console.error('Failed to upload image:', err);
+        }
+      }
 
       setIsEditModalOpen(false);
-      loadRooms();
-      setSelectedRoom(null);
-      alert('Ruangan berhasil diperbarui');
+      fetchRooms();
     } catch (err) {
+      console.error('Failed to update room:', err);
       const error = err as AxiosError<{ message: string }>;
-      alert(error.response?.data?.message || 'Gagal memperbarui ruangan');
+      setFormError(
+        error.response?.data?.message || 'Gagal memperbarui ruangan',
+      );
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
-  const confirmDeleteRoom = async () => {
+  const handleConfirmDelete = async () => {
     if (!selectedRoom) return;
 
     try {
-      await api.delete(`/rooms/${selectedRoom.id}`);
+      await roomService.deleteRoom(selectedRoom.id);
       setIsDeleteDialogOpen(false);
-      loadRooms();
-      setSelectedRoom(null);
-      alert('Ruangan berhasil dihapus');
+      setRooms((prev) => prev.filter((r) => r.id !== selectedRoom.id));
     } catch (err) {
+      console.error('Failed to delete room:', err);
       const error = err as AxiosError<{ message: string }>;
       alert(error.response?.data?.message || 'Gagal menghapus ruangan');
     }
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'ACTIVE':
-        return 'bg-green-100 text-green-800';
-      case 'MAINTENANCE':
-        return 'bg-yellow-100 text-yellow-800';
-      case 'INACTIVE':
-        return 'bg-red-100 text-red-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
-    }
-  };
+  const filteredRooms = rooms.filter((room) => {
+    const term = searchTerm.toLowerCase();
+    const matchesSearch =
+      room.name.toLowerCase().includes(term) ||
+      room.code.toLowerCase().includes(term) ||
+      (room.description && room.description.toLowerCase().includes(term));
 
-  if (isLoading) {
+    const matchesStatus =
+      selectedStatus === 'all' || room.status === selectedStatus;
+
+    return matchesSearch && matchesStatus;
+  });
+
+  if (loading) {
     return (
-      <div className='container mx-auto p-6'>
-        <div className='flex items-center justify-center h-64'>
-          <div className='text-lg'>Loading ruangan...</div>
+      <div className='flex items-center justify-center min-h-screen'>
+        <div className='text-center'>
+          <div className='animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto'></div>
+          <p className='mt-4 text-gray-600'>Memuat data ruangan...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className='flex items-center justify-center min-h-screen'>
+        <div className='text-center'>
+          <p className='text-red-600 mb-4'>{error}</p>
+          <Button onClick={fetchRooms}>Coba Lagi</Button>
         </div>
       </div>
     );
   }
 
   return (
-    <div className='container mx-auto p-3 sm:p-6'>
+    <div className='container mx-auto px-2 sm:px-4 py-2 sm:py-4 max-w-7xl'>
+      {/* Header */}
       <div className='mb-4 sm:mb-6'>
-        <h1 className='text-2xl sm:text-3xl font-bold'>Manajemen Ruangan</h1>
-        <p className='text-gray-600 mt-1 text-sm sm:text-base'>
-          Kelola ruangan dan jadwal peminjaman
+        <h1 className='text-xl sm:text-2xl font-bold text-gray-900 mb-1 sm:mb-2'>
+          Manajemen Ruang
+        </h1>
+        <p className='text-sm sm:text-base text-gray-600'>
+          Kelola data ruang yang tersedia untuk peminjaman
         </p>
       </div>
 
-      {error && (
-        <div className='bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-4'>
-          {error}
-        </div>
-      )}
-
-      {/* Search and Create Button */}
-      <div className='mb-4 flex flex-row items-center gap-2'>
-        <div className='relative flex-1'>
-          <Search className='absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4' />
-          <Input
-            type='text'
-            placeholder='Cari ruangan...'
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className='pl-10 h-10'
-          />
-        </div>
-        <Button
-          onClick={handleCreateRoom}
-          className='whitespace-nowrap h-10 shrink-0'
-        >
-          <Plus className='mr-2 h-4 w-4' />
-          <span className='hidden sm:inline'>Buat Ruangan</span>
-          <span className='sm:hidden'>Buat</span>
-        </Button>
-      </div>
-
-      {/* Filter Buttons */}
-      <div className='mb-4 flex flex-wrap gap-2'>
-        <Button
-          variant={selectedStatus === null ? 'default' : 'outline'}
-          size='sm'
-          onClick={() => setSelectedStatus(null)}
-          className='text-xs sm:text-sm'
-        >
-          Semua
-        </Button>
-        {['ACTIVE', 'MAINTENANCE', 'INACTIVE'].map((status) => (
-          <Button
-            key={status}
-            variant={selectedStatus === status ? 'default' : 'outline'}
-            size='sm'
-            onClick={() => setSelectedStatus(status)}
-            className='text-xs sm:text-sm'
+      <div className='mb-4 sm:mb-6 flex flex-col sm:flex-row justify-between gap-3'>
+        <div className='flex flex-1 gap-2'>
+          <div className='relative flex-1'>
+            <Search className='absolute left-2 sm:left-3 top-1/2 -translate-y-1/2 h-3 w-3 sm:h-4 sm:w-4 text-gray-400' />
+            <Input
+              type='text'
+              placeholder='Cari ruangan...'
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className='pl-7 sm:pl-10 text-sm h-9 sm:h-10'
+            />
+          </div>
+          <Select
+            value={selectedStatus}
+            onValueChange={(value) =>
+              setSelectedStatus(value as Room['status'] | 'all')
+            }
           >
-            {status}
-          </Button>
-        ))}
-      </div>
-
-      {/* Rooms Table */}
-      <div className='rounded-lg border overflow-x-auto'>
-        <Table className='min-w-full'>
-          <TableHeader>
-            <TableRow className='bg-gray-50'>
-              <TableHead className='font-semibold'>Nama Ruangan</TableHead>
-              <TableHead className='font-semibold hidden sm:table-cell'>
-                Kode
-              </TableHead>
-              <TableHead className='font-semibold hidden md:table-cell'>
-                Kapasitas
-              </TableHead>
-              <TableHead className='font-semibold hidden lg:table-cell'>
-                Lokasi
-              </TableHead>
-              <TableHead className='font-semibold'>Status</TableHead>
-              <TableHead className='font-semibold text-center'>Aksi</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {filteredRooms.map((room) => (
-              <TableRow key={room.id} className='hover:bg-gray-50'>
-                <TableCell>
-                  <div>
-                    <p className='font-medium text-sm sm:text-base'>
-                      {room.name}
-                    </p>
-                    <p className='text-xs text-gray-500 sm:hidden'>
-                      {room.code}
-                    </p>
-                    {room.building && (
-                      <p className='text-xs text-gray-500 hidden sm:block'>
-                        {room.building}
-                        {room.floor && `, Lantai ${room.floor}`}
-                      </p>
-                    )}
-                  </div>
-                </TableCell>
-                <TableCell className='hidden sm:table-cell'>
-                  <span className='text-sm'>{room.code}</span>
-                </TableCell>
-                <TableCell className='hidden md:table-cell'>
-                  <span className='text-sm'>
-                    {room.capacity ? `${room.capacity} orang` : '-'}
-                  </span>
-                </TableCell>
-                <TableCell className='hidden lg:table-cell'>
-                  <span className='text-sm'>{room.location || '-'}</span>
-                </TableCell>
-                <TableCell>
-                  <span
-                    className={`px-2 py-1 rounded text-xs font-medium ${getStatusColor(room.status)}`}
-                  >
-                    {room.status}
-                  </span>
-                </TableCell>
-                <TableCell>
-                  <div className='flex gap-1 justify-center shrink-0'>
-                    <Button
-                      variant='ghost'
-                      size='sm'
-                      onClick={() => handleViewRoom(room)}
-                      title='Detail'
-                      className='h-8 w-8 p-0'
-                    >
-                      <Eye className='h-4 w-4' />
-                    </Button>
-                    <Button
-                      variant='ghost'
-                      size='sm'
-                      onClick={() => handleViewSchedule(room)}
-                      title='Jadwal'
-                      className='h-8 w-8 p-0'
-                    >
-                      <Calendar className='h-4 w-4' />
-                    </Button>
-                    <Button
-                      variant='ghost'
-                      size='sm'
-                      onClick={() => handleEditRoom(room)}
-                      title='Edit'
-                      className='h-8 w-8 p-0'
-                    >
-                      <Edit className='h-4 w-4' />
-                    </Button>
-                    <Button
-                      variant='ghost'
-                      size='sm'
-                      onClick={() => handleDeleteRoom(room)}
-                      title='Hapus'
-                      className='h-8 w-8 p-0 text-red-600 hover:text-red-700'
-                    >
-                      <Trash2 className='h-4 w-4' />
-                    </Button>
-                  </div>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
-
-      {filteredRooms.length === 0 && (
-        <div className='rounded-lg border p-8 text-center'>
-          <p className='text-gray-600'>Tidak ada ruangan ditemukan</p>
+            <SelectTrigger className='w-[140px] h-9 sm:h-10 text-xs sm:text-sm'>
+              <SelectValue placeholder='Filter Status' />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value='all'>Semua Status</SelectItem>
+              <SelectItem value='ACTIVE'>Aktif</SelectItem>
+              <SelectItem value='MAINTENANCE'>Maintenance</SelectItem>
+              <SelectItem value='INACTIVE'>Nonaktif</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
-      )}
+        <Button
+          onClick={handleCreate}
+          className='whitespace-nowrap h-10 sm:h-11 px-4 sm:px-6 text-sm sm:text-base'
+        >
+          <Plus className='h-5 w-5 mr-2' />
+          <span>Tambah Ruang</span>
+        </Button>
+      </div>
 
-      {/* Create/Edit Room Modal */}
-      <Dialog
-        open={isCreateModalOpen || isEditModalOpen}
-        onOpenChange={(open) => {
-          if (!open) {
-            setIsCreateModalOpen(false);
-            setIsEditModalOpen(false);
-            setSelectedRoom(null);
-          }
-        }}
-      >
-        <DialogContent className='max-w-md'>
+      {/* Table */}
+      <div className='bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden'>
+        <div className='overflow-x-auto max-w-full'>
+          <Table className='w-full min-w-[640px]'>
+            <TableHeader>
+              <TableRow>
+                <TableHead className='w-12 text-center text-xs sm:text-sm px-2'>
+                  No
+                </TableHead>
+                <TableHead className='text-xs sm:text-sm px-2 min-w-20'>
+                  Kode
+                </TableHead>
+                <TableHead className='text-xs sm:text-sm px-2 min-w-30'>
+                  Nama Ruangan
+                </TableHead>
+                <TableHead className='text-xs sm:text-sm px-2 w-20'>
+                  Kapasitas
+                </TableHead>
+                <TableHead className='hidden lg:table-cell text-xs sm:text-sm px-2 min-w-25'>
+                  Fasilitas
+                </TableHead>
+                <TableHead className='text-xs sm:text-sm px-2 w-24'>
+                  Status
+                </TableHead>
+                <TableHead className='text-center text-xs sm:text-sm px-2 w-24'>
+                  Aksi
+                </TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filteredRooms.length === 0 ? (
+                <TableRow>
+                  <TableCell
+                    colSpan={7}
+                    className='text-center text-gray-500 h-32'
+                  >
+                    {debouncedSearchTerm
+                      ? 'Tidak ada ruangan yang cocok dengan pencarian'
+                      : 'Belum ada data ruangan'}
+                  </TableCell>
+                </TableRow>
+              ) : (
+                filteredRooms.map((room, index) => (
+                  <TableRow key={room.id}>
+                    <TableCell className='font-medium text-center text-xs sm:text-sm py-2 sm:py-3'>
+                      {index + 1}
+                    </TableCell>
+                    <TableCell className='text-xs sm:text-sm py-2 sm:py-3'>
+                      {room.code}
+                    </TableCell>
+                    <TableCell className='text-xs sm:text-sm font-medium text-gray-900 py-2 sm:py-3'>
+                      {room.name}
+                    </TableCell>
+                    <TableCell className='text-xs sm:text-sm py-2 sm:py-3'>
+                      {room.capacity || '-'}
+                    </TableCell>
+                    <TableCell className='hidden md:table-cell text-xs sm:text-sm py-2 sm:py-3'>
+                      {Array.isArray(room.facilities) &&
+                        room.facilities.length > 0
+                        ? room.facilities.join(', ')
+                        : '-'}
+                    </TableCell>
+                    <TableCell className='text-xs sm:text-sm py-2 sm:py-3'>
+                      <span
+                        className={`inline-flex items-center px-1.5 sm:px-2.5 py-0.5 rounded-full text-[10px] sm:text-xs font-medium ${room.status === 'ACTIVE'
+                          ? 'bg-green-100 text-green-800'
+                          : room.status === 'MAINTENANCE'
+                            ? 'bg-yellow-100 text-yellow-800'
+                            : 'bg-gray-100 text-gray-800'
+                          }`}
+                      >
+                        {room.status === 'ACTIVE'
+                          ? 'Aktif'
+                          : room.status === 'MAINTENANCE'
+                            ? 'Maintenance'
+                            : 'Nonaktif'}
+                      </span>
+                    </TableCell>
+                    <TableCell className='py-2 sm:py-3'>
+                      <div className='flex items-center justify-center gap-1 sm:gap-2'>
+                        <Button
+                          variant='ghost'
+                          size='sm'
+                          onClick={() => handleDetail(room)}
+                          className='h-6 w-6 sm:h-8 sm:w-8 p-0'
+                        >
+                          <Eye className='h-3 w-3 sm:h-4 sm:w-4' />
+                        </Button>
+                        <Button
+                          variant='ghost'
+                          size='sm'
+                          onClick={() => handleEdit(room)}
+                          className='h-6 w-6 sm:h-8 sm:w-8 p-0'
+                        >
+                          <Pencil className='h-3 w-3 sm:h-4 sm:w-4' />
+                        </Button>
+                        <Button
+                          variant='ghost'
+                          size='sm'
+                          onClick={() => handleDelete(room)}
+                          className='h-6 w-6 sm:h-8 sm:w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50'
+                        >
+                          <Trash2 className='h-3 w-3 sm:h-4 sm:w-4' />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </div>
+      </div>
+
+      {/* Create Room Modal */}
+      <Dialog open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen}>
+        <DialogContent className='sm:max-w-lg max-h-[90vh] overflow-y-auto'>
           <DialogHeader>
-            <DialogTitle>
-              {isEditModalOpen ? 'Edit Ruangan' : 'Buat Ruangan Baru'}
-            </DialogTitle>
+            <DialogTitle>Tambah Ruangan Baru</DialogTitle>
             <DialogDescription>
-              {isEditModalOpen
-                ? 'Perbarui informasi ruangan'
-                : 'Tambahkan ruangan baru ke sistem'}
+              Masukkan informasi ruangan yang akan ditambahkan
             </DialogDescription>
           </DialogHeader>
-          <div className='space-y-4 py-4'>
-            <div>
-              <Label htmlFor='name'>Nama Ruangan *</Label>
-              <Input
-                id='name'
-                value={formData.name}
-                onChange={(e) =>
-                  setFormData({ ...formData, name: e.target.value })
-                }
-                placeholder='Contoh: Lab Komputer A'
-              />
+          <form onSubmit={handleSubmitCreate}>
+            <div className='grid gap-4 py-4'>
+              <div className='grid gap-2'>
+                <label htmlFor='code' className='text-sm font-medium'>
+                  Kode Ruangan <span className='text-red-500'>*</span>
+                </label>
+                <Input
+                  id='code'
+                  value={formData.code}
+                  onChange={(e) =>
+                    setFormData({ ...formData, code: e.target.value })
+                  }
+                  placeholder='A101'
+                  required
+                />
+              </div>
+              <div className='grid gap-2'>
+                <label htmlFor='name' className='text-sm font-medium'>
+                  Nama Ruangan <span className='text-red-500'>*</span>
+                </label>
+                <Input
+                  id='name'
+                  value={formData.name}
+                  onChange={(e) =>
+                    setFormData({ ...formData, name: e.target.value })
+                  }
+                  placeholder='Ruang Kelas A101'
+                  required
+                />
+              </div>
+              <div className='grid gap-2'>
+                <label htmlFor='capacity' className='text-sm font-medium'>
+                  Kapasitas Ruangan <span className='text-red-500'>*</span>
+                </label>
+                <Input
+                  id='capacity'
+                  type='number'
+                  min={1}
+                  value={formData.capacity}
+                  onChange={(e) =>
+                    setFormData({ ...formData, capacity: e.target.value })
+                  }
+                  required
+                />
+              </div>
+              <div className='grid gap-2'>
+                <label htmlFor='facilities' className='text-sm font-medium'>
+                  Fasilitas (pisahkan dengan koma)
+                </label>
+                <textarea
+                  id='facilities'
+                  value={formData.facilities}
+                  onChange={(e) =>
+                    setFormData({ ...formData, facilities: e.target.value })
+                  }
+                  placeholder='AC, Proyektor, Whiteboard'
+                  rows={3}
+                  className='block w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500'
+                />
+              </div>
+              <div className='grid gap-2'>
+                <label htmlFor='description' className='text-sm font-medium'>
+                  Deskripsi/Catatan
+                </label>
+                <textarea
+                  id='description'
+                  value={formData.description}
+                  onChange={(e) =>
+                    setFormData({ ...formData, description: e.target.value })
+                  }
+                  placeholder='Ruang kelas untuk kuliah umum'
+                  rows={3}
+                  className='block w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500'
+                />
+              </div>
+              <div className='grid gap-2'>
+                <label htmlFor='image' className='text-sm font-medium'>
+                  Foto Ruangan
+                </label>
+                <Input
+                  id='image'
+                  type='file'
+                  accept='image/*'
+                  onChange={handleFileChange}
+                />
+              </div>
+              {formError && <p className='text-sm text-red-600'>{formError}</p>}
             </div>
-            <div>
-              <Label htmlFor='code'>Kode Ruangan *</Label>
-              <Input
-                id='code'
-                value={formData.code}
-                onChange={(e) =>
-                  setFormData({ ...formData, code: e.target.value })
-                }
-                placeholder='Contoh: LC-A-01'
-              />
-            </div>
-            <div>
-              <Label htmlFor='capacity'>Kapasitas</Label>
-              <Input
-                id='capacity'
-                type='number'
-                value={formData.capacity}
-                onChange={(e) =>
-                  setFormData({ ...formData, capacity: e.target.value })
-                }
-                placeholder='Jumlah orang'
-              />
-            </div>
-            <div>
-              <Label htmlFor='building'>Gedung</Label>
-              <Input
-                id='building'
-                value={formData.building}
-                onChange={(e) =>
-                  setFormData({ ...formData, building: e.target.value })
-                }
-                placeholder='Contoh: Gedung A'
-              />
-            </div>
-            <div>
-              <Label htmlFor='floor'>Lantai</Label>
-              <Input
-                id='floor'
-                value={formData.floor}
-                onChange={(e) =>
-                  setFormData({ ...formData, floor: e.target.value })
-                }
-                placeholder='Contoh: 2'
-              />
-            </div>
-            <div>
-              <Label htmlFor='location'>Lokasi</Label>
-              <Input
-                id='location'
-                value={formData.location}
-                onChange={(e) =>
-                  setFormData({ ...formData, location: e.target.value })
-                }
-                placeholder='Deskripsi lokasi'
-              />
-            </div>
-            <div>
-              <Label htmlFor='status'>Status</Label>
-              <Select
-                value={formData.status}
-                onValueChange={(value) =>
-                  setFormData({
-                    ...formData,
-                    status: value as 'ACTIVE' | 'MAINTENANCE' | 'INACTIVE',
-                  })
-                }
+            <DialogFooter>
+              <Button
+                type='button'
+                variant='outline'
+                onClick={() => setIsCreateModalOpen(false)}
+                disabled={isSubmitting}
               >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value='ACTIVE'>Aktif</SelectItem>
-                  <SelectItem value='MAINTENANCE'>Perawatan</SelectItem>
-                  <SelectItem value='INACTIVE'>Tidak Aktif</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label htmlFor='description'>Deskripsi</Label>
-              <Textarea
-                id='description'
-                value={formData.description}
-                onChange={(e) =>
-                  setFormData({ ...formData, description: e.target.value })
-                }
-                placeholder='Deskripsi ruangan...'
-                rows={3}
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button
-              variant='outline'
-              onClick={() => {
-                setIsCreateModalOpen(false);
-                setIsEditModalOpen(false);
-                setSelectedRoom(null);
-              }}
-            >
-              Batal
-            </Button>
-            <Button
-              onClick={isEditModalOpen ? submitEditRoom : submitCreateRoom}
-            >
-              {isEditModalOpen ? 'Simpan Perubahan' : 'Buat Ruangan'}
-            </Button>
-          </DialogFooter>
+                Batal
+              </Button>
+              <Button type='submit' disabled={isSubmitting}>
+                {isSubmitting ? 'Menyimpan...' : 'Tambah'}
+              </Button>
+            </DialogFooter>
+          </form>
         </DialogContent>
       </Dialog>
 
-      {/* Room Detail Modal */}
-      <Dialog open={isDetailModalOpen} onOpenChange={setIsDetailModalOpen}>
-        <DialogContent className='max-w-2xl max-h-[90vh] overflow-y-auto'>
+      {/* Edit Room Modal */}
+      <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
+        <DialogContent className='sm:max-w-lg max-h-[90vh] overflow-y-auto'>
           <DialogHeader>
-            <DialogTitle>{selectedRoom?.name}</DialogTitle>
-            <DialogDescription>Informasi detail ruangan</DialogDescription>
+            <DialogTitle>Edit Ruangan</DialogTitle>
+            <DialogDescription>Use informasi ruangan</DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleSubmitEdit}>
+            <div className='grid gap-4 py-4'>
+              <div className='grid gap-2'>
+                <label htmlFor='edit-code' className='text-sm font-medium'>
+                  Kode Ruangan <span className='text-red-500'>*</span>
+                </label>
+                <Input
+                  id='edit-code'
+                  value={formData.code}
+                  onChange={(e) =>
+                    setFormData({ ...formData, code: e.target.value })
+                  }
+                  required
+                />
+              </div>
+              <div className='grid gap-2'>
+                <label htmlFor='edit-name' className='text-sm font-medium'>
+                  Nama Ruangan <span className='text-red-500'>*</span>
+                </label>
+                <Input
+                  id='edit-name'
+                  value={formData.name}
+                  onChange={(e) =>
+                    setFormData({ ...formData, name: e.target.value })
+                  }
+                  required
+                />
+              </div>
+              <div className='grid gap-2'>
+                <label htmlFor='edit-capacity' className='text-sm font-medium'>
+                  Kapasitas Ruangan
+                </label>
+                <Input
+                  id='edit-capacity'
+                  type='number'
+                  min={1}
+                  value={formData.capacity}
+                  onChange={(e) =>
+                    setFormData({ ...formData, capacity: e.target.value })
+                  }
+                  required
+                />
+              </div>
+              <div className='grid gap-2'>
+                <label htmlFor='edit-facilities' className='text-sm font-medium'>
+                  Fasilitas (pisahkan dengan koma)
+                </label>
+                <textarea
+                  id='edit-facilities'
+                  value={formData.facilities}
+                  onChange={(e) =>
+                    setFormData({ ...formData, facilities: e.target.value })
+                  }
+                  rows={3}
+                  className='block w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500'
+                />
+              </div>
+              <div className='grid gap-2'>
+                <label
+                  htmlFor='edit-description'
+                  className='text-sm font-medium'
+                >
+                  Deskripsi/Catatan
+                </label>
+                <textarea
+                  id='edit-description'
+                  value={formData.description}
+                  onChange={(e) =>
+                    setFormData({ ...formData, description: e.target.value })
+                  }
+                  rows={3}
+                  className='block w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500'
+                />
+              </div>
+              <div className='grid gap-2'>
+                <label htmlFor='edit-image' className='text-sm font-medium'>
+                  Foto Ruangan (Upload baru untuk mengganti)
+                </label>
+                <Input
+                  id='edit-image'
+                  type='file'
+                  accept='image/*'
+                  onChange={handleFileChange}
+                />
+              </div>
+              {formError && <p className='text-sm text-red-600'>{formError}</p>}
+            </div>
+            <DialogFooter>
+              <Button
+                type='button'
+                variant='outline'
+                onClick={() => setIsEditModalOpen(false)}
+                disabled={isSubmitting}
+              >
+                Batal
+              </Button>
+              <Button type='submit' disabled={isSubmitting}>
+                {isSubmitting ? 'Menyimpan...' : 'Simpan'}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Detail Room Modal */}
+      <Dialog open={isDetailModalOpen} onOpenChange={setIsDetailModalOpen}>
+        <DialogContent className='sm:max-w-lg max-h-[90vh] overflow-y-auto'>
+          <DialogHeader>
+            <DialogTitle>Detail Ruangan</DialogTitle>
           </DialogHeader>
           {selectedRoom && (
             <div className='space-y-4 py-4'>
+              {selectedRoom.image_url && (
+                <div className='aspect-video w-full overflow-hidden rounded-lg bg-gray-100'>
+                  <img
+                    src={selectedRoom.image_url}
+                    alt={selectedRoom.name}
+                    className='h-full w-full object-cover'
+                  />
+                </div>
+              )}
               <div className='grid grid-cols-2 gap-4'>
                 <div>
-                  <p className='text-sm text-gray-600'>Kode Ruangan</p>
-                  <p className='font-medium'>{selectedRoom.code}</p>
+                  <p className='text-sm font-medium text-gray-500'>Kode</p>
+                  <p className='text-sm text-gray-900'>{selectedRoom.code}</p>
                 </div>
                 <div>
-                  <p className='text-sm text-gray-600'>Status</p>
-                  <p
-                    className={`font-medium px-2 py-1 rounded text-sm w-fit ${getStatusColor(selectedRoom.status)}`}
-                  >
-                    {selectedRoom.status}
+                  <p className='text-sm font-medium text-gray-500'>Kapasitas</p>
+                  <p className='text-sm text-gray-900'>
+                    {selectedRoom.capacity} Orang
                   </p>
                 </div>
-                {selectedRoom.capacity && (
-                  <div>
-                    <p className='text-sm text-gray-600'>Kapasitas</p>
-                    <p className='font-medium'>{selectedRoom.capacity} orang</p>
-                  </div>
-                )}
-                {selectedRoom.building && (
-                  <div>
-                    <p className='text-sm text-gray-600'>Gedung</p>
-                    <p className='font-medium'>{selectedRoom.building}</p>
-                  </div>
-                )}
-                {selectedRoom.floor && (
-                  <div>
-                    <p className='text-sm text-gray-600'>Lantai</p>
-                    <p className='font-medium'>{selectedRoom.floor}</p>
-                  </div>
-                )}
-                {selectedRoom.location && (
-                  <div>
-                    <p className='text-sm text-gray-600'>Lokasi</p>
-                    <p className='font-medium'>{selectedRoom.location}</p>
-                  </div>
-                )}
+              </div>
+              <div>
+                <p className='text-sm font-medium text-gray-500'>
+                  Nama Ruangan
+                </p>
+                <p className='text-sm text-gray-900'>{selectedRoom.name}</p>
               </div>
               {selectedRoom.description && (
                 <div>
-                  <p className='text-sm text-gray-600 mb-1'>Deskripsi</p>
-                  <p className='text-sm'>{selectedRoom.description}</p>
+                  <p className='text-sm font-medium text-gray-500'>Deskripsi</p>
+                  <p className='text-sm text-gray-900'>
+                    {selectedRoom.description}
+                  </p>
                 </div>
               )}
+              {selectedRoom.facilities && selectedRoom.facilities.length > 0 && (
+                <div>
+                  <p className='text-sm font-medium text-gray-500'>Fasilitas</p>
+                  <div className='mt-1 flex flex-wrap gap-2'>
+                    {selectedRoom.facilities.map((facility, index) => (
+                      <span
+                        key={index}
+                        className='inline-flex items-center rounded-full bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 ring-1 ring-inset ring-blue-700/10'
+                      >
+                        {facility}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+              <div>
+                <p className='text-sm font-medium text-gray-500'>Status</p>
+                <span
+                  className={`mt-1 inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${selectedRoom.status === 'ACTIVE'
+                    ? 'bg-green-100 text-green-700'
+                    : 'bg-red-100 text-red-700'
+                    }`}
+                >
+                  {selectedRoom.status === 'ACTIVE' ? 'Aktif' : 'Nonaktif'}
+                </span>
+              </div>
             </div>
           )}
           <DialogFooter>
-            <Button
-              variant='outline'
-              onClick={() => setIsDetailModalOpen(false)}
-            >
-              Tutup
-            </Button>
+            <Button onClick={() => setIsDetailModalOpen(false)}>Tutup</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* Delete Room Dialog */}
+      {/* Delete Confirmation Dialog */}
       <AlertDialog
         open={isDeleteDialogOpen}
         onOpenChange={setIsDeleteDialogOpen}
       >
         <AlertDialogContent>
-          <AlertDialogTitle>Hapus Ruangan?</AlertDialogTitle>
-          <AlertDialogDescription>
-            Apakah Anda yakin ingin menghapus ruangan "{selectedRoom?.name}"?
-            Tindakan ini tidak dapat dibatalkan.
-          </AlertDialogDescription>
-          <div className='flex gap-2 justify-end'>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Hapus Ruangan</AlertDialogTitle>
+            <AlertDialogDescription>
+              Apakah Anda yakin ingin menghapus ruangan{' '}
+              <strong>{selectedRoom?.name}</strong>? Tindakan ini tidak dapat
+              dibatalkan.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
             <AlertDialogCancel>Batal</AlertDialogCancel>
             <AlertDialogAction
-              onClick={confirmDeleteRoom}
+              onClick={handleConfirmDelete}
               className='bg-red-600 hover:bg-red-700'
             >
               Hapus
             </AlertDialogAction>
-          </div>
+          </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-
-      {/* Schedule Modal */}
-      <Dialog open={isScheduleModalOpen} onOpenChange={setIsScheduleModalOpen}>
-        <DialogContent className='max-w-3xl max-h-[90vh] overflow-y-auto'>
-          <DialogHeader>
-            <DialogTitle>Jadwal Peminjaman - {selectedRoom?.name}</DialogTitle>
-            <DialogDescription>
-              Jadwal peminjaman dari {scheduleData.startDate} hingga{' '}
-              {scheduleData.endDate}
-            </DialogDescription>
-          </DialogHeader>
-          <div className='space-y-4 py-4'>
-            <div className='grid grid-cols-2 gap-4'>
-              <div>
-                <Label htmlFor='start-date'>Tanggal Mulai</Label>
-                <Input
-                  id='start-date'
-                  type='date'
-                  value={scheduleData.startDate}
-                  onChange={(e) =>
-                    setScheduleData({
-                      ...scheduleData,
-                      startDate: e.target.value,
-                    })
-                  }
-                />
-              </div>
-              <div>
-                <Label htmlFor='end-date'>Tanggal Selesai</Label>
-                <Input
-                  id='end-date'
-                  type='date'
-                  value={scheduleData.endDate}
-                  onChange={(e) =>
-                    setScheduleData({
-                      ...scheduleData,
-                      endDate: e.target.value,
-                    })
-                  }
-                />
-              </div>
-            </div>
-
-            {scheduleData.bookings.length > 0 ? (
-              <div className='space-y-2'>
-                {scheduleData.bookings.map((booking) => (
-                  <Card key={booking.id}>
-                    <CardContent className='p-3'>
-                      <div className='flex items-start justify-between'>
-                        <div className='flex-1'>
-                          <p className='font-medium text-sm'>
-                            {booking.purpose}
-                          </p>
-                          <p className='text-xs text-gray-600'>
-                            {booking.booking_date} | {booking.start_time} -{' '}
-                            {booking.end_time}
-                          </p>
-                          <p className='text-xs text-gray-500 mt-1'>
-                            Status: {booking.status}
-                          </p>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            ) : (
-              <div className='text-center py-8'>
-                <p className='text-gray-500'>
-                  Tidak ada peminjaman pada periode ini
-                </p>
-              </div>
-            )}
-          </div>
-          <DialogFooter>
-            <Button
-              variant='outline'
-              onClick={() => setIsScheduleModalOpen(false)}
-            >
-              Tutup
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }
+

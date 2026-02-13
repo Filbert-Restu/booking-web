@@ -449,7 +449,7 @@ function RouteComponent() {
 
   const filteredBookings = bookings.filter((item) =>
     [
-      item.bookedBy?.name || '',
+      item.booked_by_user?.name || item.bookedBy?.name || '',
       item.booking_date,
       `${item.start_time} - ${item.end_time}`,
     ]
@@ -633,11 +633,10 @@ function RouteComponent() {
                 {/* Availability indicator */}
                 {availabilityMessage && (
                   <div
-                    className={`flex items-center gap-2 p-3 rounded-md text-sm ${
-                      availabilityMessage.startsWith('✓')
+                    className={`flex items-center gap-2 p-3 rounded-md text-sm ${availabilityMessage.startsWith('✓')
                         ? 'bg-green-50 text-green-700'
                         : 'bg-red-50 text-red-700'
-                    }`}
+                      }`}
                   >
                     <AlertCircle className='w-4 h-4' />
                     <span>{availabilityMessage}</span>
@@ -723,7 +722,7 @@ function RouteComponent() {
                             {index + 1}
                           </TableCell>
                           <TableCell>
-                            {item.document?.content?.ketua_pelaksana_nama ||
+                            {item.booked_by_user?.name ||
                               item.bookedBy?.name ||
                               '-'}
                           </TableCell>
