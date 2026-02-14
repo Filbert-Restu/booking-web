@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate } from '@tanstack/react-router';
+import { createFileRoute } from '@tanstack/react-router';
 import { useState, useEffect } from 'react';
 import { AxiosError } from 'axios';
 import {
@@ -7,9 +7,9 @@ import {
   Trash2,
   CheckCircle,
   Circle,
-  Edit,
-  Plus,
   Eye,
+  Pencil,
+  Plus,
 } from 'lucide-react';
 import { Button } from '@/shared/components/ui/button/button';
 import { Input } from '@/shared/components/ui/input';
@@ -48,6 +48,7 @@ import {
   AlertDialogTitle,
 } from '@/shared/components/ui/alert-dialog';
 import { documentTemplateService } from '@/services/document-template.service';
+import { TemplatePreview } from '@/features/templates/TemplatePreview';
 import type { DocumentTemplate, TemplateType, OrganizationType } from '@/types/template.types';
 
 export const Route = createFileRoute('/kemahasiswaan/template-dokumen/')({
@@ -55,21 +56,21 @@ export const Route = createFileRoute('/kemahasiswaan/template-dokumen/')({
 });
 
 function RouteComponent() {
-  const navigate = useNavigate();
   const [templates, setTemplates] = useState<DocumentTemplate[]>([]);
   const [filteredTemplates, setFilteredTemplates] = useState<DocumentTemplate[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  
+
   // Filter states
   const [typeFilter, setTypeFilter] = useState<string>('all');
-  
+
   // Modal states
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState<DocumentTemplate | null>(null);
-  
+
   // Form states
   const [formData, setFormData] = useState({
     template_type: 'executive_summary' as TemplateType,
@@ -150,11 +151,9 @@ function RouteComponent() {
     setIsDeleteDialogOpen(true);
   };
 
-  const handleEditPageClick = (template: DocumentTemplate) => {
-    navigate({
-      to: '/kemahasiswaan/template-dokumen/$templateId/edit',
-      params: { templateId: String(template.id) },
-    });
+  const handlePreviewClick = (template: DocumentTemplate) => {
+    setSelectedTemplate(template);
+    setIsPreviewModalOpen(true);
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -165,7 +164,7 @@ function RouteComponent() {
         'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
         'application/msword',
       ];
-      
+
       if (!validTypes.includes(file.type)) {
         setFormError('File harus berformat .docx atau .doc');
         setSelectedFile(null);
@@ -186,7 +185,7 @@ function RouteComponent() {
 
   const handleUploadSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!selectedFile) {
       setFormError('Pilih file template terlebih dahulu');
       return;
@@ -206,7 +205,7 @@ function RouteComponent() {
     try {
       setIsSubmitting(true);
       setFormError('');
-      
+
       await documentTemplateService.createTemplate({
         template_type: formData.template_type,
         organization_type: formData.organization_type,
@@ -237,7 +236,7 @@ function RouteComponent() {
 
   const handleEditSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!selectedTemplate) return;
 
     if (!formData.template_name.trim()) {
@@ -248,7 +247,7 @@ function RouteComponent() {
     try {
       setIsSubmitting(true);
       setFormError('');
-      
+
       await documentTemplateService.updateTemplate(selectedTemplate.id, {
         template_name: formData.template_name,
         file: selectedFile || undefined,
@@ -300,6 +299,20 @@ function RouteComponent() {
       } else {
         alert('Gagal menghapus template');
       }
+    }
+  };
+
+  const handleStatusChange = async (template: DocumentTemplate, newStatus: string) => {
+    try {
+      if (newStatus === 'active') {
+        await documentTemplateService.activateTemplate(template.id);
+      } else {
+        await documentTemplateService.deactivateTemplate(template.id);
+      }
+      await fetchTemplates();
+    } catch (err) {
+      console.error('Status change failed:', err);
+      alert('Gagal mengubah status template');
     }
   };
 
@@ -386,7 +399,9 @@ function RouteComponent() {
               <TableHead>Status</TableHead>
               <TableHead>Diupload Oleh</TableHead>
               <TableHead>Tanggal</TableHead>
-              <TableHead className='text-right'>Aksi</TableHead>
+              <TableHead className='text-center text-xs sm:text-sm w-20 sm:w-auto'>
+                Aksi
+              </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -421,17 +436,28 @@ function RouteComponent() {
                     </span>
                   </TableCell>
                   <TableCell>
-                    {template.is_active ? (
-                      <span className='flex items-center gap-1 text-green-600'>
-                        <CheckCircle className='w-4 h-4' />
-                        Aktif
-                      </span>
-                    ) : (
-                      <span className='flex items-center gap-1 text-gray-400'>
-                        <Circle className='w-4 h-4' />
-                        Tidak Aktif
-                      </span>
-                    )}
+                    <Select
+                      value={template.is_active ? 'active' : 'inactive'}
+                      onValueChange={(value) => handleStatusChange(template, value)}
+                    >
+                      <SelectTrigger className={`h-8 w-[110px] ${template.is_active ? 'text-green-600 border-green-200 bg-green-50' : 'text-gray-600 border-gray-200 bg-gray-50'}`}>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value='active' className='text-green-600 focus:text-green-700'>
+                          <div className='flex items-center gap-2'>
+                            <CheckCircle className='w-4 h-4' />
+                            <span>Aktif</span>
+                          </div>
+                        </SelectItem>
+                        <SelectItem value='inactive' className='text-gray-600 focus:text-gray-700'>
+                          <div className='flex items-center gap-2'>
+                            <Circle className='w-4 h-4' />
+                            <span>Nonaktif</span>
+                          </div>
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
                   </TableCell>
                   <TableCell>{template.uploader?.name || '-'}</TableCell>
                   <TableCell>
@@ -441,50 +467,45 @@ function RouteComponent() {
                       year: 'numeric',
                     })}
                   </TableCell>
-                  <TableCell className='text-right'>
-                    <div className='flex items-center justify-end gap-2'>
+                  <TableCell className='py-2 sm:py-3'>
+                    <div className='flex items-center justify-center gap-1 sm:gap-2'>
                       <Button
-                        variant='outline'
+                        variant='ghost'
                         size='sm'
-                        onClick={() => handleEditPageClick(template)}
-                        title='Edit & Preview template'
+                        onClick={() => handlePreviewClick(template)}
+                        className='h-6 w-6 sm:h-8 sm:w-8 p-0'
+                        title='Preview Template'
                       >
-                        <Eye className='w-4 h-4' />
+                        <Eye className='h-3 w-3 sm:h-4 sm:w-4' />
                       </Button>
-                      {!template.is_active && (
-                        <Button
-                          variant='outline'
-                          size='sm'
-                          onClick={() => handleActivate(template)}
-                          title='Aktifkan template'
-                        >
-                          <CheckCircle className='w-4 h-4' />
-                        </Button>
-                      )}
+
                       <Button
-                        variant='outline'
+                        variant='ghost'
                         size='sm'
                         onClick={() => handleDownload(template)}
+                        className='h-6 w-6 sm:h-8 sm:w-8 p-0'
                         title='Download template'
                       >
-                        <Download className='w-4 h-4' />
+                        <Download className='h-3 w-3 sm:h-4 sm:w-4' />
                       </Button>
                       <Button
-                        variant='outline'
+                        variant='ghost'
                         size='sm'
                         onClick={() => handleEditClick(template)}
+                        className='h-6 w-6 sm:h-8 sm:w-8 p-0'
                         title='Edit info template'
                       >
-                        <Edit className='w-4 h-4' />
+                        <Pencil className='h-3 w-3 sm:h-4 sm:w-4' />
                       </Button>
                       {!template.is_active && (
                         <Button
-                          variant='outline'
+                          variant='ghost'
                           size='sm'
                           onClick={() => handleDeleteClick(template)}
+                          className='h-6 w-6 sm:h-8 sm:w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50'
                           title='Hapus template'
                         >
-                          <Trash2 className='w-4 h-4 text-red-600' />
+                          <Trash2 className='h-3 w-3 sm:h-4 sm:w-4' />
                         </Button>
                       )}
                     </div>
@@ -516,8 +537,8 @@ function RouteComponent() {
                   value={formData.template_type}
                   onValueChange={(value) => {
                     const newType = value as TemplateType;
-                    setFormData({ 
-                      ...formData, 
+                    setFormData({
+                      ...formData,
                       template_type: newType,
                       // Reset organization_type jika bukan lembar pengesahan
                       organization_type: newType === 'lembar_pengesahan' ? formData.organization_type : undefined,
@@ -745,6 +766,27 @@ function RouteComponent() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <Dialog open={isPreviewModalOpen} onOpenChange={setIsPreviewModalOpen}>
+        <DialogContent className='!max-w-[95vw] !w-[95vw] !h-[95vh] flex flex-col p-6'>
+          <DialogHeader>
+            <DialogTitle>Preview Template</DialogTitle>
+            <DialogDescription>
+              {selectedTemplate?.template_name}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className='flex-1 overflow-auto bg-gray-50 rounded-md border p-4'>
+            {selectedTemplate && (
+              <TemplatePreview
+                file={null}
+                templateId={selectedTemplate.id}
+                onDownload={() => handleDownload(selectedTemplate)}
+              />
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

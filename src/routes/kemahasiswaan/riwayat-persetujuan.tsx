@@ -44,8 +44,8 @@ function RouteComponent() {
 
   const handleOpenDoc = (payload: any) => {
     navigate({
-      to: '/preview-dokumen',
-      search: { doc: payload.doc, id: payload.booking.id, return: '/kemahasiswaan/riwayat-persetujuan' } as any
+      to: '/preview-document',
+      search: { documentId: payload.booking.id, return: '/kemahasiswaan/riwayat-persetujuan' }
     });
   };
 
@@ -75,7 +75,7 @@ function RouteComponent() {
       <div className='mb-6'>
         <h1 className='text-2xl font-bold'>Riwayat Persetujuan</h1>
         <p className='text-muted-foreground'>
-          Daftar peminjaman yang sudah diproses oleh Kemahasiswaan
+          Daftar peminjaman yang sudah diproses
         </p>
       </div>
 
@@ -86,7 +86,6 @@ function RouteComponent() {
       ) : (
         <ApprovalHistory
           bookings={approvalItems}
-          actorRole={actorRole}
           onOpenDoc={handleOpenDoc}
         />
       )}

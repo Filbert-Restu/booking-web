@@ -51,6 +51,9 @@ export function mapDocumentToApprovalItem(doc: Document): ApprovalItem {
     executiveSummarySigned: doc.status === 'APPROVED',
     lembarPengesahanSigned: doc.status === 'APPROVED',
     revisiNotes: undefined,
+    hasProposal: !!doc.file_proposal,
+    hasExecutiveSummary: !!doc.file_executive_summary,
+    hasApprovalSheet: !!doc.file_approval_sheet,
   };
 }
 
@@ -66,8 +69,8 @@ export function mapDocumentStatus(
     case 'APPROVED':
       return 'approved';
     case 'REJECTED':
-      return 'approved'; // Map rejected to approved for display (will show in history)
-    case 'REVISED':
+      return 'rejected';
+    case 'REVISION':
       return 'revisi';
     case 'DRAFT':
       return 'waiting';
@@ -82,6 +85,6 @@ export function mapDocumentStatus(
 export const mapDocumentsToApprovalItems = (
   documents: Document[],
 ): ApprovalItem[] => {
-  console.log('Mapping documents:', documents); // Log raw documents before mapping
+
   return documents.map((doc) => mapDocumentToApprovalItem(doc));
 };

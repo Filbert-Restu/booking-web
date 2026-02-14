@@ -131,6 +131,16 @@ export const documentTemplateService = {
   },
 
   /**
+   * Set template as inactive
+   */
+  async deactivateTemplate(id: number): Promise<DocumentTemplate> {
+    const response = await api.patch<ApiResponse<DocumentTemplate>>(
+      `/document-templates/${id}/deactivate`,
+    );
+    return response.data.data;
+  },
+
+  /**
    * Download template file
    */
   async downloadTemplate(id: number, filename: string): Promise<void> {

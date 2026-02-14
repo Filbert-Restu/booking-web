@@ -16,6 +16,11 @@ export interface UserShort {
     name: string;
     slug: string;
   };
+  unit?: {
+    id: number;
+    name: string;
+    code: string;
+  };
 }
 
 export interface BookingContent {

@@ -255,11 +255,16 @@ function RouteComponent() {
             );
           }
           if (doc.status === 'REVISION' || doc.status === 'REJECTED') {
-            // Find the RETURNED log entry to get revision note and revisor
-            const returnedLog = doc.logs?.find(
+            // Find the LATEST RETURNED log entry (logs are asc by default)
+            const logs = doc.logs || [];
+            const returnedLog = [...logs].reverse().find(
               (log) => log.action === 'RETURNED',
             );
-            const revisorName = returnedLog?.user?.name || 'Approver';
+
+            const revisorUser = returnedLog?.user;
+            const revisorName = revisorUser
+              ? `${revisorUser.name}${revisorUser.unit ? ` (${revisorUser.unit.name})` : ''}`
+              : 'Approver';
             const revisionNote = returnedLog?.note || 'Perlu revisi';
             const revisionDate = returnedLog?.created_at
               ? new Date(returnedLog.created_at).toLocaleDateString('id-ID', {
@@ -270,45 +275,31 @@ function RouteComponent() {
               : '-';
 
             return (
-              <div className='bg-orange-50 border border-orange-200 rounded-lg p-3 space-y-2'>
-                {/* Header dengan icon dan status */}
-                <div className='flex items-center gap-2'>
-                  <AlertCircle className='w-4 h-4 text-orange-500 shrink-0' />
-                  <span className='text-sm font-medium text-orange-800'>
-                    Perlu Revisi
-                  </span>
-                </div>
-
-                {/* Info revisor dan tanggal */}
-                <div className='text-xs text-orange-700'>
-                  <span className='font-medium'>Dikembalikan oleh:</span>{' '}
-                  <span className='font-semibold'>{revisorName}</span>
-                  <span className='text-orange-600'> • {revisionDate}</span>
-                </div>
-
-                {/* Catatan revisi */}
-                <div className='bg-white border border-orange-200 rounded-md p-2'>
-                  <div className='flex items-start gap-2'>
-                    <MessageCircle className='w-3 h-3 text-orange-500 mt-0.5 shrink-0' />
-                    <div>
-                      <div className='text-xs font-medium text-orange-700 mb-1'>
-                        Catatan Revisi:
-                      </div>
-                      <div className='text-xs text-gray-700 leading-relaxed'>
-                        "{revisionNote}"
-                      </div>
-                    </div>
+              <div className='flex flex-col gap-2 max-w-[300px] py-1'>
+                <div className='flex flex-col gap-1.5'>
+                  {/* Status & Revisor */}
+                  <div className='flex flex-col'>
+                    <span className='text-[10px] font-bold text-red-500 uppercase tracking-widest mb-0.5'>
+                      Perlu Revisi
+                    </span>
+                    <span className='text-xs font-semibold text-gray-900'>
+                      Oleh: {revisorName}
+                    </span>
                   </div>
-                </div>
 
-                {/* Tombol action */}
-                <div className='pt-1'>
+                  {/* Note */}
+                  <div className='bg-gray-50 border border-gray-100 rounded-md p-2.5'>
+                    <p className='text-xs text-gray-600 leading-relaxed italic'>
+                      "{revisionNote}"
+                    </p>
+                  </div>
+
+                  {/* Action Link */}
                   <button
                     onClick={() => handleAjukanPinjamWithData(doc)}
-                    className='inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md transition-colors duration-200'
+                    className='text-xs font-bold text-blue-600 hover:text-blue-800 hover:underline text-left w-fit'
                   >
-                    <Plus className='w-3 h-3' />
-                    Lengkapi & Ajukan Kembali
+                    Lengkapi & Ajukan Kembali →
                   </button>
                 </div>
               </div>

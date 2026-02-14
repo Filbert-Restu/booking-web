@@ -1,16 +1,19 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
-import { useEffect, useState } from 'react';
-import { Clock } from 'lucide-react';
+import { useEffect, useState, useRef, useMemo, useCallback } from 'react';
+import { Clock, Users, CheckCircle } from 'lucide-react';
 import { AxiosError } from 'axios';
 import { StatCard } from '@/shared/components/common/StatCard';
 import { Approval } from '@/features/approvals';
 import type { ActorRole } from '@/features/approvals';
 import { documentService } from '@/services/document.service';
+import { ConfirmDialog } from '@/shared/components/common/ConfirmDialog';
+import { RevisionDialog } from '@/shared/components/common/RevisionDialog';
 import {
   mapDocumentsToApprovalItems,
   type ApprovalItem,
 } from '@/features/approvals/approval-utils';
 import { Button } from '@/shared/components/ui/button/button';
+import { documentTemplateService } from '@/services/document-template.service';
 
 export const Route = createFileRoute('/kemahasiswaan/')({
   component: RouteComponent,
@@ -19,15 +22,20 @@ export const Route = createFileRoute('/kemahasiswaan/')({
 function RouteComponent() {
   const navigate = useNavigate();
   const [approvalItems, setApprovalItems] = useState<ApprovalItem[]>([]);
+  const [templateCount, setTemplateCount] = useState(0);
+  const [uniqueSubmittersCount, setUniqueSubmittersCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const actorRole: ActorRole = 'kemahasiswaan';
+  const tableRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    fetchDocuments();
-  }, []);
+  // Dialog States
+  const [dialogState, setDialogState] = useState<{
+    type: 'approve' | 'revise' | null;
+    id: number | null;
+  }>({ type: null, id: null });
 
-  const fetchDocuments = async () => {
+  const fetchDocuments = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -35,6 +43,12 @@ function RouteComponent() {
       const pendingDocs = data.pending_documents || [];
       const mappedItems = mapDocumentsToApprovalItems(pendingDocs);
       setApprovalItems(mappedItems);
+
+      const submitterIds = new Set(pendingDocs.map((doc: any) => doc.creator_id));
+      setUniqueSubmittersCount(submitterIds.size);
+
+      const templates = await documentTemplateService.getTemplates();
+      setTemplateCount(templates.length);
     } catch (err) {
       console.error('Failed to fetch documents:', err);
       if (err instanceof AxiosError) {
@@ -45,77 +59,90 @@ function RouteComponent() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const stats = [
+  useEffect(() => {
+    fetchDocuments();
+  }, [fetchDocuments]);
+
+  const scrollToTable = useCallback(() => {
+    tableRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, []);
+
+  const stats = useMemo(() => [
     {
       title: 'Antrean Approval',
       value: String(approvalItems.filter((b) => b.status === 'waiting').length),
       icon: Clock,
       textColor: 'text-yellow-600',
       bgLight: 'bg-yellow-50',
+      onClick: scrollToTable,
     },
     {
-      title: 'Disetujui',
-      value: String(
-        approvalItems.filter((b) => b.status === 'approved').length,
-      ),
-      icon: Clock,
+      title: 'Total Pengaju',
+      value: String(uniqueSubmittersCount),
+      icon: Users,
+      textColor: 'text-blue-600',
+      bgLight: 'bg-blue-50',
+      onClick: scrollToTable,
+    },
+    {
+      title: 'Total Diapprove',
+      value: String(approvalItems.filter((b) => b.status === 'approved').length),
+      icon: CheckCircle,
       textColor: 'text-green-600',
       bgLight: 'bg-green-50',
+      onClick: () => navigate({ to: '/kemahasiswaan/riwayat-persetujuan' }),
     },
-    {
-      title: 'Total Dokumen',
-      value: String(approvalItems.length),
-      icon: Clock,
-      textColor: 'text-sky-600',
-      bgLight: 'bg-sky-50',
-    },
-  ];
+  ], [approvalItems, uniqueSubmittersCount, navigate, scrollToTable]);
 
-  const handleApprove = async (id: number) => {
-    const note = prompt('Masukkan catatan (opsional):') || '';
+  const handleApprove = useCallback((id: number) => {
+    setDialogState({ type: 'approve', id });
+  }, []);
+
+  const onConfirmApprove = useCallback(async () => {
+    if (!dialogState.id) return;
 
     try {
-      // Kemahasiswaan tidak memerlukan tanda tangan untuk approval
-      await documentService.approveDocument(
-        id,
-        '',
-        note || 'Disetujui oleh Kemahasiswaan',
-      );
+      await documentService.approveDocument(dialogState.id, '', 'Approved by Kemahasiswaan');
       await fetchDocuments();
     } catch (err) {
       console.error('Failed to approve document:', err);
       if (err instanceof AxiosError) {
-        alert(
-          '❌ Gagal menyetujui dokumen\n\n' +
-            (err.response?.data?.message || err.message),
-        );
+        setError(err.response?.data?.message || 'Gagal menyetujui dokumen');
       } else {
-        alert('Terjadi kesalahan saat menyetujui dokumen');
+        setError('Terjadi kesalahan saat menyetujui dokumen');
       }
+    } finally {
+      setDialogState({ type: null, id: null });
     }
-  };
+  }, [dialogState.id, fetchDocuments]);
 
-  const handleRevise = async (id: number) => {
-    const note = prompt('Masukkan catatan revisi:');
-    if (!note) return;
+  const handleRevise = useCallback((id: number) => {
+    setDialogState({ type: 'revise', id });
+  }, []);
+
+  const onConfirmRevise = useCallback(async (note: string) => {
+    if (!dialogState.id) return;
 
     try {
+      const id = dialogState.id;
       const doc = await documentService.getDocument(id);
       await documentService.reviseDocument(id, doc.creator_id, note);
       await fetchDocuments();
     } catch (err) {
       console.error('Failed to revise document:', err);
       if (err instanceof AxiosError) {
-        alert(err.response?.data?.message || 'Gagal mengembalikan dokumen');
+        setError(err.response?.data?.message || 'Gagal mengembalikan dokumen');
       } else {
-        alert('Terjadi kesalahan saat mengembalikan dokumen');
+        setError('Terjadi kesalahan saat mengembalikan dokumen');
       }
+    } finally {
+      setDialogState({ type: null, id: null });
     }
-  };
+  }, [dialogState.id, fetchDocuments]);
 
-  const handleOpenDoc = (documentId: number) => {
+  const handleOpenDoc = useCallback((documentId: number) => {
     navigate({
       to: '/preview-document',
       search: {
@@ -123,7 +150,7 @@ function RouteComponent() {
         return: '/kemahasiswaan',
       },
     });
-  };
+  }, [navigate]);
 
   if (loading) {
     return (
@@ -159,7 +186,7 @@ function RouteComponent() {
         </p>
       </div>
 
-      <div className='grid grid-cols-3 gap-4 mb-6'>
+      <div className='grid grid-cols-1 md:grid-cols-3 gap-4 mb-6'>
         {stats.map((stat, index) => (
           <StatCard
             key={index}
@@ -168,11 +195,12 @@ function RouteComponent() {
             icon={stat.icon}
             textColor={stat.textColor}
             bgLight={stat.bgLight}
+            onClick={stat.onClick}
           />
         ))}
       </div>
 
-      <div className='mt-6'>
+      <div className='mt-6' ref={tableRef}>
         <h2 className='text-lg font-semibold mb-4'>Persetujuan Peminjaman</h2>
         {approvalItems.length === 0 ? (
           <div className='bg-white rounded-lg border border-gray-200 p-8 text-center'>
@@ -191,6 +219,21 @@ function RouteComponent() {
           />
         )}
       </div>
+
+      <ConfirmDialog
+        isOpen={dialogState.type === 'approve'}
+        onClose={() => setDialogState({ type: null, id: null })}
+        onConfirm={onConfirmApprove}
+        title='⚠️ Persetujuan Dokumen'
+        description='Apakah Anda yakin ingin menyetujui dokumen ini? Tindakan ini tidak dapat dibatalkan.'
+        confirmLabel='Setujui'
+      />
+
+      <RevisionDialog
+        isOpen={dialogState.type === 'revise'}
+        onClose={() => setDialogState({ type: null, id: null })}
+        onConfirm={onConfirmRevise}
+      />
     </>
   );
 }

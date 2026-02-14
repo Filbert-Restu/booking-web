@@ -57,8 +57,9 @@ class SignatureService {
   async updateSignature(id: number, signatureFile: File): Promise<Signature> {
     const formData = new FormData();
     formData.append('signature', signatureFile);
+    formData.append('_method', 'PUT'); // Force Laravel to treat this as partial update
 
-    const response = await api.put<SignatureResponse>(`/signs/${id}`, formData);
+    const response = await api.post<SignatureResponse>(`/signs/${id}`, formData);
     return response.data.data!;
   }
 

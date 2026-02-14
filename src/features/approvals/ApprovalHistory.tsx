@@ -9,7 +9,8 @@ import {
 } from '@/shared/components/ui/table';
 import { Search } from 'lucide-react';
 import { Input } from '@/shared/components/ui/input';
-import type { ApprovalItem } from './Approval';
+import { type ApprovalItem } from './Approval';
+import FileActions, { type FileType } from '@/components/FileActions';
 
 interface ApprovalHistoryProps {
   bookings: ApprovalItem[];
@@ -26,21 +27,24 @@ function statusBadge(status: string) {
   if (status === 'rejected') {
     return `${base} bg-red-100 text-red-700`;
   }
-  return `${base} bg-yellow-100 text-yellow-700`;
+  if (status === 'revisi' || status === 'returned') {
+    return `${base} bg-yellow-100 text-yellow-700`;
+  }
+  return `${base} bg-blue-100 text-blue-700`;
 }
 
 export function ApprovalHistory({
   bookings,
   showOrganisasi = true,
-  onOpenDoc,
 }: ApprovalHistoryProps) {
   const [searchTerm, setSearchTerm] = useState('');
+  const [pdfPreview, setPdfPreview] = useState<{
+    id: number;
+    type: FileType;
+    url: string;
+  } | null>(null);
 
   const filteredItems = bookings;
-
-  const handleDocumentPreview = (booking: ApprovalItem) => {
-    onOpenDoc?.(booking.id);
-  };
 
   useEffect(() => {
     console.log('ApprovalHistory received bookings:', bookings); // Log received bookings
@@ -99,16 +103,28 @@ export function ApprovalHistory({
                   <TableCell>{item.tanggal}</TableCell>
                   <TableCell>{item.waktu}</TableCell>
                   <TableCell className='text-center'>
-                    <button
-                      onClick={() => handleDocumentPreview(item)}
-                      className='text-blue-600 hover:text-blue-800 underline font-medium'
-                    >
-                      Lihat Dokumen
-                    </button>
+                    <FileActions
+                      docId={item.id}
+                      fileTypes={[
+                        { type: 'proposal', hasFile: !!item.hasProposal },
+                        {
+                          type: 'executive-summary',
+                          hasFile: !!item.hasExecutiveSummary,
+                        },
+                        {
+                          type: 'approval-sheet',
+                          hasFile: !!item.hasApprovalSheet,
+                        },
+                      ]}
+                      pdfPreview={pdfPreview}
+                      setPdfPreview={setPdfPreview}
+                    />
                   </TableCell>
                   <TableCell>
-                    <div className='flex items-center justify-center'>
-                      <span className={statusBadge(item.status)}>APPROVED</span>
+                    <div className='flex items-center justify-center font-semibold'>
+                      <span className={statusBadge(item.status)}>
+                        {item.status === 'revisi' ? 'REVISI' : item.status.toUpperCase()}
+                      </span>
                     </div>
                   </TableCell>
                 </TableRow>

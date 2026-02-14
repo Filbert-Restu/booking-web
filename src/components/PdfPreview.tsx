@@ -15,7 +15,7 @@ const PdfPreview: React.FC<PdfPreviewProps> = ({
 }) => {
   if (!open || !url) return null;
   return (
-    <div className='fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50'>
+    <div className='fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-50'>
       <div className='bg-white rounded-lg w-[90vw] h-[90vh] flex flex-col'>
         <div className='flex justify-between items-center p-4 border-b'>
           <h3 className='text-lg font-semibold'>{title || 'Preview PDF'}</h3>

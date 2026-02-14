@@ -476,7 +476,7 @@ function RouteComponent() {
                 Unggah Proposal <span className='text-red-500'>*</span>
               </label>
               <Input
-                required
+                required={!formData.document_id}
                 type='file'
                 accept='.pdf'
                 onChange={(e) => {

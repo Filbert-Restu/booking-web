@@ -50,6 +50,7 @@ export function SignDocumentContent({
   const [reviseDialogOpen, setReviseDialogOpen] = useState(false);
   const [reviseNote, setReviseNote] = useState('');
   const [document, setDocument] = useState<Document | null>(null);
+  const [isSignatureEmbedded, setIsSignatureEmbedded] = useState(false);
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
   const [confirmAction, setConfirmAction] = useState<{
     title: string;
@@ -327,6 +328,7 @@ export function SignDocumentContent({
       currentDocumentIdRef.current = documentId;
 
       if (documentId && !globalLockRef.current.document) {
+        setIsSignatureEmbedded(false); // Reset on document change
         loadDocument();
       }
     }
@@ -336,6 +338,7 @@ export function SignDocumentContent({
   useEffect(() => {
     if (currentDocTypeRef.current !== selectedDocType) {
       currentDocTypeRef.current = selectedDocType;
+      setIsSignatureEmbedded(false); // Reset on type change
 
       if (documentId && selectedDocType && !globalLockRef.current.pdf) {
         loadDocumentPreview(selectedDocType);
@@ -377,7 +380,7 @@ export function SignDocumentContent({
       await api.post(`/documents/${documentId}/apply-signature`, {
         type: selectedDocType,
       });
-      alert('Tanda tangan berhasil dibubuhkan ke dokumen (belum disetujui)');
+      setIsSignatureEmbedded(true);
       // Reload the document preview to show updated signature
       const cacheKey = `${documentId}-${selectedDocType}`;
       pdfCacheRef.current.delete(cacheKey);
@@ -401,6 +404,16 @@ export function SignDocumentContent({
   };
 
   const confirmApproveDocument = () => {
+    if (!isSignatureEmbedded) {
+      showConfirmation(
+        'Tanda Tangan Belum Dibubuhkan',
+        'Silakan klik button "Bubuhkan tanda tangan" terlebih dahulu untuk melihat pratinjau tanda tangan Anda pada dokumen sebelum menyetujuinya.',
+        () => { }, // Just to close the dialog
+        'Mengerti',
+      );
+      return;
+    }
+
     showConfirmation(
       'Konfirmasi Persetujuan Dokumen',
       'Apakah Anda yakin ingin menyetujui dokumen ini? Dokumen yang disetujui tidak dapat diubah lagi dan akan melanjutkan ke tahap berikutnya.',
@@ -428,7 +441,6 @@ export function SignDocumentContent({
         '',
         'Approved with signature',
       );
-      alert('✅ Dokumen berhasil ditandatangani dan disetujui!');
 
       if (returnPath) {
         navigate({ to: returnPath });
@@ -467,7 +479,6 @@ export function SignDocumentContent({
         reviseNote,
       );
 
-      alert('📝 Dokumen berhasil dikembalikan untuk revisi!');
       setReviseDialogOpen(false);
       setReviseNote('');
 
@@ -481,7 +492,7 @@ export function SignDocumentContent({
       const error = err as AxiosError<{ message?: string }>;
       alert(
         error.response?.data?.message ||
-          'Gagal mengembalikan dokumen untuk revisi',
+        'Gagal mengembalikan dokumen untuk revisi',
       );
     } finally {
       setLoading(false);

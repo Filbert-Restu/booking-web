@@ -80,7 +80,7 @@ function RouteComponent() {
       <div className='mb-6'>
         <h1 className='text-2xl font-bold'>Riwayat Persetujuan</h1>
         <p className='text-muted-foreground'>
-          Daftar peminjaman yang sudah diproses oleh Ketua Departemen
+          Daftar peminjaman yang sudah diproses
         </p>
       </div>
 

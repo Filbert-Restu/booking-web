@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef, useMemo, useCallback } from 'react';
 import { Clock, Users, CheckCircle } from 'lucide-react';
 import { AxiosError } from 'axios';
 import { StatCard } from '@/shared/components/common/StatCard';
@@ -10,6 +10,8 @@ import {
   mapDocumentsToApprovalItems,
   type ApprovalItem,
 } from '@/features/approvals/approval-utils';
+import { ConfirmDialog } from '@/shared/components/common/ConfirmDialog';
+import { RevisionDialog } from '@/shared/components/common/RevisionDialog';
 import { Button } from '@/shared/components/ui/button/button';
 
 export const Route = createFileRoute('/sumber-daya/')({
@@ -22,6 +24,13 @@ function RouteComponent() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const actorRole: ActorRole = 'sumber-daya';
+  const tableRef = useRef<HTMLDivElement>(null);
+
+  // Dialog States
+  const [dialogState, setDialogState] = useState<{
+    type: 'approve' | 'revise' | null;
+    id: number | null;
+  }>({ type: null, id: null });
 
   useEffect(() => {
     fetchDocuments();
@@ -47,84 +56,83 @@ function RouteComponent() {
     }
   };
 
-  const stats = [
+  const uniqueSubmittersCount = useMemo(() => {
+    const submitterIds = new Set<string>();
+    approvalItems.forEach((item) => submitterIds.add(item.creator_id));
+    return submitterIds.size;
+  }, [approvalItems]);
+
+  const scrollToTable = useCallback(() => {
+    tableRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [tableRef]);
+
+  const stats = useMemo(() => [
     {
       title: 'Antrean Approval',
       value: String(approvalItems.filter((b) => b.status === 'waiting').length),
       icon: Clock,
       textColor: 'text-yellow-600',
       bgLight: 'bg-yellow-50',
+      onClick: scrollToTable,
     },
     {
       title: 'Total Pengaju',
-      value: String(approvalItems.length),
+      value: String(uniqueSubmittersCount),
       icon: Users,
       textColor: 'text-blue-600',
       bgLight: 'bg-blue-50',
+      onClick: scrollToTable,
     },
     {
       title: 'Total Diapprove',
-      value: String(
-        approvalItems.filter((b) => b.status === 'approved').length,
-      ),
+      value: String(approvalItems.filter((b) => b.status === 'approved').length),
       icon: CheckCircle,
       textColor: 'text-green-600',
       bgLight: 'bg-green-50',
+      onClick: () => navigate({ to: '/sumber-daya/riwayat-persetujuan' }),
     },
-  ];
+  ], [approvalItems, uniqueSubmittersCount, navigate, scrollToTable]);
 
-  const handleApprove = async (id: number) => {
-    const note = prompt('Masukkan catatan (opsional):') || '';
+  const handleApprove = useCallback((id: number) => {
+    setDialogState({ type: 'approve', id });
+  }, []);
+
+  const onConfirmApprove = useCallback(async () => {
+    if (!dialogState.id) return;
 
     try {
       // Sumber Daya tidak memerlukan tanda tangan untuk approval
-      await documentService.approveDocument(
-        id,
-        '',
-        note || 'Disetujui oleh Sumber Daya',
-      );
-      alert(
-        '✅ Dokumen berhasil disetujui!\n\nDokumen telah diteruskan ke step berikutnya.',
-      );
-      await fetchDocuments();
-    } catch (err) {
-      console.error('Failed to approve document:', err);
-      if (err instanceof AxiosError) {
-        alert(
-          '❌ Gagal menyetujui dokumen\n\n' +
-            (err.response?.data?.message || err.message),
-        );
-      } else {
-        alert('Terjadi kesalahan saat menyetujui dokumen');
-      }
+      await documentService.approveDocument(dialogState.id, '', 'Approved by Sumber Daya');
+    } finally {
+      setDialogState({ type: null, id: null });
     }
-  };
+  }, [dialogState.id, fetchDocuments]);
 
-  const handleRevise = async (id: number) => {
-    const note = prompt('Masukkan catatan revisi:');
-    if (!note) return;
+  const handleRevise = useCallback((id: number) => {
+    setDialogState({ type: 'revise', id });
+  }, []);
+
+  const onConfirmRevise = useCallback(async (note: string) => {
+    if (!dialogState.id) return;
 
     try {
+      const id = dialogState.id;
       const doc = await documentService.getDocument(id);
       await documentService.reviseDocument(id, doc.creator_id, note);
-      alert('Dokumen dikembalikan untuk revisi!');
-      await fetchDocuments();
-    } catch (err) {
-      console.error('Failed to revise document:', err);
-      if (err instanceof AxiosError) {
-        alert(err.response?.data?.message || 'Gagal mengembalikan dokumen');
-      } else {
-        alert('Terjadi kesalahan saat mengembalikan dokumen');
-      }
+    } finally {
+      setDialogState({ type: null, id: null });
     }
-  };
+  }, [dialogState.id, fetchDocuments]);
 
-  const handleOpenDoc = (documentId: number) => {
+  const handleOpenDoc = useCallback((documentId: number) => {
     navigate({
-      to: '/sumber-daya/sign-document',
-      search: { documentId }
+      to: '/preview-document',
+      search: {
+        documentId,
+        return: '/sumber-daya'
+      }
     });
-  };
+  }, [navigate]);
 
   if (loading) {
     return (
@@ -173,7 +181,7 @@ function RouteComponent() {
         ))}
       </div>
 
-      <div className='mt-6'>
+      <div className='mt-6' ref={tableRef}>
         <h2 className='text-lg font-semibold mb-4'>Persetujuan Peminjaman</h2>
         {approvalItems.length === 0 ? (
           <div className='bg-white rounded-lg border border-gray-200 p-8 text-center'>
@@ -188,9 +196,25 @@ function RouteComponent() {
             onRevise={handleRevise}
             actorRole={actorRole}
             onOpenDoc={handleOpenDoc}
+            showOrganisasi={true}
           />
         )}
       </div>
+
+      <ConfirmDialog
+        isOpen={dialogState.type === 'approve'}
+        onClose={() => setDialogState({ type: null, id: null })}
+        onConfirm={onConfirmApprove}
+        title='⚠️ Persetujuan Dokumen'
+        description='Apakah Anda yakin ingin menyetujui dokumen ini? Tindakan ini tidak dapat dibatalkan.'
+        confirmLabel='Setujui'
+      />
+
+      <RevisionDialog
+        isOpen={dialogState.type === 'revise'}
+        onClose={() => setDialogState({ type: null, id: null })}
+        onConfirm={onConfirmRevise}
+      />
     </>
   );
 }

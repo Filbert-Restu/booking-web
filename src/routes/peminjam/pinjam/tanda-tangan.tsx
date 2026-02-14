@@ -219,56 +219,60 @@ function RouteComponent() {
     try {
       setLoading(true);
 
-      // CRITICAL: Get booking data from document content if not in formData
-      let bookingData;
-      if (!formData.room_id || !formData.booking_date) {
-        const documentDetail = await documentService.getDocument(
-          formData.document_id!,
-        );
-        const content = documentDetail.content as any;
-
-        bookingData = {
-          document_id: formData.document_id!,
-          room_id: content.room_id || formData.room_id!,
-          booking_date: content.booking_date || formData.booking_date!,
-          start_time: content.start_time || formData.start_time!,
-          end_time: content.end_time || formData.end_time!,
-          purpose:
-            content.purpose ||
-            formData.purpose ||
-            formData.event_name ||
-            'Peminjaman Ruangan',
-          special_requirements: content.equipment || formData.equipment,
-          expected_participants: undefined,
-        };
-      } else {
-        bookingData = {
-          document_id: formData.document_id!,
-          room_id: formData.room_id!,
-          booking_date: formData.booking_date!,
-          start_time: formData.start_time!,
-          end_time: formData.end_time!,
-          purpose:
-            formData.purpose || formData.event_name || 'Peminjaman Ruangan',
-          special_requirements: formData.equipment,
-          expected_participants: undefined,
-        };
-      }
-
+      // 1. Fetch latest document detail (fresh status & content)
       const documentDetail = await documentService.getDocument(
         formData.document_id!,
       );
+      const content = (documentDetail.content as any) || {};
 
-      // Submit document only if it's in DRAFT or REVISION status
-      // DRAFT = first time submit, REVISION = resubmit after revision
+      // 2. Build complete booking data (merge context + DB content)
+      const bookingData = {
+        document_id: formData.document_id!,
+        room_id: formData.room_id || content.room_id,
+        booking_date: formData.booking_date || content.booking_date,
+        start_time: formData.start_time || content.start_time,
+        end_time: formData.end_time || content.end_time,
+        purpose:
+          formData.purpose ||
+          formData.event_name ||
+          content.purpose ||
+          content.event_name ||
+          'Peminjaman Ruangan',
+        special_requirements: formData.equipment || content.equipment,
+        expected_participants: undefined,
+      };
+
+      // 3. Update or Create Booking
+      const existingBooking = await bookingService.getBookingByDocumentId(
+        formData.document_id!,
+      );
+
+      if (existingBooking) {
+        await bookingService.updateBooking(existingBooking.id, bookingData);
+      } else {
+        await bookingService.createBooking(bookingData);
+      }
+
+      // 4. Finally Submit document if status is DRAFT or REVISION
       if (
         documentDetail.status === 'DRAFT' ||
         documentDetail.status === 'REVISION'
       ) {
-        await documentService.submitDocument(formData.document_id!);
+        try {
+          await documentService.submitDocument(formData.document_id!);
+        } catch (submitErr) {
+          // If already submitted (e.g. race condition), ignore error and treat as success
+          if (
+            submitErr instanceof AxiosError &&
+            submitErr.response?.status === 400 &&
+            submitErr.response?.data?.message?.includes('status IN_PROGRESS')
+          ) {
+            console.log('Document already submitted, continuing as success...');
+          } else {
+            throw submitErr;
+          }
+        }
       }
-
-      await bookingService.createBooking(bookingData);
 
       alert(
         'Peminjaman berhasil diajukan! 🎉\n\n' +
@@ -276,10 +280,8 @@ function RouteComponent() {
         'Anda bisa memantau perkembangan di halaman "Daftar Peminjaman".',
       );
 
-      // Reset context
+      // Reset context and navigate
       resetFormData();
-
-      // Navigate to peminjaman list
       navigate({ to: '/peminjam/pinjam' });
     } catch (err) {
       if (err instanceof AxiosError) {

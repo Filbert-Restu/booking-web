@@ -77,8 +77,12 @@ export function SignatureUpload({
         setExistingSignature(null);
         setSignatureUrl(null);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to load signature:', error);
+      if (error.response?.status === 404) {
+        setExistingSignature(null);
+        setSignatureUrl(null);
+      }
     } finally {
       setLoading(false);
     }
@@ -124,7 +128,6 @@ export function SignatureUpload({
       updateSignatureUrl(clientUrl);
 
       setMode('view');
-      alert('Tanda tangan berhasil disimpan');
       onSignatureUploaded?.(signature);
     } catch (error: any) {
       console.error('Failed to save signature:', error);
@@ -170,7 +173,6 @@ export function SignatureUpload({
       updateSignatureUrl(clientUrl);
 
       setMode('view');
-      alert('Tanda tangan berhasil disimpan');
       onSignatureUploaded?.(signature);
     } catch (error: any) {
       console.error('Failed to upload signature:', error);
@@ -192,7 +194,6 @@ export function SignatureUpload({
       await signatureService.deleteSignature(existingSignature.id);
       setExistingSignature(null);
       setSignatureUrl(null);
-      alert('Tanda tangan berhasil dihapus');
     } catch (error: any) {
       console.error('Failed to delete signature:', error);
       alert(error.response?.data?.message || 'Gagal menghapus tanda tangan');

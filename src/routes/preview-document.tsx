@@ -27,6 +27,9 @@ import api from '@/lib/axios';
 import { AxiosError } from 'axios';
 import { documentService, type Document } from '@/services/document.service';
 
+import { ConfirmDialog } from '@/shared/components/common/ConfirmDialog';
+import { RevisionDialog } from '@/shared/components/common/RevisionDialog';
+
 export const Route = createFileRoute('/preview-document')({
   component: RouteComponent,
   validateSearch: (search: Record<string, unknown>) => {
@@ -53,9 +56,13 @@ export function DocumentPreviewContent({
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [approveLoading, setApproveLoading] = useState(false);
-  const [reviseDialogOpen, setReviseDialogOpen] = useState(false);
-  const [reviseNote, setReviseNote] = useState('');
   const [document, setDocument] = useState<Document | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  // Dialog States
+  const [dialogState, setDialogState] = useState<{
+    type: 'approve' | 'revise' | null;
+  }>({ type: null });
 
   useEffect(() => {
     if (documentId) {
@@ -80,6 +87,7 @@ export function DocumentPreviewContent({
 
     try {
       setLoading(true);
+      setError(null);
       // Clean up previous URL
       if (pdfUrl) {
         window.URL.revokeObjectURL(pdfUrl);
@@ -100,84 +108,62 @@ export function DocumentPreviewContent({
       const error = err as AxiosError<any>;
       if (error.response?.status === 404) {
         setPdfUrl(null);
-        alert(`Dokumen ${docType} belum tersedia`);
+        setError(`Dokumen ${docType} belum tersedia`);
       } else {
-        alert('Gagal memuat preview dokumen');
+        setError('Gagal memuat preview dokumen');
       }
     } finally {
       setLoading(false);
     }
   };
 
-  const handleApprove = async () => {
-    if (!documentId) {
-      alert('Document ID tidak ditemukan');
-      return;
-    }
+  const handleApprove = () => {
+    setDialogState({ type: 'approve' });
+  };
 
-    const note = prompt('Masukkan catatan (opsional):') || '';
+  const onConfirmApprove = async () => {
+    if (!documentId) return;
 
     try {
       setApproveLoading(true);
       await documentService.approveDocument(
         documentId,
         '',
-        note || 'Disetujui',
-      );
-      alert(
-        '✅ Dokumen berhasil disetujui!\n\nDokumen telah diteruskan ke step berikutnya.',
+        'Disetujui melalui preview',
       );
       navigate({ to: returnPath as any });
     } catch (err) {
       console.error('Failed to approve document:', err);
-      if (err instanceof AxiosError) {
-        alert(
-          '❌ Gagal menyetujui dokumen\n\n' +
-            (err.response?.data?.message || err.message),
-        );
-      } else {
-        alert('Terjadi kesalahan saat menyetujui dokumen');
-      }
+      const axiosError = err as AxiosError<{ message?: string }>;
+      setError(axiosError.response?.data?.message || 'Gagal menyetujui dokumen');
     } finally {
       setApproveLoading(false);
+      setDialogState({ type: null });
     }
   };
 
   const handleRevise = () => {
-    setReviseDialogOpen(true);
+    setDialogState({ type: 'revise' });
   };
 
-  const handleSubmitRevise = async () => {
-    if (!reviseNote.trim()) {
-      alert('Silakan masukkan catatan revisi');
-      return;
-    }
-
-    if (!documentId || !document) {
-      alert('Document ID tidak ditemukan');
-      return;
-    }
+  const onConfirmRevise = async (note: string) => {
+    if (!documentId || !document) return;
 
     try {
       setApproveLoading(true);
       await documentService.reviseDocument(
         documentId,
         document.creator_id,
-        reviseNote,
+        note,
       );
-      alert('📝 Dokumen berhasil dikembalikan untuk revisi!');
-      setReviseDialogOpen(false);
-      setReviseNote('');
       navigate({ to: returnPath as any });
     } catch (err) {
       console.error('Failed to revise document:', err);
       const error = err as AxiosError<{ message?: string }>;
-      alert(
-        error.response?.data?.message ||
-          'Gagal mengembalikan dokumen untuk revisi',
-      );
+      setError(error.response?.data?.message || 'Gagal mengembalikan dokumen untuk revisi');
     } finally {
       setApproveLoading(false);
+      setDialogState({ type: null });
     }
   };
 
@@ -265,6 +251,12 @@ export function DocumentPreviewContent({
         </div>
       )}
 
+      {error && (
+        <div className='mt-4 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-center'>
+          {error}
+        </div>
+      )}
+
       <div className='mt-6 flex justify-end'>
         <Button
           onClick={() => navigate({ to: returnPath as any })}
@@ -274,46 +266,20 @@ export function DocumentPreviewContent({
         </Button>
       </div>
 
-      {/* Dialog untuk Catatan Revisi */}
-      <Dialog open={reviseDialogOpen} onOpenChange={setReviseDialogOpen}>
-        <DialogContent className='sm:max-w-125'>
-          <DialogHeader>
-            <DialogTitle>Kembalikan Dokumen untuk Revisi</DialogTitle>
-            <DialogDescription>
-              Masukkan catatan revisi untuk dokumen ini. Dokumen akan
-              dikembalikan ke pembuat dengan catatan Anda.
-            </DialogDescription>
-          </DialogHeader>
-          <div className='grid gap-4 py-4'>
-            <Textarea
-              placeholder='Masukkan alasan pengembalian dan saran perbaikan...'
-              value={reviseNote}
-              onChange={(e) => setReviseNote(e.target.value)}
-              rows={5}
-              className='resize-none'
-            />
-          </div>
-          <DialogFooter>
-            <Button
-              variant='outline'
-              onClick={() => {
-                setReviseDialogOpen(false);
-                setReviseNote('');
-              }}
-              disabled={approveLoading}
-            >
-              Batal
-            </Button>
-            <Button
-              onClick={handleSubmitRevise}
-              disabled={!reviseNote.trim() || approveLoading}
-              variant='destructive'
-            >
-              {approveLoading ? 'Memproses...' : 'Kembalikan untuk Revisi'}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <ConfirmDialog
+        isOpen={dialogState.type === 'approve'}
+        onClose={() => setDialogState({ type: null })}
+        onConfirm={onConfirmApprove}
+        title='⚠️ Persetujuan Dokumen'
+        description='Apakah Anda yakin ingin menyetujui dokumen ini? Dokumen akan diteruskan ke step berikutnya.'
+        confirmLabel='Setujui'
+      />
+
+      <RevisionDialog
+        isOpen={dialogState.type === 'revise'}
+        onClose={() => setDialogState({ type: null })}
+        onConfirm={onConfirmRevise}
+      />
     </div>
   );
 }

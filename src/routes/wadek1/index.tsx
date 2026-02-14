@@ -1,14 +1,15 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef, useMemo, useCallback } from 'react';
 import { Clock, Users, CheckCircle } from 'lucide-react';
 import { AxiosError } from 'axios';
 import { StatCard } from '@/shared/components/common/StatCard';
 import { Approval } from '@/features/approvals';
 import type { ActorRole } from '@/features/approvals';
-import type { ApprovalDocType, ApprovalModeType } from '../_shared/approval-mock';
 import { documentService } from '@/services/document.service';
 import { mapDocumentsToApprovalItems, type ApprovalItem } from '@/features/approvals/approval-utils';
 import { Button } from '@/shared/components/ui/button/button';
+import { ConfirmDialog } from '@/shared/components/common/ConfirmDialog';
+import { RevisionDialog } from '@/shared/components/common/RevisionDialog';
 
 export const Route = createFileRoute('/wadek1/')({
   component: RouteComponent,
@@ -20,6 +21,12 @@ function RouteComponent() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const actorRole: ActorRole = 'wadek1';
+
+  // Dialog States
+  const [dialogState, setDialogState] = useState<{
+    type: 'approve' | 'revise' | null;
+    id: number | null;
+  }>({ type: null, id: null });
 
   useEffect(() => {
     fetchDocuments();
@@ -45,72 +52,85 @@ function RouteComponent() {
     }
   };
 
-  const stats = [
+  const tableRef = useRef<HTMLDivElement>(null);
+
+  const scrollToTable = () => {
+    tableRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  const uniqueSubmittersCount = useMemo(() => {
+    const submitters = new Set(approvalItems.map((item) => item.namaPeminjam));
+    return submitters.size;
+  }, [approvalItems]);
+
+  const stats = useMemo(() => [
     {
       title: 'Antrean Approval',
-      value: String(approvalItems.filter(b => b.status === 'waiting').length),
+      value: String(approvalItems.filter((b) => b.status === 'waiting').length),
       icon: Clock,
       textColor: 'text-yellow-600',
       bgLight: 'bg-yellow-50',
+      onClick: scrollToTable,
     },
     {
       title: 'Total Pengaju',
-      value: String(approvalItems.length),
+      value: String(uniqueSubmittersCount),
       icon: Users,
       textColor: 'text-blue-600',
       bgLight: 'bg-blue-50',
+      onClick: scrollToTable,
     },
     {
       title: 'Total Diapprove',
-      value: String(approvalItems.filter(b => b.status === 'approved').length),
+      value: String(approvalItems.filter((b) => b.status === 'approved').length),
       icon: CheckCircle,
       textColor: 'text-green-600',
       bgLight: 'bg-green-50',
+      onClick: () => navigate({ to: '/wadek1/riwayat-persetujuan' }),
     },
-  ];
+  ], [approvalItems, uniqueSubmittersCount, navigate]);
 
-  const handleApprove = async (id: number) => {
-    const confirmSign = confirm(
-      '✍️ Membubuhkan Tanda Tangan\n\n' +
-        'Untuk menyetujui dokumen ini, Anda perlu membubuhkan tanda tangan digital.\n\n' +
-        'Anda akan diarahkan ke halaman tanda tangan.',
-    );
-    
-    if (confirmSign) {
+  const handleApprove = useCallback((id: number) => {
+    setDialogState({ type: 'approve', id });
+  }, []);
+
+  const onConfirmApprove = useCallback(() => {
+    if (dialogState.id) {
       navigate({
         to: '/wadek1/sign-document',
         search: {
-          documentId: id,
+          documentId: dialogState.id,
         },
       });
     }
-  };
+    setDialogState({ type: null, id: null });
+  }, [dialogState.id, navigate]);
 
-  const handleRevise = async (id: number) => {
-    const note = prompt('Masukkan catatan revisi:');
-    if (!note) return;
+  const handleRevise = useCallback((id: number) => {
+    setDialogState({ type: 'revise', id });
+  }, []);
+
+  const onConfirmRevise = useCallback(async (note: string) => {
+    if (!dialogState.id) return;
 
     try {
+      const id = dialogState.id;
       const doc = await documentService.getDocument(id);
       await documentService.reviseDocument(id, doc.creator_id, note);
-      alert('Dokumen dikembalikan untuk revisi!');
       await fetchDocuments();
     } catch (err) {
       console.error('Failed to revise document:', err);
-      if (err instanceof AxiosError) {
-        alert(err.response?.data?.message || 'Gagal mengembalikan dokumen');
-      } else {
-        alert('Terjadi kesalahan saat mengembalikan dokumen');
-      }
+    } finally {
+      setDialogState({ type: null, id: null });
     }
-  };
+  }, [dialogState.id]);
 
-  const handleOpenDoc = (documentId: number) => {
+  const handleOpenDoc = useCallback((documentId: number) => {
     navigate({
       to: '/wadek1/sign-document',
       search: { documentId }
     });
-  };
+  }, [navigate]);
 
   if (loading) {
     return (
@@ -153,11 +173,12 @@ function RouteComponent() {
             icon={stat.icon}
             textColor={stat.textColor}
             bgLight={stat.bgLight}
+            onClick={stat.onClick}
           />
         ))}
       </div>
 
-      <div className='mt-6'>
+      <div className='mt-6' ref={tableRef}>
         <h2 className='text-lg font-semibold mb-4'>Persetujuan Peminjaman</h2>
         {approvalItems.length === 0 ? (
           <div className='bg-white rounded-lg border border-gray-200 p-8 text-center'>
@@ -174,6 +195,21 @@ function RouteComponent() {
           />
         )}
       </div>
+
+      <ConfirmDialog
+        isOpen={dialogState.type === 'approve'}
+        onClose={() => setDialogState({ type: null, id: null })}
+        onConfirm={onConfirmApprove}
+        title='✍️ Membubuhkan Tanda Tangan'
+        description='Untuk menyetujui dokumen ini, Anda perlu membubuhkan tanda tangan digital. Anda akan diarahkan ke halaman tanda tangan.'
+        confirmLabel='Lanjutkan'
+      />
+
+      <RevisionDialog
+        isOpen={dialogState.type === 'revise'}
+        onClose={() => setDialogState({ type: null, id: null })}
+        onConfirm={onConfirmRevise}
+      />
     </>
   );
 }

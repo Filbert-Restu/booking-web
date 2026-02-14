@@ -1,5 +1,11 @@
 import { useMemo, useState } from 'react';
-import { Button } from '@/shared/components/ui/button/button';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/shared/components/ui/select';
 import {
   Table,
   TableBody,
@@ -10,24 +16,9 @@ import {
 } from '@/shared/components/ui/table';
 import { CheckCircle2, XCircle, Search } from 'lucide-react';
 import { Input } from '@/shared/components/ui/input';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/shared/components/ui/select';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from '@/shared/components/ui/dialog';
-import { Textarea } from '@/shared/components/ui/textarea';
+import FileActions, { type FileType } from '@/components/FileActions';
 
-export type ApprovalStatus = 'waiting' | 'approved' | 'revisi';
+export type ApprovalStatus = 'waiting' | 'approved' | 'revisi' | 'rejected';
 
 export type ActorRole =
   | 'ketua-ormawa'
@@ -64,6 +55,9 @@ export interface ApprovalItem {
   executiveSummarySigned?: boolean;
   lembarPengesahanSigned?: boolean;
   revisiNotes?: string;
+  hasProposal?: boolean;
+  hasExecutiveSummary?: boolean;
+  hasApprovalSheet?: boolean;
 }
 
 interface ApprovalProps {
@@ -95,74 +89,40 @@ export function Approval({
   actorRole,
   onOpenDoc,
 }: ApprovalProps) {
-  const [items, setItems] = useState<ApprovalItem[]>(bookings);
   const [searchTerm, setSearchTerm] = useState('');
-  const [revisiDialogOpen, setRevisiDialogOpen] = useState(false);
-  const [revisiNotes, setRevisiNotes] = useState('');
-  const [currentRevisiId, setCurrentRevisiId] = useState<number | null>(null);
+  const [pdfPreview, setPdfPreview] = useState<{
+    id: number;
+    type: FileType;
+    url: string;
+  } | null>(null);
   const isKemahasiswaan = actorRole === 'kemahasiswaan';
+
   const totalColumns = useMemo(() => {
-    const optionalColumns =
-      (showOrganisasi ? 1 : 0) + (isKemahasiswaan ? 1 : 0);
-    // Changed from 10 to 7 after consolidating all document columns into one
+    const optionalColumns = (showOrganisasi ? 1 : 0) + (isKemahasiswaan ? 1 : 0);
     return 7 + optionalColumns;
   }, [isKemahasiswaan, showOrganisasi]);
 
-  const handleApproveLocal = (id: number) => {
-    setItems((prev) =>
-      prev.map((item) =>
-        item.id === id ? { ...item, status: 'approved' } : item,
-      ),
+  const filteredItems = useMemo(() => {
+    return bookings.filter(
+      (item) =>
+        item.kegiatan.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        item.namaPeminjam.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        item.namaRuang.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (item.organisasiMahasiswa &&
+          item.organisasiMahasiswa.toLowerCase().includes(searchTerm.toLowerCase())),
     );
-    onApprove?.(id);
-  };
-
-  const handleRejectLocal = (id: number, notes: string) => {
-    setItems((prev) =>
-      prev.map((item) =>
-        item.id === id
-          ? { ...item, status: 'revisi', revisiNotes: notes }
-          : item,
-      ),
-    );
-    onRevise?.(id);
-  };
+  }, [bookings, searchTerm]);
 
   const handleActionSelect = (id: number, value: ApprovalStatus) => {
     if (value === 'approved') {
-      handleApproveLocal(id);
-      return;
-    }
-    if (value === 'revisi') {
-      // Open dialog untuk catatan revisi
-      setCurrentRevisiId(id);
-      setRevisiNotes('');
-      setRevisiDialogOpen(true);
+      onApprove?.(id);
+    } else if (value === 'revisi') {
+      onRevise?.(id);
     }
   };
-
-  const handleSubmitRevisi = () => {
-    if (currentRevisiId !== null && revisiNotes.trim()) {
-      handleRejectLocal(currentRevisiId, revisiNotes);
-      setRevisiDialogOpen(false);
-      setCurrentRevisiId(null);
-      setRevisiNotes('');
-    }
-  };
-
-  const filteredItems = items.filter(
-    (item) =>
-      item.kegiatan.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.namaPeminjam.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.namaRuang.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (item.organisasiMahasiswa &&
-        item.organisasiMahasiswa
-          .toLowerCase()
-          .includes(searchTerm.toLowerCase())),
-  );
 
   return (
-    <div className='w-full space-y-6 p-6'>
+    <div className='w-full space-y-6'>
       <div className='relative max-w-md'>
         <Search className='absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400' />
         <Input
@@ -221,12 +181,22 @@ export function Approval({
                   <TableCell>{item.tanggal}</TableCell>
                   <TableCell>{item.waktu}</TableCell>
                   <TableCell className='text-center'>
-                    <button
-                      onClick={() => onOpenDoc?.(item.id)}
-                      className='text-blue-600 hover:text-blue-800 underline font-medium'
-                    >
-                      Lihat Dokumen
-                    </button>
+                    <FileActions
+                      docId={item.id}
+                      fileTypes={[
+                        { type: 'proposal', hasFile: !!item.hasProposal },
+                        {
+                          type: 'executive-summary',
+                          hasFile: !!item.hasExecutiveSummary,
+                        },
+                        {
+                          type: 'approval-sheet',
+                          hasFile: !!item.hasApprovalSheet,
+                        },
+                      ]}
+                      pdfPreview={pdfPreview}
+                      setPdfPreview={setPdfPreview}
+                    />
                   </TableCell>
                   {isKemahasiswaan && (
                     <TableCell>
@@ -302,38 +272,6 @@ export function Approval({
           </TableBody>
         </Table>
       </div>
-
-      <Dialog open={revisiDialogOpen} onOpenChange={setRevisiDialogOpen}>
-        <DialogContent className='sm:max-w-[425px]'>
-          <DialogHeader>
-            <DialogTitle>Catatan Revisi</DialogTitle>
-            <DialogDescription>
-              Masukkan catatan revisi untuk pengajuan ini. Catatan akan dikirim
-              ke peminjam.
-            </DialogDescription>
-          </DialogHeader>
-          <div className='grid gap-4 py-4'>
-            <Textarea
-              placeholder='Tuliskan catatan revisi di sini...'
-              value={revisiNotes}
-              onChange={(e) => setRevisiNotes(e.target.value)}
-              rows={5}
-              className='resize-none'
-            />
-          </div>
-          <DialogFooter>
-            <Button
-              variant='outline'
-              onClick={() => setRevisiDialogOpen(false)}
-            >
-              Batal
-            </Button>
-            <Button onClick={handleSubmitRevisi} disabled={!revisiNotes.trim()}>
-              Kirim Revisi
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }
