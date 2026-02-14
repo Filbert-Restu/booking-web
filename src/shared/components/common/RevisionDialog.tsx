@@ -19,6 +19,7 @@ interface RevisionDialogProps {
     placeholder?: string;
     confirmLabel?: string;
     cancelLabel?: string;
+    variant?: 'default' | 'destructive' | 'outline' | 'secondary' | 'ghost' | 'link';
 }
 
 export function RevisionDialog({
@@ -30,6 +31,7 @@ export function RevisionDialog({
     placeholder = 'Tulis catatan di sini...',
     confirmLabel = 'Kirim Revisi',
     cancelLabel = 'Batal',
+    variant = 'default',
 }: RevisionDialogProps) {
     const [note, setNote] = useState('');
 
@@ -58,7 +60,7 @@ export function RevisionDialog({
                     <Button variant='outline' onClick={onClose}>
                         {cancelLabel}
                     </Button>
-                    <Button onClick={handleConfirm} disabled={!note.trim() && confirmLabel !== 'Setujui'}>
+                    <Button variant={variant} onClick={handleConfirm} disabled={!note.trim() && confirmLabel !== 'Setujui'}>
                         {confirmLabel}
                     </Button>
                 </DialogFooter>

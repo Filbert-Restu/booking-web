@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { useEffect, useState, useRef, useMemo, useCallback } from 'react';
-import { Clock, Users, CheckCircle } from 'lucide-react';
+import { Clock, Users, CheckCircle, FileText } from 'lucide-react';
 import { AxiosError } from 'axios';
 import { StatCard } from '@/shared/components/common/StatCard';
 import { Approval } from '@/features/approvals';
@@ -79,12 +79,12 @@ function RouteComponent() {
       onClick: scrollToTable,
     },
     {
-      title: 'Total Pengaju',
-      value: String(uniqueSubmittersCount),
-      icon: Users,
+      title: 'Total Template',
+      value: String(templateCount),
+      icon: FileText,
       textColor: 'text-blue-600',
       bgLight: 'bg-blue-50',
-      onClick: scrollToTable,
+      onClick: () => navigate({ to: '/kemahasiswaan/template-dokumen' }),
     },
     {
       title: 'Total Diapprove',
@@ -94,7 +94,7 @@ function RouteComponent() {
       bgLight: 'bg-green-50',
       onClick: () => navigate({ to: '/kemahasiswaan/riwayat-persetujuan' }),
     },
-  ], [approvalItems, uniqueSubmittersCount, navigate, scrollToTable]);
+  ], [approvalItems, uniqueSubmittersCount, templateCount, navigate, scrollToTable]);
 
   const handleApprove = useCallback((id: number) => {
     setDialogState({ type: 'approve', id });
@@ -233,6 +233,7 @@ function RouteComponent() {
         isOpen={dialogState.type === 'revise'}
         onClose={() => setDialogState({ type: null, id: null })}
         onConfirm={onConfirmRevise}
+        variant='destructive'
       />
     </>
   );

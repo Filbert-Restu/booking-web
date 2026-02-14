@@ -27,7 +27,6 @@ export const Route = createFileRoute('/sumber-daya/tambah-peminjaman')({
 	component: RouteComponent,
 });
 
-
 function RouteComponent() {
 	const [rooms, setRooms] = useState<Room[]>([]);
 	const [selectedRoom, setSelectedRoom] = useState<string>('');
@@ -58,14 +57,6 @@ function RouteComponent() {
 			setRooms(data);
 			if (data.length > 0 && !selectedRoom) {
 				setSelectedRoom(data[0].code);
-				// Auto-fetch schedule for the first room
-				try {
-					const schedule = await roomService.getRoomSchedule(data[0].id, firstDay, lastDay);
-					setRoomBookings(schedule.bookings || []);
-					setShowRoomDetails(true);
-				} catch (scheduleErr) {
-					console.error('Failed to auto-fetch schedule:', scheduleErr);
-				}
 			}
 		} catch (err) {
 			console.error('Failed to fetch rooms:', err);
@@ -111,8 +102,11 @@ function RouteComponent() {
 			setLoading(true);
 			const room = rooms.find(r => r.code === selectedRoom);
 			if (room) {
-				// Fetch room schedule to show existing bookings
-				const schedule = await roomService.getRoomSchedule(room.id, startDate, endDate);
+				// Jika input kosong, gunakan default bulan ini untuk fetch jadwal
+				const start = startDate || firstDay;
+				const end = endDate || lastDay;
+
+				const schedule = await roomService.getRoomSchedule(room.id, start, end);
 				setRoomBookings(schedule.bookings || []);
 				setShowRoomDetails(true);
 			}
@@ -127,8 +121,8 @@ function RouteComponent() {
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
 
-		if (!borrowerId.trim() || !borrowerName.trim() || !activity.trim()) {
-			alert('NIM/NIP Peminjam, Nama Peminjam, dan Aktivitas wajib diisi!');
+		if (!borrowerId.trim() || !borrowerName.trim() || !activity.trim() || !startDate || !startTime || !endTime) {
+			alert('Semua field wajib diisi!');
 			return;
 		}
 
@@ -145,8 +139,6 @@ function RouteComponent() {
 				return;
 			}
 
-			// Create document for manual booking
-			// Using workflow_id 1 as default for peminjaman ruang
 			const documentData = {
 				workflow_id: 1,
 				title: `Manual Booking - ${activity}`,
@@ -165,18 +157,14 @@ function RouteComponent() {
 			};
 
 			const doc = await documentService.createDocument(documentData);
-
-			// Auto-approve the document since it's manual booking by Sumber Daya
 			await documentService.submitDocument(doc.id);
 
 			alert('Peminjaman manual berhasil ditambahkan!');
 
-			// Reset form
 			setBorrowerId('');
 			setBorrowerName('');
 			setActivity('');
 
-			// Refresh schedule
 			await handleSearch();
 		} catch (err) {
 			console.error('Failed to create manual booking:', err);
@@ -196,8 +184,8 @@ function RouteComponent() {
 			getBorrowerName(item),
 			item.booking_date,
 			`${item.start_time} - ${item.end_time}`,
-			item.start_time,
-			item.end_time,
+			item.start_time, // Added as per instruction
+			item.end_time,   // Added as per instruction
 		]
 			.join(' ')
 			.toLowerCase()
@@ -206,7 +194,7 @@ function RouteComponent() {
 
 	return (
 		<div className='space-y-6'>
-			<h1 className='text-2xl font-bold'>Tambah Peminjaman Manual</h1>
+			<h1 className='text-2xl font-bold'>Peminjaman Ruang</h1>
 
 			<div className='bg-white rounded-lg shadow-sm border border-gray-200 p-3'>
 				<div className='flex flex-col sm:flex-row gap-3 items-start sm:items-center w-fit'>

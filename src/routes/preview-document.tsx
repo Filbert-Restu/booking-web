@@ -239,7 +239,7 @@ export function DocumentPreviewContent({
             variant='destructive'
             className='flex-1'
           >
-            {approveLoading ? 'Memproses...' : 'Kembalikan untuk Revisi'}
+            {approveLoading ? 'Memproses...' : 'Kirim Revisi'}
           </Button>
           <Button
             onClick={handleApprove}
@@ -279,6 +279,7 @@ export function DocumentPreviewContent({
         isOpen={dialogState.type === 'revise'}
         onClose={() => setDialogState({ type: null })}
         onConfirm={onConfirmRevise}
+        variant='destructive'
       />
     </div>
   );

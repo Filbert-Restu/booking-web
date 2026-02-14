@@ -22,12 +22,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/shared/components/ui/dialog';
-import { Textarea } from '@/shared/components/ui/textarea';
 import { signatureService } from '@/services/signature.service';
 import { documentService, type Document } from '@/services/document.service';
 import api from '@/lib/axios';
 import { AxiosError } from 'axios';
 import { SignatureUpload } from '@/shared/components/common/SignatureUpload';
+import { RevisionDialog } from '@/shared/components/common/RevisionDialog';
 
 type DocumentType = 'proposal' | 'approval-sheet' | 'executive-summary';
 
@@ -58,6 +58,25 @@ export function SignDocumentContent({
     action: () => void;
     actionLabel: string;
   } | null>(null);
+
+  const [currentUser, setCurrentUser] = useState<{
+    id: number;
+    name: string;
+    role?: { slug: string };
+  } | null>(null);
+
+  const [signedDocTypes, setSignedDocTypes] = useState<Set<DocumentType>>(
+    new Set(),
+  );
+
+  const isWadek1 = currentUser?.role?.slug === 'wadek1';
+  const isAllSigned = useMemo(() => {
+    if (!isWadek1) return isSignatureEmbedded;
+    return (
+      signedDocTypes.has('approval-sheet') &&
+      signedDocTypes.has('executive-summary')
+    );
+  }, [isWadek1, isSignatureEmbedded, signedDocTypes]);
 
   // Global loading lock to prevent any concurrent operations
   const globalLockRef = useRef({
@@ -132,6 +151,17 @@ export function SignDocumentContent({
       timeoutsRef.current.document = timeoutId;
     };
   }, [documentId]);
+
+  const loadCurrentUser = useMemo(() => {
+    return async () => {
+      try {
+        const response = await api.get('/user');
+        setCurrentUser(response.data);
+      } catch (err) {
+        console.error('Failed to load current user:', err);
+      }
+    };
+  }, []);
 
   const loadSignature = useMemo(() => {
     let timeoutId: number;
@@ -294,6 +324,9 @@ export function SignDocumentContent({
     const initialize = () => {
       if (!mounted) return;
 
+      // Load current user
+      loadCurrentUser();
+
       // Load signature once on mount
       if (!signatureLoadedRef.current) {
         loadSignature();
@@ -381,6 +414,7 @@ export function SignDocumentContent({
         type: selectedDocType,
       });
       setIsSignatureEmbedded(true);
+      setSignedDocTypes((prev) => new Set(prev).add(selectedDocType));
       // Reload the document preview to show updated signature
       const cacheKey = `${documentId}-${selectedDocType}`;
       pdfCacheRef.current.delete(cacheKey);
@@ -399,12 +433,27 @@ export function SignDocumentContent({
       'Konfirmasi Bubuhkan Tanda Tangan',
       'Apakah Anda yakin ingin membubuhkan tanda tangan pada dokumen ini? Tanda tangan akan diterapkan pada dokumen yang sedang dipilih.',
       handleEmbedSignature,
-      'Ya, Bubuhkan',
+      'Bubuhkan',
     );
   };
 
   const confirmApproveDocument = () => {
-    if (!isSignatureEmbedded) {
+    if (isWadek1) {
+      const missing = [];
+      if (!signedDocTypes.has('approval-sheet')) missing.push('Lembar Pengesahan');
+      if (!signedDocTypes.has('executive-summary'))
+        missing.push('Executive Summary');
+
+      if (missing.length > 0) {
+        showConfirmation(
+          'Tanda Tangan Belum Lengkap',
+          `Sebagai Wadek 1, Anda wajib menandatangani ${missing.join(' dan ')} sebelum menyetujui dokumen. Silakan pilih dokumen tersebut pada dropdown dan klik "Bubuhkan tanda tangan".`,
+          () => { },
+          'Mengerti',
+        );
+        return;
+      }
+    } else if (!isSignatureEmbedded) {
       showConfirmation(
         'Tanda Tangan Belum Dibubuhkan',
         'Silakan klik button "Bubuhkan tanda tangan" terlebih dahulu untuk melihat pratinjau tanda tangan Anda pada dokumen sebelum menyetujuinya.',
@@ -460,12 +509,7 @@ export function SignDocumentContent({
     setReviseDialogOpen(true);
   };
 
-  const handleSubmitRevise = async () => {
-    if (!reviseNote.trim()) {
-      alert('Silakan masukkan catatan revisi');
-      return;
-    }
-
+  const onConfirmRevise = async (note: string) => {
     if (!documentId || !document) {
       alert('Document ID tidak ditemukan');
       return;
@@ -476,11 +520,10 @@ export function SignDocumentContent({
       await documentService.reviseDocument(
         documentId,
         document.creator_id,
-        reviseNote,
+        note,
       );
 
       setReviseDialogOpen(false);
-      setReviseNote('');
 
       if (returnPath) {
         navigate({ to: returnPath });
@@ -584,9 +627,11 @@ export function SignDocumentContent({
                   <SelectItem value='proposal'>Proposal</SelectItem>
                   <SelectItem value='approval-sheet'>
                     Lembar Pengesahan
+                    {signedDocTypes.has('approval-sheet') && ' (Signed)'}
                   </SelectItem>
                   <SelectItem value='executive-summary'>
                     Executive Summary
+                    {signedDocTypes.has('executive-summary') && ' (Signed)'}
                   </SelectItem>
                 </SelectContent>
               </Select>
@@ -634,12 +679,15 @@ export function SignDocumentContent({
                     variant='destructive'
                     className='flex-1 min-w-40'
                   >
-                    {loading ? 'Memproses...' : 'Kembalikan untuk revisi'}
+                    {loading ? 'Memproses...' : 'Kirim Revisi'}
                   </Button>
                   <Button
                     onClick={confirmApproveDocument}
                     disabled={loading || pdfLoading}
-                    className='flex-1 min-w-40'
+                    className={`flex-1 min-w-40 ${isWadek1 && !isAllSigned
+                      ? 'bg-gray-400 hover:bg-gray-400 cursor-not-allowed opacity-50'
+                      : ''
+                      }`}
                   >
                     {loading ? 'Memproses...' : 'Setujui'}
                   </Button>
@@ -701,45 +749,12 @@ export function SignDocumentContent({
       </Dialog>
 
       {/* Dialog untuk Catatan Revisi */}
-      <Dialog open={reviseDialogOpen} onOpenChange={setReviseDialogOpen}>
-        <DialogContent className='sm:max-w-125'>
-          <DialogHeader>
-            <DialogTitle>Kembalikan Dokumen untuk Revisi</DialogTitle>
-            <DialogDescription>
-              Masukkan catatan revisi untuk dokumen ini. Dokumen akan
-              dikembalikan ke pembuat dengan catatan Anda.
-            </DialogDescription>
-          </DialogHeader>
-          <div className='grid gap-4 py-4'>
-            <Textarea
-              placeholder='Masukkan alasan pengembalian dan saran perbaikan...'
-              value={reviseNote}
-              onChange={(e) => setReviseNote(e.target.value)}
-              rows={5}
-              className='resize-none'
-            />
-          </div>
-          <DialogFooter>
-            <Button
-              variant='outline'
-              onClick={() => {
-                setReviseDialogOpen(false);
-                setReviseNote('');
-              }}
-              disabled={loading}
-            >
-              Batal
-            </Button>
-            <Button
-              onClick={handleSubmitRevise}
-              disabled={!reviseNote.trim() || loading}
-              variant='destructive'
-            >
-              {loading ? 'Memproses...' : 'Kembalikan untuk Revisi'}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <RevisionDialog
+        isOpen={reviseDialogOpen}
+        onClose={() => setReviseDialogOpen(false)}
+        onConfirm={onConfirmRevise}
+        variant='destructive'
+      />
     </div>
   );
 }

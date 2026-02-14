@@ -209,6 +209,7 @@ function RouteComponent() {
         isOpen={dialogState.type === 'revise'}
         onClose={() => setDialogState({ type: null, id: null })}
         onConfirm={onConfirmRevise}
+        variant='destructive'
       />
     </>
   );

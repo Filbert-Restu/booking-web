@@ -1,8 +1,9 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { useEffect, useState, useRef, useMemo, useCallback } from 'react';
-import { Clock, Users, CheckCircle } from 'lucide-react';
+import { Clock, DoorOpen, CheckCircle } from 'lucide-react';
 import { AxiosError } from 'axios';
 import { StatCard } from '@/shared/components/common/StatCard';
+import { dashboardService } from '@/services/dashboard.service';
 import { Approval } from '@/features/approvals';
 import type { ActorRole } from '@/features/approvals';
 import { documentService } from '@/services/document.service';
@@ -32,9 +33,21 @@ function RouteComponent() {
     id: number | null;
   }>({ type: null, id: null });
 
+  const [dashboardStats, setDashboardStats] = useState<any>(null);
+
   useEffect(() => {
     fetchDocuments();
+    fetchDashboardStats();
   }, []);
+
+  const fetchDashboardStats = async () => {
+    try {
+      const data = await dashboardService.getStats();
+      setDashboardStats(data);
+    } catch (err) {
+      console.error('Failed to fetch dashboard stats:', err);
+    }
+  };
 
   const fetchDocuments = async () => {
     try {
@@ -56,12 +69,6 @@ function RouteComponent() {
     }
   };
 
-  const uniqueSubmittersCount = useMemo(() => {
-    const submitterIds = new Set<string>();
-    approvalItems.forEach((item) => submitterIds.add(item.creator_id));
-    return submitterIds.size;
-  }, [approvalItems]);
-
   const scrollToTable = useCallback(() => {
     tableRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [tableRef]);
@@ -76,12 +83,12 @@ function RouteComponent() {
       onClick: scrollToTable,
     },
     {
-      title: 'Total Pengaju',
-      value: String(uniqueSubmittersCount),
-      icon: Users,
+      title: 'Total Ruangan',
+      value: dashboardStats?.active_rooms?.toString() || '0',
+      icon: DoorOpen,
       textColor: 'text-blue-600',
       bgLight: 'bg-blue-50',
-      onClick: scrollToTable,
+      onClick: () => navigate({ to: '/sumber-daya/manajemen-ruang' }),
     },
     {
       title: 'Total Diapprove',
@@ -91,7 +98,7 @@ function RouteComponent() {
       bgLight: 'bg-green-50',
       onClick: () => navigate({ to: '/sumber-daya/riwayat-persetujuan' }),
     },
-  ], [approvalItems, uniqueSubmittersCount, navigate, scrollToTable]);
+  ], [approvalItems, dashboardStats, navigate, scrollToTable]);
 
   const handleApprove = useCallback((id: number) => {
     setDialogState({ type: 'approve', id });
@@ -177,6 +184,7 @@ function RouteComponent() {
             icon={stat.icon}
             textColor={stat.textColor}
             bgLight={stat.bgLight}
+            onClick={stat.onClick}
           />
         ))}
       </div>
@@ -214,6 +222,7 @@ function RouteComponent() {
         isOpen={dialogState.type === 'revise'}
         onClose={() => setDialogState({ type: null, id: null })}
         onConfirm={onConfirmRevise}
+        variant='destructive'
       />
     </>
   );
