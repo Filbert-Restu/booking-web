@@ -5,6 +5,7 @@ import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
 import { BookingDetailModal } from './BookingDetailModal';
+import { DateSelectionModal } from './DateSelectionModal';
 import { bookingService, type RoomBooking } from '@/services/booking.service';
 
 export default function BookingCalendar() {
@@ -13,6 +14,9 @@ export default function BookingCalendar() {
     null,
   );
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isDateSelectionModalOpen, setIsDateSelectionModalOpen] =
+    useState(false);
+  const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -93,6 +97,11 @@ export default function BookingCalendar() {
     setIsModalOpen(true);
   };
 
+  const handleDateClick = (dateInfo: { dateStr: string }) => {
+    setSelectedDate(dateInfo.dateStr);
+    setIsDateSelectionModalOpen(true);
+  };
+
   return (
     <>
       <div className='bg-white rounded-lg shadow-sm border border-gray-200 p-4 fc-responsive'>
@@ -124,6 +133,7 @@ export default function BookingCalendar() {
             locale='id'
             events={events}
             eventClick={handleEventClick}
+            dateClick={handleDateClick}
             height={560}
             aspectRatio={1.5}
           />
@@ -134,6 +144,12 @@ export default function BookingCalendar() {
         open={isModalOpen}
         onOpenChange={setIsModalOpen}
         booking={selectedBooking}
+      />
+
+      <DateSelectionModal
+        open={isDateSelectionModalOpen}
+        onOpenChange={setIsDateSelectionModalOpen}
+        selectedDate={selectedDate}
       />
     </>
   );

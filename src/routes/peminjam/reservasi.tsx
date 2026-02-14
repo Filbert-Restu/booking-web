@@ -1,7 +1,16 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { useState, useEffect, useMemo } from 'react';
-import { Calendar, AlertCircle } from 'lucide-react';
+import { Calendar as CalendarIcon, AlertCircle } from 'lucide-react';
 import { AxiosError } from 'axios';
+import { format } from 'date-fns';
+import { id } from 'date-fns/locale';
+import { cn } from '@/shared/lib/utils';
+import { Calendar } from '@/shared/components/ui/calendar';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/shared/components/ui/popover';
 
 import {
   Select,
@@ -27,6 +36,7 @@ import {
   type RoomBooking,
 } from '@/services/room.service';
 import { documentService } from '@/services/document.service';
+import { RoomDetailModal } from '@/features/bookings/RoomDetailModal';
 
 export const Route = createFileRoute('/peminjam/reservasi')({
   component: RouteComponent,
@@ -65,6 +75,7 @@ function RouteComponent() {
   const [timeValidationMsg, setTimeValidationMsg] = useState<string | null>(
     null,
   );
+  const [showRoomDetailModal, setShowRoomDetailModal] = useState(false);
 
   const [startTime, setStartTime] = useState('');
   const [endTime, setEndTime] = useState('');
@@ -488,28 +499,30 @@ function RouteComponent() {
   return (
     <div className='space-y-6'>
       <div className='bg-white rounded-lg shadow-sm border border-gray-200 p-3'>
-        <div className='flex flex-col sm:flex-row gap-3 items-start sm:items-center w-fit'>
-          <Select
-            value={selectedRoomId?.toString()}
-            onValueChange={(value) => {
-              setSelectedRoomId(Number(value));
-              setShowRoomDetails(false);
-            }}
-          >
-            <SelectTrigger className='w-full sm:w-64'>
-              <SelectValue placeholder='Pilih ruangan...' />
-            </SelectTrigger>
-            <SelectContent>
-              {rooms.map((room) => (
-                <SelectItem key={room.id} value={room.id.toString()}>
-                  {room.code} - {room.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Button onClick={handleSearch} disabled={!selectedRoomId || loading}>
-            {loading ? 'Memuat...' : 'Cari'}
-          </Button>
+        <div className='flex flex-col sm:flex-row gap-3 items-start sm:items-center'>
+          <div className='flex flex-col sm:flex-row gap-3 items-start sm:items-center w-fit'>
+            <Select
+              value={selectedRoomId?.toString()}
+              onValueChange={(value) => {
+                setSelectedRoomId(Number(value));
+                setShowRoomDetails(false);
+              }}
+            >
+              <SelectTrigger className='w-full sm:w-64'>
+                <SelectValue placeholder='Pilih ruangan...' />
+              </SelectTrigger>
+              <SelectContent>
+                {rooms.map((room) => (
+                  <SelectItem key={room.id} value={room.id.toString()}>
+                    {room.code} - {room.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Button onClick={handleSearch} disabled={!selectedRoomId || loading}>
+              {loading ? 'Memuat...' : 'Cari'}
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -523,6 +536,12 @@ function RouteComponent() {
               <p className='text-sm text-gray-600 mt-1'>
                 Kapasitas: {selectedRoom.capacity} orang
               </p>
+              <button
+                onClick={() => setShowRoomDetailModal(true)}
+                className='text-sm text-blue-600 hover:text-blue-800 hover:underline font-medium transition-colors mt-2'
+              >
+                Detail Tempat
+              </button>
             </div>
 
             <form onSubmit={handleSubmit} className='space-y-5'>
@@ -589,17 +608,53 @@ function RouteComponent() {
 
                 <div className='space-y-3'>
                   <div className='flex flex-col gap-2'>
-                    <div className='flex items-center gap-2 text-sm text-gray-600'>
-                      <Calendar className='w-4 h-4' />
-                      <span>Tanggal</span>
-                    </div>
-                    <Input
-                      type='date'
-                      value={bookingDate}
-                      onChange={(e) => setBookingDate(e.target.value)}
-                      min={new Date().toISOString().split('T')[0]}
-                      required
-                    />
+                    <label className='text-sm text-gray-700'>Tanggal</label>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant={'outline'}
+                          className={cn(
+                            'w-full justify-start text-left font-normal',
+                            !bookingDate && 'text-muted-foreground',
+                          )}
+                        >
+                          <CalendarIcon className='mr-2 h-4 w-4' />
+                          {bookingDate ? (
+                            format(new Date(bookingDate), 'EEEE, dd MMMM yyyy', {
+                              locale: id,
+                            })
+                          ) : (
+                            <span>Pilih hari Sabtu...</span>
+                          )}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className='w-auto p-0' align='start'>
+                        <Calendar
+                          mode='single'
+                          selected={bookingDate ? new Date(bookingDate) : undefined}
+                          onSelect={(date: Date | undefined) => {
+                            if (date) {
+                              const offset = date.getTimezoneOffset();
+                              const adjustedDate = new Date(
+                                date.getTime() - offset * 60 * 1000,
+                              );
+                              const dateString = adjustedDate
+                                .toISOString()
+                                .split('T')[0];
+                              setBookingDate(dateString);
+                            } else {
+                              setBookingDate('');
+                            }
+                          }}
+                          disabled={(date: Date) => {
+                            const isNotSaturday = date.getDay() !== 6;
+                            const isPast = date < new Date(new Date().setHours(0, 0, 0, 0));
+                            return isNotSaturday || isPast;
+                          }}
+                          initialFocus
+                        />
+                      </PopoverContent>
+                    </Popover>
                     {dateValidationMsg && (
                       <div className='text-sm text-red-600 mt-1'>
                         {dateValidationMsg}
@@ -634,8 +689,8 @@ function RouteComponent() {
                 {availabilityMessage && (
                   <div
                     className={`flex items-center gap-2 p-3 rounded-md text-sm ${availabilityMessage.startsWith('✓')
-                        ? 'bg-green-50 text-green-700'
-                        : 'bg-red-50 text-red-700'
+                      ? 'bg-green-50 text-green-700'
+                      : 'bg-red-50 text-red-700'
                       }`}
                   >
                     <AlertCircle className='w-4 h-4' />
@@ -745,6 +800,13 @@ function RouteComponent() {
           </div>
         </div>
       )}
+
+      {/* Room Detail Modal */}
+      <RoomDetailModal
+        open={showRoomDetailModal}
+        onOpenChange={setShowRoomDetailModal}
+        room={selectedRoom}
+      />
     </div>
   );
 }

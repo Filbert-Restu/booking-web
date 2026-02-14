@@ -50,7 +50,7 @@ export function DataTable<T>({
   return (
     <div className='bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden'>
       <div className='overflow-x-auto'>
-        <Table>
+        <Table className='w-full'>
           <TableHeader>
             <TableRow>
               {columns.map((col, index) => (
@@ -74,7 +74,7 @@ export function DataTable<T>({
               data.map((item, rowIndex) => (
                 <TableRow key={(item as { id: string }).id || rowIndex}>
                   {columns.map((col, colIndex) => (
-                    <TableCell key={colIndex} className={col.className}>
+                    <TableCell key={colIndex} className={`whitespace-normal ${col.className || ''}`}>
                       {/* Render cell content */}
                       {col.cell(item, rowIndex)}
                     </TableCell>

@@ -281,7 +281,7 @@ function BookingForm(props: BookingFormProps) {
   };
 
   return (
-    <div className='space-y-6'>
+    <div className='space-y-3'>
       <Stepper
         steps={[
           { number: 1, title: 'Detail Tempat' },

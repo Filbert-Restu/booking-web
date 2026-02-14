@@ -346,7 +346,7 @@ function RouteComponent() {
   };
 
   return (
-    <div className='space-y-6'>
+    <div className='space-y-3'>
       <Stepper steps={steps} currentStep={2} />
 
       <div className='max-w-4xl mx-auto'>

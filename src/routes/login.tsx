@@ -69,127 +69,143 @@ function RouteComponent() {
   };
 
   return (
-    <div className='min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-purple-50 p-4'>
-      <div className='w-full max-w-md'>
-        {/* Header */}
-        <div className='text-center mb-8'>
-          <h1 className='text-3xl font-bold text-gray-900 mb-2'>
-            Sistem Peminjaman Ruang FSM
-          </h1>
-          <p className='text-gray-600'>Selamat datang!</p>
-        </div>
+    <div className='min-h-screen flex items-center justify-center p-4 relative overflow-hidden'>
+      {/* Background Image */}
+      <div
+        className='absolute inset-0 z-0'
+        style={{
+          backgroundImage: `url('/gambar fsm.jpg')`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          filter: 'blur(8px)',
+        }}
+      />
 
-        {/* Login Card */}
-        <Card className='shadow-xl border-0 bg-white/80 backdrop-blur'>
-          <CardHeader className='space-y-1'>
-            <CardTitle className='text-2xl font-bold text-center'>
-              Login
-            </CardTitle>
-            <CardDescription className='text-center'>
-              Masukkan email dan password Anda
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmit} className='space-y-4'>
-              {/* Email Input */}
-              <div className='space-y-2'>
-                <label
-                  htmlFor='email'
-                  className='text-sm font-medium text-gray-700 block'
-                >
-                  Email
-                </label>
-                <Input
-                  id='email'
-                  name='email'
-                  type='email'
-                  placeholder='nama@example.com'
-                  value={formData.email}
-                  onChange={handleChange}
-                  required
-                  disabled={isLoading}
-                  className='w-full'
-                />
-              </div>
+      {/* Overlay */}
+      <div className='absolute inset-0 bg-black/10 z-0' />
 
-              {/* Password Input */}
-              <div className='space-y-2'>
-                <label
-                  htmlFor='password'
-                  className='text-sm font-medium text-gray-700 block'
-                >
-                  Password
-                </label>
-                <Input
-                  id='password'
-                  name='password'
-                  type='password'
-                  placeholder='••••••••'
-                  value={formData.password}
-                  onChange={handleChange}
-                  required
-                  disabled={isLoading}
-                  className='w-full'
-                />
-              </div>
+      <div className='max-w-md w-full relative z-10'>
+        <Card className='bg-white/40 backdrop-blur-md border border-white/20 shadow-2xl p-4'>
+          {/* Header */}
+          <div className='text-center mb-6'>
+            <h1 className='text-2xl font-bold text-gray-900 mb-1'>
+              Sistem Peminjaman Ruang FSM
+            </h1>
+            <p className='text-gray-800 font-medium text-sm'>Selamat datang!</p>
+          </div>
 
-              {/* Error Message */}
-              {error && (
-                <div className='bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm'>
-                  {error}
+          {/* Login Card */}
+          <Card className='shadow-lg border-0 bg-white'>
+            <CardHeader className='space-y-1 pb-4'>
+              <CardTitle className='text-xl font-bold text-center'>
+                Login
+              </CardTitle>
+              <CardDescription className='text-center text-sm'>
+                Masukkan email dan password Anda
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handleSubmit} className='space-y-3'>
+                {/* Email Input */}
+                <div className='space-y-2'>
+                  <label
+                    htmlFor='email'
+                    className='text-sm font-medium text-gray-700 block'
+                  >
+                    Email
+                  </label>
+                  <Input
+                    id='email'
+                    name='email'
+                    type='email'
+                    placeholder='nama@example.com'
+                    value={formData.email}
+                    onChange={handleChange}
+                    required
+                    disabled={isLoading}
+                    className='w-full'
+                  />
                 </div>
-              )}
 
-              {/* Submit Button */}
-              <Button type='submit' className='w-full' disabled={isLoading}>
-                {isLoading ? (
-                  <span className='flex items-center justify-center'>
-                    <svg
-                      className='animate-spin -ml-1 mr-3 h-5 w-5 text-white'
-                      xmlns='http://www.w3.org/2000/svg'
-                      fill='none'
-                      viewBox='0 0 24 24'
-                    >
-                      <circle
-                        className='opacity-25'
-                        cx='12'
-                        cy='12'
-                        r='10'
-                        stroke='currentColor'
-                        strokeWidth='4'
-                      ></circle>
-                      <path
-                        className='opacity-75'
-                        fill='currentColor'
-                        d='M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z'
-                      ></path>
-                    </svg>
-                    Loading...
-                  </span>
-                ) : (
-                  'Login'
+                {/* Password Input */}
+                <div className='space-y-2'>
+                  <label
+                    htmlFor='password'
+                    className='text-sm font-medium text-gray-700 block'
+                  >
+                    Password
+                  </label>
+                  <Input
+                    id='password'
+                    name='password'
+                    type='password'
+                    placeholder='••••••••'
+                    value={formData.password}
+                    onChange={handleChange}
+                    required
+                    disabled={isLoading}
+                    className='w-full'
+                  />
+                </div>
+
+                {/* Error Message */}
+                {error && (
+                  <div className='bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm'>
+                    {error}
+                  </div>
                 )}
-              </Button>
-            </form>
 
-            {/* Development Link */}
-            <div className='mt-4 pt-4 border-t border-gray-200'>
-              <Link to='/login-option'>
-                <Button
-                  variant='ghost'
-                  className='w-full text-xs text-gray-500'
-                >
-                  🔧 Development Login Menu
+                {/* Submit Button */}
+                <Button type='submit' className='w-full' disabled={isLoading}>
+                  {isLoading ? (
+                    <span className='flex items-center justify-center'>
+                      <svg
+                        className='animate-spin -ml-1 mr-3 h-5 w-5 text-white'
+                        xmlns='http://www.w3.org/2000/svg'
+                        fill='none'
+                        viewBox='0 0 24 24'
+                      >
+                        <circle
+                          className='opacity-25'
+                          cx='12'
+                          cy='12'
+                          r='10'
+                          stroke='currentColor'
+                          strokeWidth='4'
+                        ></circle>
+                        <path
+                          className='opacity-75'
+                          fill='currentColor'
+                          d='M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z'
+                        ></path>
+                      </svg>
+                      Loading...
+                    </span>
+                  ) : (
+                    'Login'
+                  )}
                 </Button>
-              </Link>
-            </div>
-          </CardContent>
-        </Card>
+              </form>
 
-        {/* Footer */}
-        <p className='text-center text-sm text-gray-500 mt-6'>
-          © 2026 Booking System FSM. All rights reserved.
-        </p>
+              {/* Development Link */}
+              <div className='mt-4 pt-4 border-t border-gray-200'>
+                <Link to='/login-option'>
+                  <Button
+                    variant='ghost'
+                    className='w-full text-xs text-gray-500'
+                  >
+                    🔧 Development Login Menu
+                  </Button>
+                </Link>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Footer */}
+          <p className='text-center text-xs text-gray-700 mt-4 font-medium'>
+            © 2026 Booking System FSM. All rights reserved.
+          </p>
+        </Card>
       </div>
     </div>
   );

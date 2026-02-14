@@ -114,12 +114,12 @@ function RouteComponent() {
     () => [
       {
         header: 'No',
-        className: 'text-center w-[3%]',
+        className: 'text-center',
         cell: (_, index) => index + 1,
       },
       {
         header: 'Tgl Pengajuan',
-        className: 'w-[7%]',
+        className: '',
         cell: (doc) =>
           new Date(doc.created_at).toLocaleDateString('id-ID', {
             day: '2-digit',
@@ -129,7 +129,7 @@ function RouteComponent() {
       },
       {
         header: 'Deadline',
-        className: 'w-[9%]',
+        className: '',
         cell: (doc) => {
           const deadlineStatus = documentHelpers.getDeadlineStatus(doc);
           const deadlineText = documentHelpers.getDeadlineText(doc);
@@ -171,40 +171,21 @@ function RouteComponent() {
       },
       {
         header: 'Nama Kegiatan',
-        className: 'w-[16%] font-medium',
+        className: 'font-medium',
         cell: (doc) => (
-          <div className='line-clamp-2'>
+          <div>
             {documentHelpers.getEventName(doc)}
           </div>
         ),
       },
       {
-        header: 'Ketua Pelaksana',
-        className: 'w-[11%]',
-        cell: (doc) => (
-          <div className='line-clamp-1'>
-            {documentHelpers.getKetuaPelaksanaNama(doc)}
-          </div>
-        ),
-      },
-      {
-        header: 'NIM',
-        className: 'w-[7%]',
-        cell: (doc) => documentHelpers.getKetuaPelaksanaNim(doc),
-      },
-      {
-        header: 'No HP',
-        className: 'w-[8%]',
-        cell: (doc) => documentHelpers.getKetuaPelaksanaHp(doc),
-      },
-      {
         header: 'Tgl Acara',
-        className: 'w-[7%]',
+        className: '',
         cell: (doc) => documentHelpers.getBookingDate(doc),
       },
       {
         header: 'Jam Pelaksanaan',
-        className: 'w-[9%]',
+        className: '',
         cell: (doc) => {
           const content = doc.content || {};
           const startTime = content.start_time;
@@ -223,17 +204,17 @@ function RouteComponent() {
       },
       {
         header: 'Ruangan',
-        className: 'w-[7%]',
+        className: '',
         cell: (doc) => documentHelpers.getRoomInfo(doc),
       },
       {
         header: 'Status',
-        className: 'w-[8%]',
+        className: '',
         cell: (doc) => <DocumentStatusBadge doc={doc} />,
       },
       {
         header: 'Dokumen',
-        className: 'w-[7%]',
+        className: '',
         cell: (doc) => (
           <FileActions
             docId={doc.id}
@@ -252,7 +233,7 @@ function RouteComponent() {
       },
       {
         header: 'Keterangan',
-        className: 'w-[11%]',
+        className: '',
         cell: (doc) => {
           if (doc.status === 'IN_PROGRESS') {
             const holderName = documentHelpers.getCurrentHolder(doc);
@@ -282,10 +263,10 @@ function RouteComponent() {
             const revisionNote = returnedLog?.note || 'Perlu revisi';
             const revisionDate = returnedLog?.created_at
               ? new Date(returnedLog.created_at).toLocaleDateString('id-ID', {
-                  day: '2-digit',
-                  month: '2-digit',
-                  year: 'numeric',
-                })
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric',
+              })
               : '-';
 
             return (
@@ -368,7 +349,7 @@ function RouteComponent() {
             Perhatian: Batas Waktu Pengajuan
           </h3>
           <p className='text-sm text-blue-800'>
-            Setiap pengajuan peminjaman (baik melalui <strong>Reservasi</strong> atau <strong>Ajukan Peminjaman Langsung</strong>) memiliki <strong>batas waktu 14 hari (2 minggu)</strong> sejak tanggal pengajuan untuk diselesaikan hingga status <strong>APPROVED</strong> atau <strong>REJECTED</strong>. 
+            Setiap pengajuan peminjaman (baik melalui <strong>Reservasi</strong> atau <strong>Ajukan Peminjaman Langsung</strong>) memiliki <strong>batas waktu 14 hari (2 minggu)</strong> sejak tanggal pengajuan untuk diselesaikan hingga status <strong>APPROVED</strong> atau <strong>REJECTED</strong>.
             Pastikan Anda melengkapi dan mengajukan dokumen tepat waktu!
           </p>
         </div>

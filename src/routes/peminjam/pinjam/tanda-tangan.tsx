@@ -145,9 +145,9 @@ function RouteComponent() {
     if (!signature) {
       alert(
         '⚠️ Tanda Tangan Belum Diupload!\n\n' +
-          'Anda harus mengupload tanda tangan terlebih dahulu sebelum generate dokumen.\n\n' +
-          'Klik tombol "Refresh" untuk memuat ulang status tanda tangan, atau\n' +
-          'Klik tombol "Upload Tanda Tangan" untuk mengupload tanda tangan Anda.',
+        'Anda harus mengupload tanda tangan terlebih dahulu sebelum generate dokumen.\n\n' +
+        'Klik tombol "Refresh" untuk memuat ulang status tanda tangan, atau\n' +
+        'Klik tombol "Upload Tanda Tangan" untuk mengupload tanda tangan Anda.',
       );
       return;
     }
@@ -173,8 +173,8 @@ function RouteComponent() {
 
       alert(
         'Dokumen berhasil digenerate!\n\n' +
-          'Tanda tangan Anda telah otomatis tertanam di dokumen.\n' +
-          'Silakan lihat preview dan download dokumen.',
+        'Tanda tangan Anda telah otomatis tertanam di dokumen.\n' +
+        'Silakan lihat preview dan download dokumen.',
       );
     } catch (error) {
       if (error instanceof AxiosError) {
@@ -195,12 +195,12 @@ function RouteComponent() {
     if (!generatedUrls.executiveSummary || !generatedUrls.approvalSheet) {
       alert(
         '⚠️ Dokumen Belum Digenerate!\n\n' +
-          'Anda harus generate dokumen terlebih dahulu:\n' +
-          '1. Pastikan tanda tangan sudah diupload\n' +
-          '2. Klik tombol "Generate Dokumen" (hijau)\n' +
-          '3. Download dan verifikasi dokumen\n' +
-          '4. Centang konfirmasi\n' +
-          '5. Baru ajukan peminjaman',
+        'Anda harus generate dokumen terlebih dahulu:\n' +
+        '1. Pastikan tanda tangan sudah diupload\n' +
+        '2. Klik tombol "Generate Dokumen" (hijau)\n' +
+        '3. Download dan verifikasi dokumen\n' +
+        '4. Centang konfirmasi\n' +
+        '5. Baru ajukan peminjaman',
       );
       return;
     }
@@ -208,10 +208,10 @@ function RouteComponent() {
     if (!ttdExecutiveSummary || !ttdLembarPengesahan) {
       alert(
         '⚠️ Konfirmasi Belum Lengkap!\n\n' +
-          'Mohon centang kedua konfirmasi:\n' +
-          '✓ Lembar Pengesahan sudah digenerate\n' +
-          '✓ Executive Summary sudah digenerate\n\n' +
-          'Pastikan Anda sudah download dan verifikasi bahwa tanda tangan muncul di dokumen.',
+        'Mohon centang kedua konfirmasi:\n' +
+        '✓ Lembar Pengesahan sudah digenerate\n' +
+        '✓ Executive Summary sudah digenerate\n\n' +
+        'Pastikan Anda sudah download dan verifikasi bahwa tanda tangan muncul di dokumen.',
       );
       return;
     }
@@ -272,8 +272,8 @@ function RouteComponent() {
 
       alert(
         'Peminjaman berhasil diajukan! 🎉\n\n' +
-          'Status: Dokumen sedang dalam proses persetujuan.\n' +
-          'Anda bisa memantau perkembangan di halaman "Daftar Peminjaman".',
+        'Status: Dokumen sedang dalam proses persetujuan.\n' +
+        'Anda bisa memantau perkembangan di halaman "Daftar Peminjaman".',
       );
 
       // Reset context
@@ -297,11 +297,11 @@ function RouteComponent() {
           if (err.response?.status === 400) {
             alert(
               `❌ Gagal mengajukan dokumen\n\n${errorMsg}\n\n` +
-                'Kemungkinan penyebab:\n' +
-                '• Dokumen sudah dalam proses persetujuan\n' +
-                '• Status dokumen tidak valid untuk diajukan\n' +
-                '• Data dokumen belum lengkap\n\n' +
-                'Silakan cek kembali atau hubungi administrator.',
+              'Kemungkinan penyebab:\n' +
+              '• Dokumen sudah dalam proses persetujuan\n' +
+              '• Status dokumen tidak valid untuk diajukan\n' +
+              '• Data dokumen belum lengkap\n\n' +
+              'Silakan cek kembali atau hubungi administrator.',
             );
           } else {
             alert(`❌ Error: ${errorMsg}`);
@@ -410,7 +410,7 @@ function RouteComponent() {
   ];
 
   return (
-    <div className='space-y-6'>
+    <div className='space-y-3'>
       <Stepper steps={steps} currentStep={3} />
 
       <div className='max-w-4xl mx-auto'>
