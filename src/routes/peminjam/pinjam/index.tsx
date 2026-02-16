@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { useState, useMemo, useCallback } from 'react'; // Tambah useMemo
-import { Plus, FilePlus, AlertCircle, MessageCircle, Clock, AlertTriangle } from 'lucide-react';
+import { Plus, FilePlus, AlertCircle, Clock, AlertTriangle } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/shared/components/ui/button/button';
 
@@ -266,13 +266,6 @@ function RouteComponent() {
               ? `${revisorUser.name}${revisorUser.unit ? ` (${revisorUser.unit.name})` : ''}`
               : 'Approver';
             const revisionNote = returnedLog?.note || 'Perlu revisi';
-            const revisionDate = returnedLog?.created_at
-              ? new Date(returnedLog.created_at).toLocaleDateString('id-ID', {
-                day: '2-digit',
-                month: '2-digit',
-                year: 'numeric',
-              })
-              : '-';
 
             return (
               <div className='flex flex-col gap-2 max-w-[300px] py-1'>

@@ -296,49 +296,6 @@ function BookingForm(props: BookingFormProps) {
           <h2 className='text-xl font-semibold'>
             Detail Tempat - {selectedRoom?.name || 'Pilih Ruangan'}
           </h2>
-          {props.editId && props.existingDocument && (
-            <div className='mt-2 p-3 bg-blue-50 border border-blue-200 rounded-lg'>
-              <div className='flex items-center gap-2 text-sm text-blue-800'>
-                <AlertCircle className='w-4 h-4' />
-                <span className='font-medium'>Mode Edit</span>
-              </div>
-              <div className='mt-1 text-xs text-blue-600 space-y-1'>
-                <div>
-                  Dokumen ID: #{props.editId} | Status:
-                  <span className='font-medium ml-1'>
-                    {props.existingDocument.status || 'DRAFT'}
-                  </span>
-                </div>
-                {props.existingDocument.creator && (
-                  <div>
-                    Dibuat oleh:{' '}
-                    <span className='font-medium'>
-                      {props.existingDocument.creator.name}
-                    </span>
-                  </div>
-                )}
-                {props.existingDocument.current_holder && (
-                  <div>
-                    Sedang ditangani:{' '}
-                    <span className='font-medium'>
-                      {props.existingDocument.current_holder.name}
-                    </span>
-                  </div>
-                )}
-              </div>
-              {props.existingDocument.status &&
-                !['DRAFT', 'REVISION'].includes(
-                  props.existingDocument.status,
-                ) && (
-                  <div className='mt-2 p-2 bg-yellow-50 border border-yellow-200 rounded text-xs text-yellow-800'>
-                    ⚠️ Dokumen dengan status{' '}
-                    <strong>{props.existingDocument.status}</strong> tidak dapat
-                    diedit. Hanya dokumen dengan status DRAFT atau REVISION yang
-                    dapat diubah.
-                  </div>
-                )}
-            </div>
-          )}
         </div>
 
         <form onSubmit={handleSubmit} className='space-y-5'>

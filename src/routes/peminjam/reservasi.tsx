@@ -519,7 +519,10 @@ function RouteComponent() {
                 ))}
               </SelectContent>
             </Select>
-            <Button onClick={handleSearch} disabled={!selectedRoomId || loading}>
+            <Button
+              onClick={handleSearch}
+              disabled={!selectedRoomId || loading}
+            >
               {loading ? 'Memuat...' : 'Cari'}
             </Button>
           </div>
@@ -620,9 +623,13 @@ function RouteComponent() {
                         >
                           <CalendarIcon className='mr-2 h-4 w-4' />
                           {bookingDate ? (
-                            format(new Date(bookingDate), 'EEEE, dd MMMM yyyy', {
-                              locale: id,
-                            })
+                            format(
+                              new Date(bookingDate),
+                              'EEEE, dd MMMM yyyy',
+                              {
+                                locale: id,
+                              },
+                            )
                           ) : (
                             <span>Pilih hari Sabtu...</span>
                           )}
@@ -631,7 +638,9 @@ function RouteComponent() {
                       <PopoverContent className='w-auto p-0' align='start'>
                         <Calendar
                           mode='single'
-                          selected={bookingDate ? new Date(bookingDate) : undefined}
+                          selected={
+                            bookingDate ? new Date(bookingDate) : undefined
+                          }
                           onSelect={(date: Date | undefined) => {
                             if (date) {
                               const offset = date.getTimezoneOffset();
@@ -648,7 +657,8 @@ function RouteComponent() {
                           }}
                           disabled={(date: Date) => {
                             const isNotSaturday = date.getDay() !== 6;
-                            const isPast = date < new Date(new Date().setHours(0, 0, 0, 0));
+                            const isPast =
+                              date < new Date(new Date().setHours(0, 0, 0, 0));
                             return isNotSaturday || isPast;
                           }}
                           initialFocus
@@ -660,38 +670,122 @@ function RouteComponent() {
                         {dateValidationMsg}
                       </div>
                     )}
-                    <div className='flex items-center gap-2 w-full'>
-                      <Input
-                        type='time'
-                        value={startTime}
-                        onChange={(e) => setStartTime(e.target.value)}
-                        className='flex-1 min-w-0'
-                        required
-                      />
-                      <span className='text-sm text-gray-500 shrink-0'>-</span>
-                      <Input
-                        type='time'
-                        value={endTime}
-                        onChange={(e) => setEndTime(e.target.value)}
-                        className='flex-1 min-w-0'
-                        required
-                      />
-                    </div>
-                    {timeValidationMsg && (
-                      <div className='text-sm text-red-600 mt-1'>
-                        {timeValidationMsg}
+                    <div className='flex gap-2'>
+                      <div className='flex-1'>
+                        <label className='text-sm'>Mulai</label>
+                        <div className='flex gap-2'>
+                          <Select
+                            value={startTime.split(':')[0] || '09'}
+                            onValueChange={(hour) => {
+                              const minute = startTime.split(':')[1] || '00';
+                              setStartTime(`${hour}:${minute}`);
+                            }}
+                          >
+                            <SelectTrigger className='w-full'>
+                              <SelectValue placeholder='Jam' />
+                            </SelectTrigger>
+                            <SelectContent
+                              position='popper'
+                              className='max-h-50'
+                            >
+                              {Array.from({ length: 9 }, (_, i) => {
+                                const hour = (i + 9)
+                                  .toString()
+                                  .padStart(2, '0');
+                                return (
+                                  <SelectItem key={hour} value={hour}>
+                                    {hour}
+                                  </SelectItem>
+                                );
+                              })}
+                            </SelectContent>
+                          </Select>
+                          <Select
+                            value={startTime.split(':')[1] || '00'}
+                            onValueChange={(minute) => {
+                              const hour = startTime.split(':')[0] || '09';
+                              setStartTime(`${hour}:${minute}`);
+                            }}
+                          >
+                            <SelectTrigger className='w-full'>
+                              <SelectValue placeholder='Menit' />
+                            </SelectTrigger>
+                            <SelectContent className='max-h-50'>
+                              {['00', '15', '30', '45'].map((minute) => (
+                                <SelectItem key={minute} value={minute}>
+                                  {minute}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
                       </div>
-                    )}
+                      <div className='flex-1'>
+                        <label className='text-sm'>Selesai</label>
+                        <div className='flex gap-2'>
+                          <Select
+                            value={endTime.split(':')[0] || '17'}
+                            onValueChange={(hour) => {
+                              const minute = endTime.split(':')[1] || '00';
+                              setEndTime(`${hour}:${minute}`);
+                            }}
+                          >
+                            <SelectTrigger className='w-full'>
+                              <SelectValue placeholder='Jam' />
+                            </SelectTrigger>
+                            <SelectContent
+                              position='popper'
+                              className='max-h-50'
+                            >
+                              {Array.from({ length: 9 }, (_, i) => {
+                                const hour = (i + 9)
+                                  .toString()
+                                  .padStart(2, '0');
+                                return (
+                                  <SelectItem key={hour} value={hour}>
+                                    {hour}
+                                  </SelectItem>
+                                );
+                              })}
+                            </SelectContent>
+                          </Select>
+                          <Select
+                            value={endTime.split(':')[1] || '00'}
+                            onValueChange={(minute) => {
+                              const hour = endTime.split(':')[0] || '17';
+                              setEndTime(`${hour}:${minute}`);
+                            }}
+                          >
+                            <SelectTrigger className='w-full'>
+                              <SelectValue placeholder='Menit' />
+                            </SelectTrigger>
+                            <SelectContent className='max-h-50'>
+                              {['00', '15', '30', '45'].map((minute) => (
+                                <SelectItem key={minute} value={minute}>
+                                  {minute}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        {timeValidationMsg && (
+                          <div className='text-sm text-red-600 mt-1'>
+                            {timeValidationMsg}
+                          </div>
+                        )}
+                      </div>
+                    </div>
                   </div>
                 </div>
 
                 {/* Availability indicator */}
                 {availabilityMessage && (
                   <div
-                    className={`flex items-center gap-2 p-3 rounded-md text-sm ${availabilityMessage.startsWith('✓')
-                      ? 'bg-green-50 text-green-700'
-                      : 'bg-red-50 text-red-700'
-                      }`}
+                    className={`flex items-center gap-2 p-3 rounded-md text-sm ${
+                      availabilityMessage.startsWith('✓')
+                        ? 'bg-green-50 text-green-700'
+                        : 'bg-red-50 text-red-700'
+                    }`}
                   >
                     <AlertCircle className='w-4 h-4' />
                     <span>{availabilityMessage}</span>

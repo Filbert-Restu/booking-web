@@ -75,7 +75,7 @@ const FileActions: React.FC<FileActionsProps> = ({
   };
 
   return (
-    <div className='flex flex-col gap-2 items-start'>
+    <div className='flex md:flex-col gap-2 items-start'>
       {fileTypes.map(({ type, hasFile }) =>
         hasFile ? (
           <React.Fragment key={type}>
@@ -91,7 +91,9 @@ const FileActions: React.FC<FileActionsProps> = ({
               ) : (
                 <FileText className={`w-4 h-4 ${getIconColor(type)}`} />
               )}
-              <span className={`text-sm ${getIconColor(type)} font-medium`}>
+              <span
+                className={`text-sm ${getIconColor(type)} font-medium hidden md:inline ml-2`}
+              >
                 {getFileName(type)}
               </span>
             </button>
