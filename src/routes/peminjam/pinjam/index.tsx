@@ -31,13 +31,13 @@ function RouteComponent() {
     data: documents = [],
     isLoading,
     isError,
+    refetch,
   } = useQuery({
     queryKey: ['documents'],
     queryFn: () => documentService.getDocuments(),
     refetchInterval: 30000,
     select: (res) => {
       const myDocs = res.my_documents || [];
-      console.log('📄 My documents from API:', myDocs);
 
       // Deduplicate berdasarkan kombinasi unique: room_id + booking_date + start_time + end_time
       // Prioritas: IN_PROGRESS > DRAFT (status reservasi)
@@ -63,9 +63,7 @@ function RouteComponent() {
         }
       });
 
-      const result = Array.from(uniqueMap.values());
-      console.log('📄 After deduplication:', result);
-      return result;
+      return Array.from(uniqueMap.values());
     },
   });
 
@@ -321,7 +319,22 @@ function RouteComponent() {
     </div>
   );
 
-  if (isError) return <div>Error...</div>;
+  if (isError) {
+    return (
+      <div className='flex flex-col items-center justify-center py-16 text-center'>
+        <AlertCircle className='w-12 h-12 text-red-400 mb-4' />
+        <h3 className='text-lg font-semibold text-gray-700 mb-2'>
+          Gagal Memuat Data
+        </h3>
+        <p className='text-sm text-gray-500 mb-4'>
+          Terjadi kesalahan saat memuat daftar pengajuan. Silakan coba lagi.
+        </p>
+        <Button onClick={() => refetch()} variant='outline' className='gap-2'>
+          Coba Lagi
+        </Button>
+      </div>
+    );
+  }
 
   return (
     <div className='space-y-4 md:space-y-6 p-2 md:p-0'>

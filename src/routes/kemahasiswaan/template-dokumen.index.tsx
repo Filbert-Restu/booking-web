@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router';
-import { useState, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import { AxiosError } from 'axios';
 import {
   FileText,
@@ -10,7 +10,9 @@ import {
   Eye,
   Pencil,
   Plus,
+  AlertCircle,
 } from 'lucide-react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/shared/components/ui/button/button';
 import { Input } from '@/shared/components/ui/input';
 import { Textarea } from '@/shared/components/ui/textarea';
@@ -55,13 +57,46 @@ export const Route = createFileRoute('/kemahasiswaan/template-dokumen/')({
   component: RouteComponent,
 });
 
-function RouteComponent() {
-  const [templates, setTemplates] = useState<DocumentTemplate[]>([]);
-  const [filteredTemplates, setFilteredTemplates] = useState<DocumentTemplate[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
 
-  // Filter states
+function parseAxiosError(err: unknown, fallback: string): string {
+  if (err instanceof AxiosError) {
+    const errors = err.response?.data?.errors;
+    if (errors) return Object.values(errors).flat().join(', ');
+    return err.response?.data?.message || fallback;
+  }
+  return fallback;
+}
+
+const TEMPLATE_TYPE_LABELS: Record<TemplateType, string> = {
+  executive_summary: 'Executive Summary',
+  lembar_pengesahan: 'Lembar Pengesahan',
+};
+
+const ORG_TYPE_LABELS: Record<OrganizationType, string> = {
+  hmd: 'HMD',
+  bem_ukm: 'BEM/UKM',
+  senat: 'Senat',
+};
+
+const INITIAL_FORM = {
+  template_type: 'executive_summary' as TemplateType,
+  organization_type: undefined as OrganizationType | undefined,
+  template_name: '',
+  description: '',
+  set_as_active: true,
+};
+
+// ---------------------------------------------------------------------------
+// Component
+// ---------------------------------------------------------------------------
+
+function RouteComponent() {
+  const queryClient = useQueryClient();
+
+  // Filter
   const [typeFilter, setTypeFilter] = useState<string>('all');
 
   // Modal states
@@ -72,61 +107,104 @@ function RouteComponent() {
   const [selectedTemplate, setSelectedTemplate] = useState<DocumentTemplate | null>(null);
 
   // Form states
-  const [formData, setFormData] = useState({
-    template_type: 'executive_summary' as TemplateType,
-    organization_type: undefined as OrganizationType | undefined,
-    template_name: '',
-    description: '',
-    set_as_active: true,
-  });
+  const [formData, setFormData] = useState(INITIAL_FORM);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [formError, setFormError] = useState('');
 
-  useEffect(() => {
-    fetchTemplates();
-  }, []);
+  // Action-level error (replaces alert())
+  const [actionError, setActionError] = useState<string | null>(null);
 
-  useEffect(() => {
-    filterTemplates();
+  // ---- DATA FETCHING (React Query) ----
+  const {
+    data: templates = [],
+    isLoading,
+    isError,
+    refetch,
+  } = useQuery({
+    queryKey: ['document-templates'],
+    queryFn: () => documentTemplateService.getTemplates(),
+  });
+
+  // ---- DERIVED FILTERING (useMemo instead of useEffect) ----
+  const filteredTemplates = useMemo(() => {
+    if (typeFilter === 'all') return templates;
+    return templates.filter((t) => t.template_type === typeFilter);
   }, [templates, typeFilter]);
 
-  const fetchTemplates = async () => {
-    try {
-      setIsLoading(true);
-      setError(null);
-      const data = await documentTemplateService.getTemplates();
-      setTemplates(data);
-    } catch (err) {
-      console.error('Failed to fetch templates:', err);
-      if (err instanceof AxiosError) {
-        setError(err.response?.data?.message || 'Gagal memuat template');
-      } else {
-        setError('Gagal memuat template');
+  // ---- MUTATIONS ----
+  const invalidateTemplates = () =>
+    queryClient.invalidateQueries({ queryKey: ['document-templates'] });
+
+  const uploadMutation = useMutation({
+    mutationFn: (params: {
+      formData: typeof INITIAL_FORM;
+      file: File;
+    }) =>
+      documentTemplateService.createTemplate({
+        template_type: params.formData.template_type,
+        organization_type: params.formData.organization_type,
+        template_name: params.formData.template_name,
+        file: params.file,
+        description: params.formData.description || undefined,
+        set_as_active: params.formData.set_as_active,
+      }),
+    onSuccess: () => {
+      setIsUploadModalOpen(false);
+      invalidateTemplates();
+    },
+    onError: (err) => {
+      setFormError(parseAxiosError(err, 'Gagal upload template'));
+    },
+  });
+
+  const editMutation = useMutation({
+    mutationFn: (params: {
+      id: number;
+      formData: typeof INITIAL_FORM;
+      file: File | null;
+    }) =>
+      documentTemplateService.updateTemplate(params.id, {
+        template_name: params.formData.template_name,
+        file: params.file || undefined,
+        description: params.formData.description || undefined,
+      }),
+    onSuccess: () => {
+      setIsEditModalOpen(false);
+      invalidateTemplates();
+    },
+    onError: (err) => {
+      setFormError(parseAxiosError(err, 'Gagal update template'));
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: number) => documentTemplateService.deleteTemplate(id),
+    onSuccess: () => {
+      setIsDeleteDialogOpen(false);
+      invalidateTemplates();
+    },
+    onError: (err) => {
+      setActionError(parseAxiosError(err, 'Gagal menghapus template'));
+      setIsDeleteDialogOpen(false);
+    },
+  });
+
+  const statusMutation = useMutation({
+    mutationFn: (params: { template: DocumentTemplate; newStatus: string }) => {
+      if (params.newStatus === 'active') {
+        return documentTemplateService.activateTemplate(params.template.id);
       }
-    } finally {
-      setIsLoading(false);
-    }
-  };
+      return documentTemplateService.deactivateTemplate(params.template.id);
+    },
+    onSuccess: () => invalidateTemplates(),
+    onError: (err) => {
+      setActionError(parseAxiosError(err, 'Gagal mengubah status template'));
+    },
+  });
 
-  const filterTemplates = () => {
-    let filtered = [...templates];
-
-    if (typeFilter !== 'all') {
-      filtered = filtered.filter((t) => t.template_type === typeFilter);
-    }
-
-    setFilteredTemplates(filtered);
-  };
-
+  // ---- HANDLERS ----
   const handleUploadClick = () => {
-    setFormData({
-      template_type: 'executive_summary',
-      organization_type: undefined,
-      template_name: '',
-      description: '',
-      set_as_active: true,
-    });
+    setFormData(INITIAL_FORM);
     setSelectedFile(null);
     setFormError('');
     setIsUploadModalOpen(true);
@@ -159,7 +237,6 @@ function RouteComponent() {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      // Validate file type
       const validTypes = [
         'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
         'application/msword',
@@ -171,7 +248,6 @@ function RouteComponent() {
         return;
       }
 
-      // Validate file size (max 10MB)
       if (file.size > 10 * 1024 * 1024) {
         setFormError('Ukuran file maksimal 10MB');
         setSelectedFile(null);
@@ -183,60 +259,28 @@ function RouteComponent() {
     }
   };
 
-  const handleUploadSubmit = async (e: React.FormEvent) => {
+  const handleUploadSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!selectedFile) {
       setFormError('Pilih file template terlebih dahulu');
       return;
     }
-
     if (!formData.template_name.trim()) {
       setFormError('Nama template harus diisi');
       return;
     }
-
-    // Validasi organization_type untuk lembar pengesahan
     if (formData.template_type === 'lembar_pengesahan' && !formData.organization_type) {
       setFormError('Jenis organisasi harus dipilih untuk Lembar Pengesahan');
       return;
     }
 
-    try {
-      setIsSubmitting(true);
-      setFormError('');
-
-      await documentTemplateService.createTemplate({
-        template_type: formData.template_type,
-        organization_type: formData.organization_type,
-        template_name: formData.template_name,
-        file: selectedFile,
-        description: formData.description || undefined,
-        set_as_active: formData.set_as_active,
-      });
-
-      setIsUploadModalOpen(false);
-      await fetchTemplates();
-    } catch (err) {
-      console.error('Upload failed:', err);
-      if (err instanceof AxiosError) {
-        const errors = err.response?.data?.errors;
-        if (errors) {
-          setFormError(Object.values(errors).flat().join(', '));
-        } else {
-          setFormError(err.response?.data?.message || 'Gagal upload template');
-        }
-      } else {
-        setFormError('Gagal upload template');
-      }
-    } finally {
-      setIsSubmitting(false);
-    }
+    setFormError('');
+    uploadMutation.mutate({ formData, file: selectedFile });
   };
 
-  const handleEditSubmit = async (e: React.FormEvent) => {
+  const handleEditSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-
     if (!selectedTemplate) return;
 
     if (!formData.template_name.trim()) {
@@ -244,103 +288,38 @@ function RouteComponent() {
       return;
     }
 
-    try {
-      setIsSubmitting(true);
-      setFormError('');
-
-      await documentTemplateService.updateTemplate(selectedTemplate.id, {
-        template_name: formData.template_name,
-        file: selectedFile || undefined,
-        description: formData.description || undefined,
-      });
-
-      setIsEditModalOpen(false);
-      await fetchTemplates();
-    } catch (err) {
-      console.error('Update failed:', err);
-      if (err instanceof AxiosError) {
-        const errors = err.response?.data?.errors;
-        if (errors) {
-          setFormError(Object.values(errors).flat().join(', '));
-        } else {
-          setFormError(err.response?.data?.message || 'Gagal update template');
-        }
-      } else {
-        setFormError('Gagal update template');
-      }
-    } finally {
-      setIsSubmitting(false);
-    }
+    setFormError('');
+    editMutation.mutate({
+      id: selectedTemplate.id,
+      formData,
+      file: selectedFile,
+    });
   };
 
-  const handleActivate = async (template: DocumentTemplate) => {
-    if (template.is_active) return;
-
-    try {
-      await documentTemplateService.activateTemplate(template.id);
-      await fetchTemplates();
-    } catch (err) {
-      console.error('Activate failed:', err);
-      alert('Gagal mengaktifkan template');
-    }
-  };
-
-  const handleDelete = async () => {
+  const handleDelete = () => {
     if (!selectedTemplate) return;
-
-    try {
-      await documentTemplateService.deleteTemplate(selectedTemplate.id);
-      setIsDeleteDialogOpen(false);
-      await fetchTemplates();
-    } catch (err) {
-      console.error('Delete failed:', err);
-      if (err instanceof AxiosError) {
-        alert(err.response?.data?.message || 'Gagal menghapus template');
-      } else {
-        alert('Gagal menghapus template');
-      }
-    }
+    deleteMutation.mutate(selectedTemplate.id);
   };
 
-  const handleStatusChange = async (template: DocumentTemplate, newStatus: string) => {
-    try {
-      if (newStatus === 'active') {
-        await documentTemplateService.activateTemplate(template.id);
-      } else {
-        await documentTemplateService.deactivateTemplate(template.id);
-      }
-      await fetchTemplates();
-    } catch (err) {
-      console.error('Status change failed:', err);
-      alert('Gagal mengubah status template');
-    }
+  const handleStatusChange = (template: DocumentTemplate, newStatus: string) => {
+    statusMutation.mutate({ template, newStatus });
   };
 
   const handleDownload = async (template: DocumentTemplate) => {
     try {
       await documentTemplateService.downloadTemplate(
         template.id,
-        `${template.template_name}.docx`
+        `${template.template_name}.docx`,
       );
     } catch (err) {
-      console.error('Download failed:', err);
-      alert('Gagal download template');
+      setActionError(parseAxiosError(err, 'Gagal download template'));
     }
   };
 
-  const getTemplateTypeLabel = (type: TemplateType) => {
-    return type === 'executive_summary' ? 'Executive Summary' : 'Lembar Pengesahan';
-  };
+  const isSubmitting =
+    uploadMutation.isPending || editMutation.isPending || deleteMutation.isPending;
 
-  const getOrganizationTypeLabel = (type: OrganizationType) => {
-    const labels: Record<OrganizationType, string> = {
-      hmd: 'HMD',
-      bem_ukm: 'BEM/UKM',
-      senat: 'Senat',
-    };
-    return labels[type];
-  };
-
+  // ---- RENDER ----
   if (isLoading) {
     return (
       <div className='flex items-center justify-center h-64'>
@@ -349,10 +328,19 @@ function RouteComponent() {
     );
   }
 
-  if (error) {
+  if (isError) {
     return (
-      <div className='flex items-center justify-center h-64'>
-        <p className='text-red-500'>{error}</p>
+      <div className='flex flex-col items-center justify-center h-64 text-center'>
+        <AlertCircle className='w-12 h-12 text-red-400 mb-4' />
+        <h3 className='text-lg font-semibold text-gray-700 mb-2'>
+          Gagal Memuat Template
+        </h3>
+        <p className='text-sm text-gray-500 mb-4'>
+          Terjadi kesalahan saat memuat data template. Silakan coba lagi.
+        </p>
+        <Button onClick={() => refetch()} variant='outline'>
+          Coba Lagi
+        </Button>
       </div>
     );
   }
@@ -365,6 +353,20 @@ function RouteComponent() {
           Kelola template Executive Summary dan Lembar Pengesahan
         </p>
       </div>
+
+      {/* Action Error Banner (replaces alert()) */}
+      {actionError && (
+        <div className='mb-4 flex items-center gap-2 p-3 rounded-md bg-red-50 text-red-700 text-sm border border-red-200'>
+          <AlertCircle className='w-4 h-4 shrink-0' />
+          <span className='flex-1'>{actionError}</span>
+          <button
+            onClick={() => setActionError(null)}
+            className='text-red-400 hover:text-red-600 font-bold'
+          >
+            ×
+          </button>
+        </div>
+      )}
 
       {/* Filters & Actions */}
       <div className='mb-6 flex items-center justify-between gap-4'>
@@ -420,11 +422,11 @@ function RouteComponent() {
                       {template.template_name}
                     </div>
                   </TableCell>
-                  <TableCell>{getTemplateTypeLabel(template.template_type)}</TableCell>
+                  <TableCell>{TEMPLATE_TYPE_LABELS[template.template_type]}</TableCell>
                   <TableCell>
                     {template.organization_type ? (
                       <span className='px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs font-medium'>
-                        {getOrganizationTypeLabel(template.organization_type)}
+                        {ORG_TYPE_LABELS[template.organization_type]}
                       </span>
                     ) : (
                       <span className='text-gray-400 text-xs'>-</span>
@@ -540,7 +542,6 @@ function RouteComponent() {
                     setFormData({
                       ...formData,
                       template_type: newType,
-                      // Reset organization_type jika bukan lembar pengesahan
                       organization_type: newType === 'lembar_pengesahan' ? formData.organization_type : undefined,
                     });
                   }}
@@ -658,7 +659,7 @@ function RouteComponent() {
                 Batal
               </Button>
               <Button type='submit' disabled={isSubmitting}>
-                {isSubmitting ? 'Mengupload...' : 'Upload Template'}
+                {uploadMutation.isPending ? 'Mengupload...' : 'Upload Template'}
               </Button>
             </DialogFooter>
           </form>
@@ -738,7 +739,7 @@ function RouteComponent() {
                 Batal
               </Button>
               <Button type='submit' disabled={isSubmitting}>
-                {isSubmitting ? 'Menyimpan...' : 'Simpan Perubahan'}
+                {editMutation.isPending ? 'Menyimpan...' : 'Simpan Perubahan'}
               </Button>
             </DialogFooter>
           </form>

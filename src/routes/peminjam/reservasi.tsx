@@ -1,17 +1,4 @@
 import { createFileRoute } from '@tanstack/react-router';
-import { useState, useEffect, useMemo } from 'react';
-import { Calendar as CalendarIcon, AlertCircle } from 'lucide-react';
-import { AxiosError } from 'axios';
-import { format } from 'date-fns';
-import { id } from 'date-fns/locale';
-import { cn } from '@/shared/lib/utils';
-import { Calendar } from '@/shared/components/ui/calendar';
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/shared/components/ui/popover';
-
 import {
   Select,
   SelectContent,
@@ -19,23 +6,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/shared/components/ui/select';
-import { Input } from '@/shared/components/ui/input';
-import { Textarea } from '@/shared/components/ui/textarea';
 import { Button } from '@/shared/components/ui/button/button';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/shared/components/ui/table';
-import {
-  roomService,
-  type Room,
-  type RoomBooking,
-} from '@/services/room.service';
-import { documentService } from '@/services/document.service';
+import { useReservation } from '@/hooks/useReservation';
+import { ReservationForm } from '@/features/bookings/ReservationForm';
+import { BookingScheduleTable } from '@/features/bookings/BookingScheduleTable';
 import { RoomDetailModal } from '@/features/bookings/RoomDetailModal';
 
 export const Route = createFileRoute('/peminjam/reservasi')({
@@ -57,423 +31,10 @@ export const Route = createFileRoute('/peminjam/reservasi')({
 
 function RouteComponent() {
   const searchParams = Route.useSearch();
-  const [rooms, setRooms] = useState<Room[]>([]);
-  const [selectedRoomId, setSelectedRoomId] = useState<number | null>(null);
-  const [selectedRoom, setSelectedRoom] = useState<Room | null>(null);
-  const [bookings, setBookings] = useState<RoomBooking[]>([]);
-  const [search, setSearch] = useState('');
-  const [showRoomDetails, setShowRoomDetails] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [checkingAvailability, setCheckingAvailability] = useState(false);
-  const [availabilityMessage, setAvailabilityMessage] = useState<string | null>(
-    null,
-  );
-  const [dateValidationMsg, setDateValidationMsg] = useState<string | null>(
-    null,
-  );
-  const [timeValidationMsg, setTimeValidationMsg] = useState<string | null>(
-    null,
-  );
-  const [showRoomDetailModal, setShowRoomDetailModal] = useState(false);
+  const reservation = useReservation(searchParams);
 
-  const [startTime, setStartTime] = useState('');
-  const [endTime, setEndTime] = useState('');
-  const [bookingDate, setBookingDate] = useState('');
-  const [activity, setActivity] = useState('');
-  const [ketuaPelaksanaNama, setKetuaPelaksanaNama] = useState(() => {
-    return localStorage.getItem('userName') || '';
-  });
-  const [ketuaPelaksanaNim, setKetuaPelaksanaNim] = useState(() => {
-    return localStorage.getItem('userNim') || '';
-  });
-  const [ketuaPelaksanaHp, setKetuaPelaksanaHp] = useState('');
-
-  // Check if selected date is Saturday
-  const isSaturday = useMemo(() => {
-    if (!bookingDate) return false;
-    const d = new Date(bookingDate + 'T00:00:00');
-    return d.getDay() === 6; // Saturday === 6
-  }, [bookingDate]);
-
-  // Check if time is valid (start_time < end_time)
-  const isTimeValid = useMemo(() => {
-    if (!startTime || !endTime) return true; // Belum diisi, anggap valid (belum ada error)
-    return startTime < endTime;
-  }, [startTime, endTime]);
-
-  // Auto-fill form from query params (from Riwayat Pengajuan)
-  useEffect(() => {
-    if (searchParams.roomId) {
-      setSelectedRoomId(searchParams.roomId);
-      setShowRoomDetails(true);
-    }
-    if (searchParams.bookingDate) {
-      setBookingDate(searchParams.bookingDate);
-    }
-    if (searchParams.startTime) {
-      setStartTime(searchParams.startTime);
-    }
-    if (searchParams.endTime) {
-      setEndTime(searchParams.endTime);
-    }
-    if (searchParams.purpose) {
-      setActivity(searchParams.purpose);
-    }
-    if (searchParams.ketuaNama) {
-      setKetuaPelaksanaNama(searchParams.ketuaNama);
-    }
-    if (searchParams.ketuaNim) {
-      setKetuaPelaksanaNim(searchParams.ketuaNim);
-    }
-    if (searchParams.ketuaHp) {
-      setKetuaPelaksanaHp(searchParams.ketuaHp);
-    }
-  }, [searchParams]);
-
-  // Update validation message when date changes
-  useEffect(() => {
-    if (!bookingDate) {
-      setDateValidationMsg(null);
-    } else if (!isSaturday) {
-      setDateValidationMsg('Peminjaman hanya diperbolehkan pada hari Sabtu');
-    } else {
-      setDateValidationMsg(null);
-    }
-  }, [bookingDate, isSaturday]);
-
-  // Update validation message when time changes
-  useEffect(() => {
-    if (!startTime || !endTime) {
-      setTimeValidationMsg(null);
-    } else if (!isTimeValid) {
-      setTimeValidationMsg('Waktu mulai harus lebih awal dari waktu selesai');
-    } else {
-      setTimeValidationMsg(null);
-    }
-  }, [startTime, endTime, isTimeValid]);
-
-  // Fetch rooms on mount
-  useEffect(() => {
-    fetchRooms();
-  }, []);
-
-  const fetchRooms = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      console.log('Fetching rooms...');
-      const data = await roomService.getRooms({ status: 'ACTIVE' });
-      console.log('Rooms fetched:', data);
-      setRooms(data);
-      if (data.length > 0 && !selectedRoomId) {
-        setSelectedRoomId(data[0].id);
-      }
-    } catch (err) {
-      console.error('Failed to fetch rooms:', err);
-      if (err instanceof AxiosError) {
-        console.error('Error response:', err.response?.data);
-        console.error('Error status:', err.response?.status);
-        setError(err.response?.data?.message || 'Gagal memuat data ruangan');
-      } else {
-        setError('Gagal memuat data ruangan');
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleSearch = async () => {
-    if (!selectedRoomId) {
-      alert('Pilih ruangan terlebih dahulu');
-      return;
-    }
-
-    try {
-      setLoading(true);
-      setError(null);
-      setShowRoomDetails(true);
-
-      // Get room details
-      const roomData = await roomService.getRoom(selectedRoomId);
-      setSelectedRoom(roomData.room);
-
-      // Get room schedule (all future bookings)
-      const endDate = new Date();
-      endDate.setFullYear(endDate.getFullYear() + 1); // 1 tahun ke depan
-
-      const scheduleData = await roomService.getRoomSchedule(
-        selectedRoomId,
-        new Date().toISOString().split('T')[0],
-        endDate.toISOString().split('T')[0],
-      );
-      console.log('📊 Bookings received from API:', scheduleData.bookings);
-      console.log('📊 Number of bookings:', scheduleData.bookings?.length);
-      setBookings(scheduleData.bookings);
-    } catch (err) {
-      console.error('Failed to fetch room details:', err);
-      if (err instanceof AxiosError) {
-        setError(err.response?.data?.message || 'Gagal memuat detail ruangan');
-      } else {
-        setError('Terjadi kesalahan saat memuat data');
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const checkAvailability = async () => {
-    if (!selectedRoomId || !bookingDate || !startTime || !endTime) {
-      return;
-    }
-
-    try {
-      setCheckingAvailability(true);
-      setAvailabilityMessage(null);
-
-      console.log('🔍 Checking availability:', {
-        roomId: selectedRoomId,
-        date: bookingDate,
-        start_time: startTime,
-        end_time: endTime,
-      });
-
-      const result = await roomService.checkAvailability(
-        selectedRoomId,
-        bookingDate,
-        startTime,
-        endTime,
-      );
-
-      console.log('📊 API Response:', result);
-      console.log('📊 Detailed Response:', {
-        available: result.available,
-        conflictCount: result.conflicts?.length || 0,
-        conflicts: result.conflicts,
-      });
-
-      if (result.available) {
-        setAvailabilityMessage('✓ Ruangan tersedia pada waktu yang dipilih');
-      } else {
-        setAvailabilityMessage(
-          `✗ Ruangan tidak tersedia, Karena booking yang bentrok.`,
-        );
-      }
-    } catch (err) {
-      console.error('Failed to check availability:', err);
-      setAvailabilityMessage('Gagal mengecek ketersediaan ruangan');
-    } finally {
-      setCheckingAvailability(false);
-    }
-  };
-
-  // Check availability when date/time changes
-  useEffect(() => {
-    if (
-      selectedRoomId &&
-      bookingDate &&
-      startTime &&
-      endTime &&
-      showRoomDetails
-    ) {
-      const timeoutId = setTimeout(() => {
-        checkAvailability();
-      }, 500);
-      return () => clearTimeout(timeoutId);
-    } else {
-      // Reset message when room details hidden
-      setAvailabilityMessage(null);
-    }
-  }, [selectedRoomId, bookingDate, startTime, endTime, showRoomDetails]);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (
-      !selectedRoomId ||
-      !bookingDate ||
-      !startTime ||
-      !endTime ||
-      !activity
-    ) {
-      alert('Mohon lengkapi semua field wajib');
-      return;
-    }
-
-    if (!ketuaPelaksanaNama || !ketuaPelaksanaNim || !ketuaPelaksanaHp) {
-      alert('Mohon lengkapi data Ketua Pelaksana');
-      return;
-    }
-
-    // Validasi NIM - harus 14 digit angka
-    if (!/^\d{14}$/.test(ketuaPelaksanaNim)) {
-      alert('NIM harus 14 digit angka');
-      return;
-    }
-
-    // Validasi HP - harus 12-13 digit angka
-    if (!/^\d{12,13}$/.test(ketuaPelaksanaHp)) {
-      alert('Nomor HP harus 12-13 digit angka');
-      return;
-    }
-
-    // Check availability first
-    try {
-      const availabilityResult = await roomService.checkAvailability(
-        selectedRoomId,
-        bookingDate,
-        startTime,
-        endTime,
-      );
-
-      if (!availabilityResult.available) {
-        alert(
-          'Ruangan tidak tersedia pada waktu yang dipilih. Silakan pilih waktu lain.',
-        );
-        return;
-      }
-
-      // Create document for reservation
-      setLoading(true);
-
-      // Check if user already has a DRAFT reservation for this room and date
-      const existingDocs = await documentService.getDocuments();
-      const hasDuplicateReservation = existingDocs.my_documents?.some(
-        (doc: any) => {
-          const content = doc.content || {};
-          const metaData = doc.meta_data || {};
-          return (
-            doc.status === 'DRAFT' &&
-            metaData.step === 'reservation' &&
-            content.room_id === selectedRoomId &&
-            content.booking_date === bookingDate &&
-            content.start_time === startTime &&
-            content.end_time === endTime
-          );
-        },
-      );
-
-      if (hasDuplicateReservation) {
-        alert(
-          'Anda sudah memiliki reservasi yang sama di daftar pengajuan. Silakan submit atau edit reservasi yang ada.',
-        );
-        setLoading(false);
-        return;
-      }
-
-      // Tentukan workflow_id berdasarkan unit category user
-      const userUnitCategory =
-        localStorage.getItem('userUnitCategory') || 'HMD';
-      const workflowMap: Record<string, number> = {
-        HMD: 1,
-        BEM: 2,
-        SENAT: 3,
-        UKM: 4,
-      };
-      const workflowId = workflowMap[userUnitCategory] || 1;
-
-      await documentService.createDocument({
-        workflow_id: workflowId,
-        title: `Peminjaman ${selectedRoom?.name || 'Ruangan'} - ${bookingDate}`,
-        content: {
-          room_id: selectedRoomId,
-          room_code: selectedRoom?.code || '',
-          room_name: selectedRoom?.name || '',
-          booking_date: bookingDate,
-          start_time: startTime,
-          end_time: endTime,
-          purpose: activity,
-          ketua_pelaksana_nama: ketuaPelaksanaNama,
-          ketua_pelaksana_nim: ketuaPelaksanaNim,
-          ketua_pelaksana_hp: ketuaPelaksanaHp,
-          peminjam_nama: localStorage.getItem('userName') || 'Pemohon',
-        },
-        meta_data: {
-          type: 'room_reservation',
-          step: 'reservation',
-        },
-      });
-
-      // Reset form dan refresh data
-      alert(
-        'Reservasi berhasil disimpan! Silakan cek di halaman Riwayat Pengajuan untuk melanjutkan.',
-      );
-
-      // Reset form
-      setStartTime('');
-      setEndTime('');
-      setBookingDate('');
-      setActivity('');
-      setKetuaPelaksanaNama(localStorage.getItem('userName') || '');
-      setKetuaPelaksanaNim(localStorage.getItem('userNim') || '');
-      setKetuaPelaksanaHp('');
-
-      // Refresh booking list
-      if (selectedRoomId) {
-        await handleSearch();
-      }
-    } catch (err) {
-      console.error('Failed to check availability:', err);
-      if (err instanceof AxiosError) {
-        alert(
-          err.response?.data?.message || 'Gagal mengecek ketersediaan ruangan',
-        );
-      } else {
-        alert('Terjadi kesalahan saat membuat reservasi');
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const getStatusBadge = (status: string) => {
-    const statusConfig: Record<
-      string,
-      { bg: string; text: string; label: string }
-    > = {
-      PENDING: {
-        bg: 'bg-yellow-100',
-        text: 'text-yellow-800',
-        label: 'Pending',
-      },
-      APPROVED: {
-        bg: 'bg-green-100',
-        text: 'text-green-800',
-        label: 'Approved',
-      },
-      REJECTED: { bg: 'bg-red-100', text: 'text-red-800', label: 'Rejected' },
-      CANCELLED: {
-        bg: 'bg-gray-100',
-        text: 'text-gray-800',
-        label: 'Cancelled',
-      },
-    };
-    const config = statusConfig[status] || statusConfig.PENDING;
-    return (
-      <span
-        className={`px-2 py-1 rounded-full text-xs font-medium ${config.bg} ${config.text}`}
-      >
-        {config.label}
-      </span>
-    );
-  };
-
-  const filteredBookings = bookings.filter((item) =>
-    [
-      item.booked_by_user?.name || item.bookedBy?.name || '',
-      item.booking_date,
-      `${item.start_time} - ${item.end_time}`,
-    ]
-      .join(' ')
-      .toLowerCase()
-      .includes(search.toLowerCase()),
-  );
-
-  console.log('📋 Total bookings:', bookings.length);
-  console.log('📋 Filtered bookings:', filteredBookings.length);
-  console.log('🔍 Search term:', search);
-
-  if (loading && !showRoomDetails) {
+  // Full-screen loading state (only when rooms are loading initially)
+  if (reservation.isLoadingRooms && !reservation.showRoomDetails) {
     return (
       <div className='p-6 flex justify-center items-center min-h-screen'>
         <div className='text-center'>
@@ -485,12 +46,17 @@ function RouteComponent() {
     );
   }
 
-  if (error && !showRoomDetails) {
+  // Full-screen error state
+  if (reservation.roomsError && !reservation.showRoomDetails) {
     return (
       <div className='p-6 flex justify-center items-center min-h-screen'>
         <div className='text-center'>
-          <div className='text-lg font-semibold text-red-600 mb-4'>{error}</div>
-          <Button onClick={fetchRooms}>Coba Lagi</Button>
+          <div className='text-lg font-semibold text-red-600 mb-4'>
+            {reservation.roomsError}
+          </div>
+          <Button onClick={() => reservation.refetchRooms()}>
+            Coba Lagi
+          </Button>
         </div>
       </div>
     );
@@ -498,21 +64,19 @@ function RouteComponent() {
 
   return (
     <div className='space-y-6'>
+      {/* Room Selector */}
       <div className='bg-white rounded-lg shadow-sm border border-gray-200 p-3'>
         <div className='flex flex-col sm:flex-row gap-3 items-start sm:items-center'>
           <div className='flex flex-col sm:flex-row gap-3 items-start sm:items-center w-fit'>
             <Select
-              value={selectedRoomId?.toString()}
-              onValueChange={(value) => {
-                setSelectedRoomId(Number(value));
-                setShowRoomDetails(false);
-              }}
+              value={reservation.selectedRoomId?.toString()}
+              onValueChange={(value) => reservation.selectRoom(Number(value))}
             >
               <SelectTrigger className='w-full sm:w-64'>
                 <SelectValue placeholder='Pilih ruangan...' />
               </SelectTrigger>
               <SelectContent>
-                {rooms.map((room) => (
+                {reservation.rooms.map((room) => (
                   <SelectItem key={room.id} value={room.id.toString()}>
                     {room.code} - {room.name}
                   </SelectItem>
@@ -520,386 +84,45 @@ function RouteComponent() {
               </SelectContent>
             </Select>
             <Button
-              onClick={handleSearch}
-              disabled={!selectedRoomId || loading}
+              onClick={reservation.searchRoom}
+              disabled={!reservation.selectedRoomId || reservation.isLoadingDetails}
             >
-              {loading ? 'Memuat...' : 'Cari'}
+              {reservation.isLoadingDetails ? 'Memuat...' : 'Cari'}
             </Button>
           </div>
         </div>
       </div>
 
-      {showRoomDetails && selectedRoom && (
+      {/* Room Details + Schedule */}
+      {reservation.showRoomDetails && reservation.selectedRoom && (
         <div className='flex flex-col lg:flex-row gap-6'>
-          <div className='bg-white rounded-lg shadow-sm border border-gray-200 p-6 space-y-4 lg:w-[37.5%]'>
-            <div>
-              <h2 className='text-lg font-semibold text-gray-900'>
-                Reservasi Ruang {selectedRoom.code}
-              </h2>
-              <p className='text-sm text-gray-600 mt-1'>
-                Kapasitas: {selectedRoom.capacity} orang
-              </p>
-              <button
-                onClick={() => setShowRoomDetailModal(true)}
-                className='text-sm text-blue-600 hover:text-blue-800 hover:underline font-medium transition-colors mt-2'
-              >
-                Detail Tempat
-              </button>
-            </div>
+          <ReservationForm
+            room={reservation.selectedRoom}
+            form={reservation.form}
+            updateForm={reservation.updateForm}
+            validation={reservation.validation}
+            availability={reservation.availability}
+            onSubmit={reservation.handleSubmit}
+            isSubmitting={reservation.isSubmitting}
+            formError={reservation.formError}
+            submitError={reservation.submitError}
+            successMessage={reservation.successMessage}
+            onShowRoomDetail={() => reservation.setShowRoomDetailModal(true)}
+          />
 
-            <form onSubmit={handleSubmit} className='space-y-5'>
-              {/* Data Ketua Pelaksana */}
-              <div className='space-y-3'>
-                <p className='text-sm font-medium text-gray-700'>
-                  Data Ketua Pelaksana
-                </p>
-
-                <div className='space-y-2'>
-                  <label className='block text-sm text-gray-600'>
-                    Nama Ketua Pelaksana *
-                  </label>
-                  <Input
-                    placeholder='Masukkan nama ketua pelaksana'
-                    value={ketuaPelaksanaNama}
-                    onChange={(e) => setKetuaPelaksanaNama(e.target.value)}
-                    required
-                  />
-                </div>
-
-                <div className='space-y-2'>
-                  <label className='block text-sm text-gray-600'>
-                    NIM (14 digit) *
-                  </label>
-                  <Input
-                    placeholder='Contoh: 20210801012345'
-                    value={ketuaPelaksanaNim}
-                    onChange={(e) => {
-                      const value = e.target.value.replace(/\D/g, '');
-                      if (value.length <= 14) setKetuaPelaksanaNim(value);
-                    }}
-                    maxLength={14}
-                    required
-                  />
-                  <p className='text-xs text-gray-500'>Hanya angka, 14 digit</p>
-                </div>
-
-                <div className='space-y-2'>
-                  <label className='block text-sm text-gray-600'>
-                    No HP (12-13 digit) *
-                  </label>
-                  <Input
-                    type='tel'
-                    placeholder='Contoh: 081234567890'
-                    value={ketuaPelaksanaHp}
-                    onChange={(e) => {
-                      const value = e.target.value.replace(/\D/g, '');
-                      if (value.length <= 13) setKetuaPelaksanaHp(value);
-                    }}
-                    maxLength={13}
-                    required
-                  />
-                  <p className='text-xs text-gray-500'>
-                    Hanya angka, 12-13 digit
-                  </p>
-                </div>
-              </div>
-
-              <div className='space-y-3'>
-                <p className='text-sm font-medium text-gray-700'>
-                  Waktu & Tanggal
-                </p>
-
-                <div className='space-y-3'>
-                  <div className='flex flex-col gap-2'>
-                    <label className='text-sm text-gray-700'>Tanggal</label>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <Button
-                          variant={'outline'}
-                          className={cn(
-                            'w-full justify-start text-left font-normal',
-                            !bookingDate && 'text-muted-foreground',
-                          )}
-                        >
-                          <CalendarIcon className='mr-2 h-4 w-4' />
-                          {bookingDate ? (
-                            format(
-                              new Date(bookingDate),
-                              'EEEE, dd MMMM yyyy',
-                              {
-                                locale: id,
-                              },
-                            )
-                          ) : (
-                            <span>Pilih hari Sabtu...</span>
-                          )}
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className='w-auto p-0' align='start'>
-                        <Calendar
-                          mode='single'
-                          selected={
-                            bookingDate ? new Date(bookingDate) : undefined
-                          }
-                          onSelect={(date: Date | undefined) => {
-                            if (date) {
-                              const offset = date.getTimezoneOffset();
-                              const adjustedDate = new Date(
-                                date.getTime() - offset * 60 * 1000,
-                              );
-                              const dateString = adjustedDate
-                                .toISOString()
-                                .split('T')[0];
-                              setBookingDate(dateString);
-                            } else {
-                              setBookingDate('');
-                            }
-                          }}
-                          disabled={(date: Date) => {
-                            const isNotSaturday = date.getDay() !== 6;
-                            const isPast =
-                              date < new Date(new Date().setHours(0, 0, 0, 0));
-                            return isNotSaturday || isPast;
-                          }}
-                          initialFocus
-                        />
-                      </PopoverContent>
-                    </Popover>
-                    {dateValidationMsg && (
-                      <div className='text-sm text-red-600 mt-1'>
-                        {dateValidationMsg}
-                      </div>
-                    )}
-                    <div className='flex gap-2'>
-                      <div className='flex-1'>
-                        <label className='text-sm'>Mulai</label>
-                        <div className='flex gap-2'>
-                          <Select
-                            value={startTime.split(':')[0] || '09'}
-                            onValueChange={(hour) => {
-                              const minute = startTime.split(':')[1] || '00';
-                              setStartTime(`${hour}:${minute}`);
-                            }}
-                          >
-                            <SelectTrigger className='w-full'>
-                              <SelectValue placeholder='Jam' />
-                            </SelectTrigger>
-                            <SelectContent
-                              position='popper'
-                              className='max-h-50'
-                            >
-                              {Array.from({ length: 9 }, (_, i) => {
-                                const hour = (i + 9)
-                                  .toString()
-                                  .padStart(2, '0');
-                                return (
-                                  <SelectItem key={hour} value={hour}>
-                                    {hour}
-                                  </SelectItem>
-                                );
-                              })}
-                            </SelectContent>
-                          </Select>
-                          <Select
-                            value={startTime.split(':')[1] || '00'}
-                            onValueChange={(minute) => {
-                              const hour = startTime.split(':')[0] || '09';
-                              setStartTime(`${hour}:${minute}`);
-                            }}
-                          >
-                            <SelectTrigger className='w-full'>
-                              <SelectValue placeholder='Menit' />
-                            </SelectTrigger>
-                            <SelectContent className='max-h-50'>
-                              {['00', '15', '30', '45'].map((minute) => (
-                                <SelectItem key={minute} value={minute}>
-                                  {minute}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </div>
-                      </div>
-                      <div className='flex-1'>
-                        <label className='text-sm'>Selesai</label>
-                        <div className='flex gap-2'>
-                          <Select
-                            value={endTime.split(':')[0] || '17'}
-                            onValueChange={(hour) => {
-                              const minute = endTime.split(':')[1] || '00';
-                              setEndTime(`${hour}:${minute}`);
-                            }}
-                          >
-                            <SelectTrigger className='w-full'>
-                              <SelectValue placeholder='Jam' />
-                            </SelectTrigger>
-                            <SelectContent
-                              position='popper'
-                              className='max-h-50'
-                            >
-                              {Array.from({ length: 9 }, (_, i) => {
-                                const hour = (i + 9)
-                                  .toString()
-                                  .padStart(2, '0');
-                                return (
-                                  <SelectItem key={hour} value={hour}>
-                                    {hour}
-                                  </SelectItem>
-                                );
-                              })}
-                            </SelectContent>
-                          </Select>
-                          <Select
-                            value={endTime.split(':')[1] || '00'}
-                            onValueChange={(minute) => {
-                              const hour = endTime.split(':')[0] || '17';
-                              setEndTime(`${hour}:${minute}`);
-                            }}
-                          >
-                            <SelectTrigger className='w-full'>
-                              <SelectValue placeholder='Menit' />
-                            </SelectTrigger>
-                            <SelectContent className='max-h-50'>
-                              {['00', '15', '30', '45'].map((minute) => (
-                                <SelectItem key={minute} value={minute}>
-                                  {minute}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </div>
-                        {timeValidationMsg && (
-                          <div className='text-sm text-red-600 mt-1'>
-                            {timeValidationMsg}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Availability indicator */}
-                {availabilityMessage && (
-                  <div
-                    className={`flex items-center gap-2 p-3 rounded-md text-sm ${
-                      availabilityMessage.startsWith('✓')
-                        ? 'bg-green-50 text-green-700'
-                        : 'bg-red-50 text-red-700'
-                    }`}
-                  >
-                    <AlertCircle className='w-4 h-4' />
-                    <span>{availabilityMessage}</span>
-                  </div>
-                )}
-              </div>
-
-              <div className='space-y-2'>
-                <label className='block text-sm font-medium text-gray-700'>
-                  Nama Kegiatan
-                </label>
-                <Textarea
-                  placeholder='Jelaskan kegiatan yang akan dilakukan...'
-                  value={activity}
-                  onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
-                    setActivity(e.target.value)
-                  }
-                  rows={4}
-                  className='resize-none'
-                  required
-                />
-              </div>
-              <div className='flex justify-end'>
-                <Button
-                  type='submit'
-                  className='mt-2'
-                  disabled={
-                    loading ||
-                    checkingAvailability ||
-                    availabilityMessage?.startsWith('✗') ||
-                    !isSaturday ||
-                    !isTimeValid
-                  }
-                >
-                  {loading ? 'Memproses...' : 'Reservasi'}
-                </Button>
-              </div>
-            </form>
-          </div>
-
-          <div className='bg-white rounded-lg shadow-sm border border-gray-200 p-6 space-y-4 lg:w-[62.5%]'>
-            <div className='flex flex-col md:flex-row md:items-center justify-between gap-3'>
-              <h2 className='text-lg font-semibold text-gray-900'>
-                Jadwal Peminjaman Ruang {selectedRoom.code}
-              </h2>
-              <div className='flex items-center gap-2 text-sm'>
-                <span className='text-gray-700'>Search:</span>
-                <Input
-                  className='w-40'
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  placeholder='Cari...'
-                />
-              </div>
-            </div>
-
-            <div className='border border-gray-200 rounded-lg overflow-hidden'>
-              <div className='overflow-x-auto'>
-                <Table className='min-w-full text-sm'>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead className='w-12 text-center'>No</TableHead>
-                      <TableHead>Nama Peminjam</TableHead>
-                      <TableHead>Tanggal</TableHead>
-                      <TableHead>Waktu</TableHead>
-                      <TableHead>Status</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredBookings.length === 0 ? (
-                      <TableRow>
-                        <TableCell
-                          colSpan={5}
-                          className='text-center text-gray-500 py-8'
-                        >
-                          Tidak ada booking yang ditemukan
-                        </TableCell>
-                      </TableRow>
-                    ) : (
-                      filteredBookings.map((item, index) => (
-                        <TableRow key={item.id}>
-                          <TableCell className='text-center'>
-                            {index + 1}
-                          </TableCell>
-                          <TableCell>
-                            {item.booked_by_user?.name ||
-                              item.bookedBy?.name ||
-                              '-'}
-                          </TableCell>
-                          <TableCell>
-                            {new Date(item.booking_date).toLocaleDateString(
-                              'id-ID',
-                            )}
-                          </TableCell>
-                          <TableCell>
-                            {item.start_time} - {item.end_time}
-                          </TableCell>
-                          <TableCell>{getStatusBadge(item.status)}</TableCell>
-                        </TableRow>
-                      ))
-                    )}
-                  </TableBody>
-                </Table>
-              </div>
-            </div>
-          </div>
+          <BookingScheduleTable
+            roomCode={reservation.selectedRoom.code}
+            bookings={reservation.bookings}
+            isLoading={reservation.isLoadingSchedule}
+          />
         </div>
       )}
 
       {/* Room Detail Modal */}
       <RoomDetailModal
-        open={showRoomDetailModal}
-        onOpenChange={setShowRoomDetailModal}
-        room={selectedRoom}
+        open={reservation.showRoomDetailModal}
+        onOpenChange={reservation.setShowRoomDetailModal}
+        room={reservation.selectedRoom}
       />
     </div>
   );
