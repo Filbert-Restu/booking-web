@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import mammoth from 'mammoth';
 import { FileText, Download, AlertCircle, FileType, Eye } from 'lucide-react';
 import { Button } from '@/shared/components/ui/button/button';
@@ -24,28 +24,42 @@ export function TemplatePreview({
   const [errorHint, setErrorHint] = useState<string | null>(null);
   const [useFallback, setUseFallback] = useState(false);
 
-  // Load preview when file or templateId changes
-  useEffect(() => {
-    if (file || templateId) {
-      loadPreview();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [file, templateId]);
+  const extractPlaceholders = useCallback(async () => {
+    try {
+      let arrayBuffer: ArrayBuffer;
 
-  // Cleanup PDF blob URL when it changes or on unmount
-  useEffect(() => {
-    return () => {
-      if (pdfUrl) {
-        try {
-          URL.revokeObjectURL(pdfUrl);
-        } catch {
-          // ignore
-        }
+      if (file instanceof File) {
+        arrayBuffer = await file.arrayBuffer();
+      } else if (templateId) {
+        // Download DOCX from backend for placeholder extraction
+        const response = await api.get(
+          `/document-templates/${templateId}/download`,
+          {
+            responseType: 'arraybuffer',
+          },
+        );
+        arrayBuffer = response.data;
+      } else {
+        // No file or template ID provided
+        return;
       }
-    };
-  }, [pdfUrl]);
 
-  const loadPreview = async () => {
+      // Extract placeholders using mammoth
+      const result = await mammoth.extractRawText({ arrayBuffer });
+      const placeholderRegex = /\$\{([a-zA-Z0-9_]+)\}/g;
+      const matches = [...result.value.matchAll(placeholderRegex)];
+      const uniquePlaceholders = Array.from(new Set(matches.map((m) => m[1])));
+      setPlaceholders(uniquePlaceholders);
+
+      if (onPlaceholdersDetected) {
+        onPlaceholdersDetected(uniquePlaceholders);
+      }
+    } catch {
+      // Placeholder extraction is non-critical; silently ignore
+    }
+  }, [file, templateId, onPlaceholdersDetected]);
+
+  const loadPreview = useCallback(async () => {
     try {
       setIsLoading(true);
       setError(null);
@@ -75,7 +89,6 @@ export function TemplatePreview({
             // Backend returned JSON error, parse it
             const text = await (response.data as Blob).text();
             const errorData = JSON.parse(text);
-            console.warn('PDF conversion failed:', errorData);
             setError(errorData.message || 'Gagal konversi PDF');
             setErrorHint(errorData.hint || null);
             setUseFallback(true);
@@ -92,20 +105,21 @@ export function TemplatePreview({
           await extractPlaceholders();
           setIsLoading(false);
           return;
-        } catch (pdfError: any) {
-          console.warn('PDF preview not available, falling back:', pdfError);
+        } catch (pdfError: unknown) {
+          const axiosErr = pdfError as { response?: { data?: unknown } };
 
           // Try to extract error message from response
-          if (pdfError.response?.data) {
+          if (axiosErr.response?.data) {
             try {
-              let errorData = pdfError.response.data;
+              let errorData = axiosErr.response.data;
               // If blob, convert to text first
               if (errorData instanceof Blob) {
                 const text = await errorData.text();
                 errorData = JSON.parse(text);
               }
-              setError(errorData.message || 'Gagal konversi PDF');
-              setErrorHint(errorData.hint || null);
+              const parsed = errorData as { message?: string; hint?: string };
+              setError(parsed.message || 'Gagal konversi PDF');
+              setErrorHint(parsed.hint || null);
             } catch {
               setError('LibreOffice tidak tersedia untuk konversi PDF');
             }
@@ -119,12 +133,11 @@ export function TemplatePreview({
       // Fallback: show message that PDF preview is not available
       await extractPlaceholders();
     } catch (err) {
-      console.error('Failed to load preview:', err);
       setError(err instanceof Error ? err.message : 'Gagal memuat preview');
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [file, templateId, useFallback, extractPlaceholders]);
 
   const handleRetry = () => {
     setUseFallback(false);
@@ -134,45 +147,25 @@ export function TemplatePreview({
     loadPreview();
   };
 
-  const extractPlaceholders = async () => {
-    try {
-      let arrayBuffer: ArrayBuffer;
-
-      if (file instanceof File) {
-        arrayBuffer = await file.arrayBuffer();
-      } else if (file && typeof file === 'string') {
-        const response = await api.get(file, {
-          responseType: 'arraybuffer',
-        });
-        arrayBuffer = response.data;
-      } else if (templateId) {
-        // Download DOCX from backend for placeholder extraction
-        const response = await api.get(
-          `/document-templates/${templateId}/download`,
-          {
-            responseType: 'arraybuffer',
-          },
-        );
-        arrayBuffer = response.data;
-      } else {
-        // No file or template ID provided
-        return;
-      }
-
-      // Extract placeholders using mammoth
-      const result = await mammoth.extractRawText({ arrayBuffer });
-      const placeholderRegex = /\$\{([a-zA-Z0-9_]+)\}/g;
-      const matches = [...result.value.matchAll(placeholderRegex)];
-      const uniquePlaceholders = Array.from(new Set(matches.map((m) => m[1])));
-      setPlaceholders(uniquePlaceholders);
-
-      if (onPlaceholdersDetected) {
-        onPlaceholdersDetected(uniquePlaceholders);
-      }
-    } catch (err) {
-      console.warn('Failed to extract placeholders:', err);
+  // Load preview when file or templateId changes
+  useEffect(() => {
+    if (file || templateId) {
+      loadPreview();
     }
-  };
+  }, [file, templateId, loadPreview]);
+
+  // Cleanup PDF blob URL when it changes or on unmount
+  useEffect(() => {
+    return () => {
+      if (pdfUrl) {
+        try {
+          URL.revokeObjectURL(pdfUrl);
+        } catch {
+          // ignore
+        }
+      }
+    };
+  }, [pdfUrl]);
 
   if (isLoading) {
     return (
