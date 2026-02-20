@@ -5,8 +5,6 @@ import type { ActorRole } from '@/features/approvals';
 import {
   getMockBookings,
   mapBookingsToApprovalItems,
-  type ApprovalDocType,
-  type ApprovalModeType,
 } from '../approval-mock';
 
 interface ApprovalPageProps {
@@ -31,18 +29,12 @@ export function ApprovalPage({ role, title, description, editorRoutePath }: Appr
     alert(`Booking ${id} perlu revisi oleh ${title}`);
   };
 
-  const handleOpenDoc = (payload: {
-    doc: ApprovalDocType;
-    mode: ApprovalModeType;
-    booking: { id: number };
-  }) => {
+  const handleOpenDoc = (documentId: number) => {
     navigate({
       to: editorRoutePath,
       search: {
-        doc: payload.doc,
-        mode: payload.mode,
-        bookingId: String(payload.booking.id),
-      },
+        documentId,
+      } as any,
     });
   };
 

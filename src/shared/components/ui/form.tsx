@@ -1,9 +1,9 @@
 import * as React from 'react';
 import {
   Controller,
-  ControllerProps,
-  FieldPath,
-  FieldValues,
+  type ControllerProps,
+  type FieldPath,
+  type FieldValues,
   FormProvider,
   useFormContext,
 } from 'react-hook-form';
@@ -79,7 +79,7 @@ const FormLabel = React.forwardRef<
   React.ElementRef<typeof Label>,
   React.ComponentPropsWithoutRef<typeof Label>
 >(({ className, ...props }, ref) => {
-  const { error, name } = useFormField();
+  const { error } = useFormField();
   const { id } = React.useContext(FormItemContext);
 
   return (
@@ -97,7 +97,7 @@ const FormControl = React.forwardRef<
   React.ElementRef<'div'>,
   React.ComponentPropsWithoutRef<'div'>
 >(({ ...props }, ref) => {
-  const { error, name } = useFormField();
+  const { error } = useFormField();
   const { id } = React.useContext(FormItemContext);
 
   return (

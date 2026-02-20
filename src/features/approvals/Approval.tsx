@@ -87,7 +87,6 @@ export function Approval({
   onRevise,
   showOrganisasi = true,
   actorRole,
-  onOpenDoc,
 }: ApprovalProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [pdfPreview, setPdfPreview] = useState<{
@@ -98,7 +97,8 @@ export function Approval({
   const isKemahasiswaan = actorRole === 'kemahasiswaan';
 
   const totalColumns = useMemo(() => {
-    const optionalColumns = (showOrganisasi ? 1 : 0) + (isKemahasiswaan ? 1 : 0);
+    const optionalColumns =
+      (showOrganisasi ? 1 : 0) + (isKemahasiswaan ? 1 : 0);
     return 7 + optionalColumns;
   }, [isKemahasiswaan, showOrganisasi]);
 
@@ -109,7 +109,9 @@ export function Approval({
         item.namaPeminjam.toLowerCase().includes(searchTerm.toLowerCase()) ||
         item.namaRuang.toLowerCase().includes(searchTerm.toLowerCase()) ||
         (item.organisasiMahasiswa &&
-          item.organisasiMahasiswa.toLowerCase().includes(searchTerm.toLowerCase())),
+          item.organisasiMahasiswa
+            .toLowerCase()
+            .includes(searchTerm.toLowerCase())),
     );
   }, [bookings, searchTerm]);
 

@@ -13,7 +13,7 @@ import { Button } from '@/shared/components/ui/button/button';
 import { Input } from '@/shared/components/ui/input';
 import { Textarea } from '@/shared/components/ui/textarea';
 import { TemplatePreview } from '@/features/templates/TemplatePreview';
-import { PlaceholderStatus } from '@/features/templates/PlaceholderStatus';
+
 import { documentTemplateService } from '@/services/document-template.service';
 import type { DocumentTemplate } from '@/types/template.types';
 
@@ -37,7 +37,7 @@ function RouteComponent() {
     description: '',
   });
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [detectedPlaceholders, setDetectedPlaceholders] = useState<string[]>(
+  const [, setDetectedPlaceholders] = useState<string[]>(
     [],
   );
   const fileInputRef = useRef<HTMLInputElement>(null);

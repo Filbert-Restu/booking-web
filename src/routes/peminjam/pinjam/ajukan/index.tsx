@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { useEffect, useState } from 'react';
 import api from '@/lib/axios';
 import { documentService } from '@/services/document.service';
-import type { CreateDocumentData } from '@/services/document.service';
+import type { CreateDocumentData } from '@/types/document';
 import { Button } from '@/shared/components/ui/button/button';
 
 export const Route = createFileRoute('/peminjam/pinjam/ajukan/')({
@@ -74,61 +74,58 @@ export default function RouteComponent() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Basic validation
-    if (!workflowId) {
-      setError('Pilih workflow terlebih dahulu');
-      return;
-    }
 
-    // If rooms exist in the system, require selection
-    if (rooms.length > 0 && !roomId) {
-      setError('Pilih ruang terlebih dahulu');
-      return;
-    }
+    // 1. Validasi Awal
+    if (!workflowId) return setError('Pilih workflow terlebih dahulu');
+    if (rooms.length > 0 && !roomId)
+      return setError('Pilih ruang terlebih dahulu');
 
     setSubmitting(true);
     setError(null);
     setSuccess('');
+
     try {
-      // If user attached a file, send multipart/form-data
-      let doc;
+      const documentTitle = title || 'Pengajuan Peminjaman';
+
       if (attachmentFile) {
+        // 2a. Kirim dengan File (Multipart)
         const form = new FormData();
         form.append('workflow_id', String(workflowId));
-        form.append('title', title || 'Pengajuan Peminjaman');
-        // append content fields as nested form keys so Laravel parses them as array
-        if (bookingDate) form.append('content[booking_date]', bookingDate);
-        form.append('content[room_id]', roomId ? String(Number(roomId)) : '');
+        form.append('title', documentTitle);
         form.append('attachment', attachmentFile);
 
-        const res = await api.post('/documents', form, {
+        if (bookingDate) form.append('content[booking_date]', bookingDate);
+        form.append('content[room_id]', roomId ? String(roomId) : '');
+
+        await api.post('/documents', form, {
           headers: { 'Content-Type': 'multipart/form-data' },
         });
-        doc = res.data.data;
       } else {
+        // 2b. Kirim JSON Biasa
         const payload: CreateDocumentData = {
           workflow_id: workflowId,
-          title: title || 'Pengajuan Peminjaman',
+          title: documentTitle,
           content: {
             booking_date: bookingDate || null,
             room_id: roomId ? Number(roomId) : null,
           },
         };
-
-        doc = await documentService.createDocument(payload);
+        await documentService.createDocument(payload);
       }
+
+      // 3. Sukses & Navigasi
       setSuccess('Dokumen berhasil dibuat');
-      // navigate back to list
       navigate({ to: '/peminjam/pinjam' });
     } catch (err: any) {
       console.error('createDocument error:', err);
-      // Try to extract backend validation messages
-      const message =
-        err?.response?.data?.message ||
-        (err?.response?.data?.errors &&
-          Object.values(err.response.data.errors).flat().join(', ')) ||
-        'Gagal membuat dokumen.';
-      setError(String(message));
+
+      // Ekstraksi pesan error dari backend
+      const backendMessage = err?.response?.data?.message;
+      const validationErrors = err?.response?.data?.errors
+        ? Object.values(err.response.data.errors).flat().join(', ')
+        : null;
+
+      setError(backendMessage || validationErrors || 'Gagal membuat dokumen.');
     } finally {
       setSubmitting(false);
     }

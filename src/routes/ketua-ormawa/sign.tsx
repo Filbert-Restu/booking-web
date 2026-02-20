@@ -12,8 +12,8 @@ function RouteComponent() {
   const navigate = useNavigate();
   const searchParams = useSearch({ from: '/ketua-ormawa/sign' });
   const docType = (searchParams as any)?.doc || 'document';
-  const bookingId = (searchParams as any)?.id;
-  
+
+
   const [isSigned, setIsSigned] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -23,12 +23,12 @@ function RouteComponent() {
     }
 
     setIsSubmitting(true);
-    
+
     // Simulate API call
     setTimeout(() => {
       setIsSubmitting(false);
       // Navigate back to dashboard
-      navigate({ to: '/ketua-ormawa' });
+      navigate({ to: '/ketua-ormawa', search: {} as any });
     }, 500);
   };
 
@@ -70,7 +70,7 @@ function RouteComponent() {
           <div className='flex gap-3'>
             <Button
               variant='outline'
-              onClick={() => navigate({ to: '/ketua-ormawa' })}
+              onClick={() => navigate({ to: '/ketua-ormawa', search: {} as any })}
               disabled={isSubmitting}
               className='flex-1'
             >

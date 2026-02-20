@@ -9,12 +9,11 @@ import {
 } from 'lucide-react';
 import { Button } from '@/shared/components/ui/button/button';
 import { Input } from '@/shared/components/ui/input';
-import { Textarea } from '@/shared/components/ui/textarea';
+
 import { documentTemplateService } from '@/services/document-template.service';
 import type {
   DocumentTemplate,
   PlaceholderMetadata,
-  AvailableField,
 } from '@/types/template.types';
 
 interface PlaceholderStatusProps {
@@ -30,9 +29,7 @@ export function PlaceholderStatus({
   const [metadata, setMetadata] = useState<Record<string, PlaceholderMetadata>>(
     {},
   );
-  const [availableFields, setAvailableFields] = useState<
-    Record<string, AvailableField>
-  >({});
+
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
@@ -50,8 +47,7 @@ export function PlaceholderStatus({
       setIsLoading(true);
 
       // Load available fields
-      const fields = await documentTemplateService.getAvailableFields();
-      setAvailableFields(fields);
+      await documentTemplateService.getAvailableFields();
 
       // Set placeholders from template
       setPlaceholders(template.detected_placeholders || []);

@@ -2,7 +2,6 @@ import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { useEffect, useState } from 'react';
 import { AxiosError } from 'axios';
 import { ApprovalHistory } from '@/features/approvals';
-import type { ActorRole } from '@/features/approvals';
 import { documentService } from '@/services/document.service';
 import { mapDocumentsToApprovalItems, type ApprovalItem } from '@/features/approvals/approval-utils';
 import { Button } from '@/shared/components/ui/button/button';
@@ -16,7 +15,6 @@ function RouteComponent() {
   const [approvalItems, setApprovalItems] = useState<ApprovalItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const actorRole: ActorRole = 'kemahasiswaan';
 
   useEffect(() => {
     fetchProcessedDocuments();

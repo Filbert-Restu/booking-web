@@ -14,15 +14,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/shared/components/ui/select';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/shared/components/ui/dialog';
-import { Textarea } from '@/shared/components/ui/textarea';
 import api from '@/lib/axios';
 import { AxiosError } from 'axios';
 import { documentService, type Document } from '@/services/document.service';
@@ -105,7 +96,7 @@ export function DocumentPreviewContent({
       setPdfUrl(url);
     } catch (err) {
       console.error('Failed to load document preview:', err);
-      const error = err as AxiosError<any>;
+      const error = err as AxiosError<{ message?: string }>;
       if (error.response?.status === 404) {
         setPdfUrl(null);
         setError(`Dokumen ${docType} belum tersedia`);
@@ -135,7 +126,9 @@ export function DocumentPreviewContent({
     } catch (err) {
       console.error('Failed to approve document:', err);
       const axiosError = err as AxiosError<{ message?: string }>;
-      setError(axiosError.response?.data?.message || 'Gagal menyetujui dokumen');
+      setError(
+        axiosError.response?.data?.message || 'Gagal menyetujui dokumen',
+      );
     } finally {
       setApproveLoading(false);
       setDialogState({ type: null });
@@ -160,7 +153,10 @@ export function DocumentPreviewContent({
     } catch (err) {
       console.error('Failed to revise document:', err);
       const error = err as AxiosError<{ message?: string }>;
-      setError(error.response?.data?.message || 'Gagal mengembalikan dokumen untuk revisi');
+      setError(
+        error.response?.data?.message ||
+          'Gagal mengembalikan dokumen untuk revisi',
+      );
     } finally {
       setApproveLoading(false);
       setDialogState({ type: null });
@@ -209,7 +205,7 @@ export function DocumentPreviewContent({
         <CardContent className='space-y-4'>
           {/* Preview PDF */}
           {loading && (
-            <div className='flex items-center justify-center h-[800px] border rounded-lg bg-gray-50'>
+            <div className='flex items-center justify-center h-200 border rounded-lg bg-gray-50'>
               <p className='text-gray-500'>Memuat dokumen...</p>
             </div>
           )}
@@ -217,13 +213,13 @@ export function DocumentPreviewContent({
             <div className='border rounded-lg overflow-hidden'>
               <iframe
                 src={pdfUrl}
-                className='w-full h-[800px]'
+                className='w-full h-200'
                 title='Document Preview'
               />
             </div>
           )}
           {!loading && !pdfUrl && (
-            <div className='flex items-center justify-center h-[800px] border rounded-lg bg-gray-50'>
+            <div className='flex items-center justify-center h-200 border rounded-lg bg-gray-50'>
               <p className='text-gray-500'>Dokumen tidak tersedia</p>
             </div>
           )}

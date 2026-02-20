@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { useEffect, useState, useRef, useMemo, useCallback } from 'react';
-import { Clock, Users, CheckCircle, FileText } from 'lucide-react';
+import { Clock, CheckCircle, FileText } from 'lucide-react';
 import { AxiosError } from 'axios';
 import { StatCard } from '@/shared/components/common/StatCard';
 import { Approval } from '@/features/approvals';

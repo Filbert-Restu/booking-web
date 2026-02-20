@@ -48,7 +48,6 @@ export function SignDocumentContent({
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [reviseDialogOpen, setReviseDialogOpen] = useState(false);
-  const [reviseNote, setReviseNote] = useState('');
   const [document, setDocument] = useState<Document | null>(null);
   const [isSignatureEmbedded, setIsSignatureEmbedded] = useState(false);
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
@@ -87,7 +86,6 @@ export function SignDocumentContent({
 
   // Loading states for individual operations
   const [signatureLoading, setSignatureLoading] = useState(false);
-  const [documentLoading, setDocumentLoading] = useState(false);
   const [pdfLoading, setPdfLoading] = useState(false);
 
   // Cache flags to prevent redundant calls - using refs for performance
@@ -135,8 +133,6 @@ export function SignDocumentContent({
 
         try {
           globalLockRef.current.document = true;
-          setDocumentLoading(true);
-
           const doc = await documentService.getDocument(documentId);
           setDocument(doc);
           documentLoadedRef.current = true;
@@ -144,7 +140,6 @@ export function SignDocumentContent({
           console.error('Failed to load document:', err);
         } finally {
           globalLockRef.current.document = false;
-          setDocumentLoading(false);
         }
       }, 50);
 
@@ -440,7 +435,8 @@ export function SignDocumentContent({
   const confirmApproveDocument = () => {
     if (isWadek1) {
       const missing = [];
-      if (!signedDocTypes.has('approval-sheet')) missing.push('Lembar Pengesahan');
+      if (!signedDocTypes.has('approval-sheet'))
+        missing.push('Lembar Pengesahan');
       if (!signedDocTypes.has('executive-summary'))
         missing.push('Executive Summary');
 
@@ -448,7 +444,7 @@ export function SignDocumentContent({
         showConfirmation(
           'Tanda Tangan Belum Lengkap',
           `Sebagai Wadek 1, Anda wajib menandatangani ${missing.join(' dan ')} sebelum menyetujui dokumen. Silakan pilih dokumen tersebut pada dropdown dan klik "Bubuhkan tanda tangan".`,
-          () => { },
+          () => {},
           'Mengerti',
         );
         return;
@@ -457,7 +453,7 @@ export function SignDocumentContent({
       showConfirmation(
         'Tanda Tangan Belum Dibubuhkan',
         'Silakan klik button "Bubuhkan tanda tangan" terlebih dahulu untuk melihat pratinjau tanda tangan Anda pada dokumen sebelum menyetujuinya.',
-        () => { }, // Just to close the dialog
+        () => {}, // Just to close the dialog
         'Mengerti',
       );
       return;
@@ -535,7 +531,7 @@ export function SignDocumentContent({
       const error = err as AxiosError<{ message?: string }>;
       alert(
         error.response?.data?.message ||
-        'Gagal mengembalikan dokumen untuk revisi',
+          'Gagal mengembalikan dokumen untuk revisi',
       );
     } finally {
       setLoading(false);
@@ -684,10 +680,11 @@ export function SignDocumentContent({
                   <Button
                     onClick={confirmApproveDocument}
                     disabled={loading || pdfLoading}
-                    className={`flex-1 min-w-40 ${isWadek1 && !isAllSigned
-                      ? 'bg-gray-400 hover:bg-gray-400 cursor-not-allowed opacity-50'
-                      : ''
-                      }`}
+                    className={`flex-1 min-w-40 ${
+                      isWadek1 && !isAllSigned
+                        ? 'bg-gray-400 hover:bg-gray-400 cursor-not-allowed opacity-50'
+                        : ''
+                    }`}
                   >
                     {loading ? 'Memproses...' : 'Setujui'}
                   </Button>
