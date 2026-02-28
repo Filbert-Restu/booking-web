@@ -12,7 +12,6 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as TandaTanganRouteImport } from './routes/tanda-tangan'
 import { Route as SignDocumentRouteImport } from './routes/sign-document'
 import { Route as PreviewDocumentRouteImport } from './routes/preview-document'
-import { Route as LoginOptionRouteImport } from './routes/login-option'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as Wadek1RouteRouteImport } from './routes/wadek1/route'
 import { Route as SumberDayaRouteRouteImport } from './routes/sumber-daya/route'
@@ -89,11 +88,6 @@ const SignDocumentRoute = SignDocumentRouteImport.update({
 const PreviewDocumentRoute = PreviewDocumentRouteImport.update({
   id: '/preview-document',
   path: '/preview-document',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const LoginOptionRoute = LoginOptionRouteImport.update({
-  id: '/login-option',
-  path: '/login-option',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LoginRoute = LoginRouteImport.update({
@@ -440,7 +434,6 @@ export interface FileRoutesByFullPath {
   '/sumber-daya': typeof SumberDayaRouteRouteWithChildren
   '/wadek1': typeof Wadek1RouteRouteWithChildren
   '/login': typeof LoginRoute
-  '/login-option': typeof LoginOptionRoute
   '/preview-document': typeof PreviewDocumentRoute
   '/sign-document': typeof SignDocumentRoute
   '/tanda-tangan': typeof TandaTanganRoute
@@ -499,7 +492,6 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
-  '/login-option': typeof LoginOptionRoute
   '/preview-document': typeof PreviewDocumentRoute
   '/sign-document': typeof SignDocumentRoute
   '/tanda-tangan': typeof TandaTanganRoute
@@ -568,7 +560,6 @@ export interface FileRoutesById {
   '/sumber-daya': typeof SumberDayaRouteRouteWithChildren
   '/wadek1': typeof Wadek1RouteRouteWithChildren
   '/login': typeof LoginRoute
-  '/login-option': typeof LoginOptionRoute
   '/preview-document': typeof PreviewDocumentRoute
   '/sign-document': typeof SignDocumentRoute
   '/tanda-tangan': typeof TandaTanganRoute
@@ -638,7 +629,6 @@ export interface FileRouteTypes {
     | '/sumber-daya'
     | '/wadek1'
     | '/login'
-    | '/login-option'
     | '/preview-document'
     | '/sign-document'
     | '/tanda-tangan'
@@ -697,7 +687,6 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/login'
-    | '/login-option'
     | '/preview-document'
     | '/sign-document'
     | '/tanda-tangan'
@@ -765,7 +754,6 @@ export interface FileRouteTypes {
     | '/sumber-daya'
     | '/wadek1'
     | '/login'
-    | '/login-option'
     | '/preview-document'
     | '/sign-document'
     | '/tanda-tangan'
@@ -834,7 +822,6 @@ export interface RootRouteChildren {
   SumberDayaRouteRoute: typeof SumberDayaRouteRouteWithChildren
   Wadek1RouteRoute: typeof Wadek1RouteRouteWithChildren
   LoginRoute: typeof LoginRoute
-  LoginOptionRoute: typeof LoginOptionRoute
   PreviewDocumentRoute: typeof PreviewDocumentRoute
   SignDocumentRoute: typeof SignDocumentRoute
   TandaTanganRoute: typeof TandaTanganRoute
@@ -861,13 +848,6 @@ declare module '@tanstack/react-router' {
       path: '/preview-document'
       fullPath: '/preview-document'
       preLoaderRoute: typeof PreviewDocumentRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/login-option': {
-      id: '/login-option'
-      path: '/login-option'
-      fullPath: '/login-option'
-      preLoaderRoute: typeof LoginOptionRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/login': {
@@ -1511,7 +1491,6 @@ const rootRouteChildren: RootRouteChildren = {
   SumberDayaRouteRoute: SumberDayaRouteRouteWithChildren,
   Wadek1RouteRoute: Wadek1RouteRouteWithChildren,
   LoginRoute: LoginRoute,
-  LoginOptionRoute: LoginOptionRoute,
   PreviewDocumentRoute: PreviewDocumentRoute,
   SignDocumentRoute: SignDocumentRoute,
   TandaTanganRoute: TandaTanganRoute,

@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import axios from 'axios';
 import { Button } from '@/shared/components/ui/button/button';
-import { Link } from '@tanstack/react-router';
 import {
     Dialog,
     DialogContent,
@@ -179,9 +178,6 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
                                 <p className="text-[10px] font-bold text-muted-foreground/50 uppercase tracking-[0.2em]">
                                     © 2026 PINJAM RUANG FSM • UNDIP
                                 </p>
-                                <Link to="/login-option" className="text-[10px] font-bold text-primary/40 hover:text-primary transition-colors tracking-tighter uppercase">
-                                    🔧 Menu Development
-                                </Link>
                             </div>
                         </div>
                     </div>
