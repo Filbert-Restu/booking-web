@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from '@tanstack/react-router';
+import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/shared/components/ui/button/button';
 import {
   Card,
@@ -87,8 +88,8 @@ function RouteComponent() {
       <div className='max-w-md w-full relative z-10'>
         <Card className='bg-white/40 backdrop-blur-md border border-white/20 shadow-2xl p-4'>
           {/* Header */}
-          <div className='text-center mb-6'>
-            <h1 className='text-2xl font-bold text-gray-900 mb-1'>
+          <div className='relative text-center mb-6'>
+            <h1 className='text-2xl font-bold text-gray-900 mb-1 pt-8'>
               Sistem Peminjaman Ruang FSM
             </h1>
             <p className='text-gray-800 font-medium text-sm'>Selamat datang!</p>
@@ -97,6 +98,12 @@ function RouteComponent() {
           {/* Login Card */}
           <Card className='shadow-lg border-0 bg-white'>
             <CardHeader className='space-y-1 pb-4'>
+              <Link to='/'>
+                <Button variant='ghost' size='sm' className='flex items-center gap-2 text-gray-700 hover:text-gray-900'>
+                  <ArrowLeft className='h-4 w-4' />
+                  <span>Kembali</span>
+                </Button>
+              </Link>
               <CardTitle className='text-xl font-bold text-center'>
                 Login
               </CardTitle>

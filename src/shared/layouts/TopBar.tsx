@@ -1,4 +1,5 @@
 import { SidebarTrigger } from '@/shared/components/ui/sidebar/sidebar';
+import { Button } from '@/shared/components/ui/button/button';
 import { Link } from '@tanstack/react-router';
 import { useSidebar } from '@/shared/components/ui/sidebar/sidebarContext';
 import { useEffect, useState } from 'react';
@@ -22,10 +23,6 @@ type User = {
 
 type TopBarProps = {
   /**
-   * Judul atau nama halaman/role yang ditampilkan di TopBar
-   */
-  title?: string;
-  /**
    * URL tujuan tombol kanan (misal login / logout)
    */
   actionHref?: string;
@@ -33,12 +30,16 @@ type TopBarProps = {
    * Label tombol kanan
    */
   actionLabel?: string;
+  /**
+   * Callback when login button is clicked
+   */
+  onLoginClick?: () => void;
 };
 
 export function TopBar({
-  title,
   actionHref = '/login-option',
   actionLabel = 'Login',
+  onLoginClick,
 }: TopBarProps) {
   const [user, setUser] = useState<User | null>(null);
 
@@ -79,15 +80,12 @@ export function TopBar({
   }
 
   return (
-    <header className='w-full flex items-center justify-between bg-primary px-6 py-10 h-16'>
+    <header className={`w-full flex items-center justify-between bg-primary border-b border-gray-100 px-6 py-6 h-20 transition-all`}>
       <div className='flex items-center gap-3'>
         {/* Trigger sidebar untuk layout dengan sidebar (admin, role, dll) */}
         {hasSidebar && <SidebarTrigger className='md:hidden text-white' />}
-        <div>
-          <h3 className='text-white text-sm font-bold'>
-            {title || 'Sistem Peminjaman Ruang'}
-          </h3>
-          <p className='text-white/90 text-xs'>Fakultas Sains dan Matematika</p>
+        <div className='flex items-center gap-3'>
+          <img src='/fsm-logo.webp' alt='FSM Logo' className='h-12 w-auto' />
         </div>
       </div>
       <div className='flex items-center gap-4'>
@@ -102,15 +100,26 @@ export function TopBar({
 
             <button
               onClick={handleLogout}
-              className='inline-flex items-center gap-2 bg-white text-primary px-3 py-2 rounded-lg shadow-sm hover:bg-gray-100 transition text-sm'
+              className='inline-flex items-center gap-2 bg-white/20 text-white hover:bg-white/30 border border-white/30 px-4 py-2 rounded-xl shadow-sm transition-all duration-200 text-sm font-bold active:scale-95'
             >
               Logout
             </button>
           </>
+        ) : onLoginClick ? (
+          <Button
+            onClick={onLoginClick}
+            className='flex rounded-xl items-center gap-1.5 bg-gradient-to-r from-primary to-primary/80 text-white hover:from-primary/90 hover:to-primary shadow-lg shadow-primary/30 px-6 py-2 font-bold transition-all duration-200 text-sm h-auto active:scale-95 relative overflow-hidden group'
+          >
+            <span className='relative z-10'>{actionLabel}</span>
+            <svg xmlns='http://www.w3.org/2000/svg' className='h-3.5 w-3.5 relative z-10 transition-transform group-hover:translate-x-0.5 duration-200' fill='none' viewBox='0 0 24 24' stroke='currentColor' strokeWidth={2.5}>
+              <path strokeLinecap='round' strokeLinejoin='round' d='M13 7l5 5m0 0l-5 5m5-5H6' />
+            </svg>
+            <span className='absolute inset-0 bg-white/10 translate-y-full group-hover:translate-y-0 transition-transform duration-300' />
+          </Button>
         ) : (
           <Link
             to={actionHref}
-            className='flex items-center gap-4 bg-white text-primary px-4 py-2 rounded-xl font-semibold hover:bg-gray-200 transition text-sm'
+            className='flex rounded-xl items-center gap-1.5 bg-gradient-to-r from-primary to-primary/80 text-white hover:from-primary/90 hover:to-primary shadow-lg shadow-primary/30 px-6 py-2 font-bold transition-all duration-200 text-sm active:scale-95'
           >
             {actionLabel}
           </Link>

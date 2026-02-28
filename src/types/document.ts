@@ -1,5 +1,6 @@
 // src/types/document.ts
 import { DOCUMENT_STATUS, DOCUMENT_ACTIONS } from '@/constants/document';
+import type { PaginatedData } from './pagination';
 
 export type DocumentStatus =
   (typeof DOCUMENT_STATUS)[keyof typeof DOCUMENT_STATUS];
@@ -11,6 +12,7 @@ export interface UserShort {
   id: number;
   name: string;
   email: string;
+  nim_nip?: string | null;
   role?: {
     id: number;
     name: string;
@@ -33,6 +35,16 @@ export interface BookingContent {
   ketua_pelaksana_nama?: string;
   ketua_pelaksana_nim?: string;
   ketua_pelaksana_hp?: string;
+
+  // Step 2: Proposal fields
+  event_nature?: string;
+  event_form?: string;
+  objectives?: string;
+  benefits?: string;
+  target_audience?: string;
+  location?: string;
+  equipment?: string;
+  invitations?: string;
 
   // Index signature agar tetap kompatibel jika ada field tambahan lain
   [key: string]: string | number | boolean | null | undefined;
@@ -95,10 +107,10 @@ export interface Document<
 export interface DocumentsResponse {
   success: boolean;
   data: {
-    my_documents: Document[];
-    pending_documents: Document[];
-    processed_documents: Document[];
-    all_documents?: Document[];
+    my_documents: PaginatedData<Document>;
+    pending_documents: PaginatedData<Document>;
+    processed_documents: PaginatedData<Document>;
+    all_documents?: PaginatedData<Document>;
   };
 }
 

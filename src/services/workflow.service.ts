@@ -1,4 +1,5 @@
 import api from '@/lib/axios';
+import type { PaginatedData } from '@/types/pagination';
 
 export interface WorkflowStep {
   id?: number;
@@ -24,7 +25,7 @@ export interface Workflow {
 
 export interface WorkflowResponse {
   success: boolean;
-  data: Workflow[];
+  data: PaginatedData<Workflow>;
 }
 
 export interface SingleWorkflowResponse {
@@ -67,7 +68,7 @@ export const workflowService = {
    */
   async getWorkflows(): Promise<Workflow[]> {
     const response = await api.get<WorkflowResponse>('/workflows');
-    return response.data.data;
+    return response.data.data.data;
   },
 
   /**

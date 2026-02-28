@@ -86,7 +86,8 @@
 @layer base {
   :root {
     /* Global Settings */
-    --radius: 0.5rem; /* Sedikit lebih kotak agar terlihat formal (akademik) */
+    --radius: 0.5rem;
+    /* Sedikit lebih kotak agar terlihat formal (akademik) */
 
     /* --- LIGHT MODE (FSM UNDIP Standard) --- */
 
@@ -105,7 +106,8 @@
 
     /* PRIMARY: FSM Blue Bright (#098cf2) -> converted to OKLCH */
     --primary: oklch(0.65 0.18 245);
-    --primary-foreground: oklch(1 0 0); /* Teks putih di atas biru */
+    --primary-foreground: oklch(1 0 0);
+    /* Teks putih di atas biru */
 
     /* SECONDARY: FSM Dark Teal (#003c49) -> converted to OKLCH */
     /* Digunakan untuk elemen pendukung yang solid */
@@ -132,11 +134,16 @@
     --ring: oklch(0.65 0.18 245 / 0.5);
 
     /* Chart Colors (Tetap default atau disesuaikan nuansa biru) */
-    --chart-1: oklch(0.65 0.18 245); /* Primary Blue */
-    --chart-2: oklch(0.35 0.06 230); /* Dark Teal */
-    --chart-3: oklch(0.7 0.15 180); /* Cyan */
-    --chart-4: oklch(0.6 0.15 60); /* Orange (Warna sekunder Undip umum) */
-    --chart-5: oklch(0.6 0.15 300); /* Purple */
+    --chart-1: oklch(0.65 0.18 245);
+    /* Primary Blue */
+    --chart-2: oklch(0.35 0.06 230);
+    /* Dark Teal */
+    --chart-3: oklch(0.7 0.15 180);
+    /* Cyan */
+    --chart-4: oklch(0.6 0.15 60);
+    /* Orange (Warna sekunder Undip umum) */
+    --chart-5: oklch(0.6 0.15 300);
+    /* Purple */
 
     /* SIDEBAR (Light Mode) */
     /* Menggunakan Dark Teal FSM (#003c49) agar terlihat "Official" seperti Header website */
@@ -144,9 +151,8 @@
     --sidebar-foreground: oklch(0.98 0 0);
     --sidebar-primary: oklch(0.65 0.18 245);
     --sidebar-primary-foreground: oklch(1 0 0);
-    --sidebar-accent: oklch(
-      0.4 0.06 230
-    ); /* Sedikit lebih terang dari sidebar bg */
+    --sidebar-accent: oklch(0.4 0.06 230);
+    /* Sedikit lebih terang dari sidebar bg */
     --sidebar-accent-foreground: oklch(0.98 0 0);
     --sidebar-border: oklch(0.4 0.06 230);
     --sidebar-ring: oklch(0.65 0.18 245);
@@ -202,9 +208,20 @@
   * {
     @apply border-border outline-ring/50;
   }
+
   body {
     @apply bg-background text-foreground;
   }
+}
+
+/* --- FullCalendar Base Styles --- */
+.fc {
+  --fc-button-bg-color: var(--primary);
+  --fc-button-border-color: var(--primary);
+  --fc-button-hover-bg-color: oklch(0.6 0.18 245);
+  --fc-button-hover-border-color: oklch(0.6 0.18 245);
+  --fc-button-active-bg-color: oklch(0.55 0.18 245);
+  --fc-button-active-border-color: oklch(0.55 0.18 245);
 }
 
 /* --- FullCalendar: responsive tweaks for mobile --- */

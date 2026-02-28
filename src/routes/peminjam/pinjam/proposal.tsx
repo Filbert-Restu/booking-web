@@ -48,6 +48,7 @@ function RouteComponent() {
     proposalFile,
     handleFileChange,
     fileError,
+    existingFileProposal,
     isSubmitting,
     isAutoSaving,
     error,
@@ -80,7 +81,7 @@ function RouteComponent() {
                   onClick={() => setError(null)}
                   className='text-red-400 hover:text-red-600 font-bold'
                 >
-                  ×
+                  x
                 </button>
               </div>
             )}
@@ -105,8 +106,20 @@ function RouteComponent() {
             {/* Upload Proposal */}
             <div className='space-y-2'>
               <label className='block text-sm font-medium text-gray-700'>
-                Unggah Proposal <span className='text-red-500'>*</span>
+                Unggah Proposal{' '}
+                <span className='text-red-500'>{existingFileProposal ? '' : '*'}</span>
               </label>
+
+              {/* Existing file saved on server */}
+              {existingFileProposal && !proposalFile && (
+                <div className='flex items-center gap-2 p-2 rounded-md bg-blue-50 border border-blue-200 text-blue-700 text-sm'>
+                  <span>📎</span>
+                  <span>
+                    File proposal sudah tersimpan. Upload file baru hanya jika ingin menggantikan.
+                  </span>
+                </div>
+              )}
+
               <Input
                 type='file'
                 accept='.pdf'

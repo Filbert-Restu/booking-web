@@ -27,7 +27,6 @@ export default function BookingCalendar() {
         setIsLoading(true);
         setError(null);
         const data = await bookingService.getBookings();
-        console.log(data);
 
         setBookings(data);
       } catch (err) {
@@ -54,13 +53,6 @@ export default function BookingCalendar() {
     // Extract only date part from booking_date (format: "YYYY-MM-DDTHH:mm:ss.SSSZ" or "YYYY-MM-DD")
     const bookingDate = booking.booking_date.split('T')[0];
 
-    console.log('Event:', {
-      id: booking.id,
-      date: bookingDate,
-      start: `${bookingDate}T${startTime}:00`,
-      end: `${bookingDate}T${endTime}:00`,
-    });
-
     return {
       id: String(booking.id),
       title: booking.purpose || booking.room?.name || 'Booking',
@@ -71,6 +63,7 @@ export default function BookingCalendar() {
       borderColor: getEventColor(booking.status),
     };
   });
+
 
   // Get color based on booking status
   function getEventColor(status: string): string {

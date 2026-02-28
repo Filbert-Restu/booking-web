@@ -47,7 +47,7 @@ export function ApprovalHistory({
   const filteredItems = bookings;
 
   useEffect(() => {
-    console.log('ApprovalHistory received bookings:', bookings); // Log received bookings
+
   }, [bookings]);
 
   return (

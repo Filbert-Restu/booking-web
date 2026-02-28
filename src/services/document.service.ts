@@ -22,7 +22,13 @@ export const documentService = {
     const response = await api.get<DocumentsResponse>('/documents', {
       params: filters,
     });
-    return response.data.data;
+
+    // Extracted data from the paginated structure for each category
+    return {
+      my_documents: response.data.data.my_documents.data,
+      pending_documents: response.data.data.pending_documents.data,
+      processed_documents: response.data.data.processed_documents.data,
+    };
   },
 
   async getDocument(id: number) {

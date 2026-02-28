@@ -60,13 +60,13 @@ export function useBookingForm({
       ketua: {
         nama: String(
           val('ketua_pelaksana_nama', 'ketua_pelaksana_nama', 'ketuaNama') ||
-            localStorage.getItem('userName') ||
-            '',
+          localStorage.getItem('userName') ||
+          '',
         ),
         nim: String(
           val('ketua_pelaksana_nim', 'ketua_pelaksana_nim', 'ketuaNim') ||
-            localStorage.getItem('userNim') ||
-            '',
+          localStorage.getItem('userNim') ||
+          '',
         ),
         hp: String(
           val('ketua_pelaksana_hp', 'ketua_pelaksana_hp', 'ketuaHp') || '',
@@ -136,9 +136,9 @@ export function useBookingForm({
           res.available
             ? { msg: '✓ Ruangan tersedia', isError: false }
             : {
-                msg: `✗ Tidak tersedia (${res.conflicts?.length || 0} bentrok)`,
-                isError: true,
-              },
+              msg: `✗ Tidak tersedia (${res.conflicts?.length || 0} bentrok)`,
+              isError: true,
+            },
         );
       }
     },
@@ -187,7 +187,6 @@ export function useBookingForm({
         peminjam_nama: localStorage.getItem('userName') || 'Pemohon',
       };
 
-      console.log('📤 [SAVE] Content payload:', contentPayload);
 
       // 3. Create or Update Logic
       // ERROR FIX: Menggunakan 'documentService' agar tidak unused
@@ -234,7 +233,6 @@ export function useBookingForm({
         ketua_pelaksana_nim: content.ketua_pelaksana_nim,
         ketua_pelaksana_hp: content.ketua_pelaksana_hp,
       });
-      console.log('Saved content:', content);
       // Navigate
       navigate({ to: '/peminjam/pinjam/proposal' });
     },

@@ -6,6 +6,7 @@ import {
     useBookingContext,
     type BookingFormData,
 } from '@/contexts/BookingContext';
+import type { BookingContent } from '@/types/document';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -147,11 +148,59 @@ export function useProposalForm() {
         formData.proposal_file || null,
     );
 
+    // True when the draft document already has a saved proposal file on the server
+    const [existingFileProposal, setExistingFileProposal] = useState(false);
+
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isAutoSaving, setIsAutoSaving] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [fileError, setFileError] = useState<string | null>(null);
     const autoSaveRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+    // --- HYDRATE FROM API WHEN CONTEXT IS EMPTY (e.g. after refresh) ---
+    useEffect(() => {
+        if (!formData.document_id) return;
+        // If the context already has proposal data, no need to fetch
+        if (formData.event_name || formData.objectives) return;
+
+        documentService.getDocument(formData.document_id).then((doc) => {
+            const c = (doc.content ?? {}) as BookingContent & Record<string, string | number | undefined>;
+            const hydrated: Partial<BookingFormData> = {};
+            const proposalFieldMap: Array<[keyof typeof fields, string]> = [
+                ['event_name', 'event_name'],
+                ['event_nature', 'event_nature'],
+                ['event_form', 'event_form'],
+                ['objectives', 'objectives'],
+                ['benefits', 'benefits'],
+                ['target_audience', 'target_audience'],
+                ['location', 'location'],
+                ['equipment', 'equipment'],
+                ['invitations', 'invitations'],
+            ];
+
+            const newFields: Partial<ProposalFields> = {};
+            for (const [fieldKey, contentKey] of proposalFieldMap) {
+                const val = c[contentKey];
+                if (typeof val === 'string' && val.trim()) {
+                    newFields[fieldKey] = val;
+                    (hydrated as Record<string, string>)[contentKey] = val;
+                }
+            }
+
+            if (Object.keys(newFields).length > 0) {
+                setFields((prev) => ({ ...prev, ...newFields }));
+                updateFormData(hydrated);
+            }
+
+            // Check if a proposal file already exists on the server
+            if (doc.file_proposal && doc.file_proposal !== '0' && doc.file_proposal !== '') {
+                setExistingFileProposal(true);
+            }
+        }).catch(() => {
+            // Silently ignore — user will fill manually
+        });
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [formData.document_id]);
 
     // --- FIELD CHANGE HANDLER ---
     const handleFieldChange = useCallback(
@@ -273,6 +322,7 @@ export function useProposalForm() {
         proposalFile,
         handleFileChange,
         fileError,
+        existingFileProposal,
         isSubmitting,
         isAutoSaving,
         error,

@@ -175,39 +175,48 @@ export function BookingForm(props: BookingFormProps) {
                     </div>
 
                     {/* KETUA INPUTS */}
-                    <div className='space-y-3 border-t pt-3'>
+                    <div className='space-y-4 border-t pt-3'>
                         <h3 className='font-medium text-sm'>Data Ketua Pelaksana</h3>
-                        <Input
-                            placeholder='Nama Ketua'
-                            value={form.ketua.nama}
-                            onChange={(e) => handleKetuaChange('nama', e.target.value)}
-                            disabled={!canEditDocument}
-                            required
-                        />
-                        <Input
-                            placeholder='NIM (14 digit)'
-                            value={form.ketua.nim}
-                            onChange={(e) =>
-                                handleKetuaChange(
-                                    'nim',
-                                    e.target.value.replace(/\D/g, '').slice(0, 14),
-                                )
-                            }
-                            disabled={!canEditDocument}
-                            required
-                        />
-                        <Input
-                            placeholder='HP (12-13 digit)'
-                            value={form.ketua.hp}
-                            onChange={(e) =>
-                                handleKetuaChange(
-                                    'hp',
-                                    e.target.value.replace(/\D/g, '').slice(0, 13),
-                                )
-                            }
-                            disabled={!canEditDocument}
-                            required
-                        />
+                        <div className='space-y-1.5'>
+                            <label className='text-xs font-medium text-gray-700'>Nama Ketua</label>
+                            <Input
+                                placeholder='Masukkan nama lengkap ketua'
+                                value={form.ketua.nama}
+                                onChange={(e) => handleKetuaChange('nama', e.target.value)}
+                                disabled={!canEditDocument}
+                                required
+                            />
+                        </div>
+                        <div className='space-y-1.5'>
+                            <label className='text-xs font-medium text-gray-700'>NIM Ketua (14 digit)</label>
+                            <Input
+                                placeholder='Contoh: 24060120120001'
+                                value={form.ketua.nim}
+                                onChange={(e) =>
+                                    handleKetuaChange(
+                                        'nim',
+                                        e.target.value.replace(/\D/g, '').slice(0, 14),
+                                    )
+                                }
+                                disabled={!canEditDocument}
+                                required
+                            />
+                        </div>
+                        <div className='space-y-1.5'>
+                            <label className='text-xs font-medium text-gray-700'>Nomor HP Ketua</label>
+                            <Input
+                                placeholder='Contoh: 081234567890'
+                                value={form.ketua.hp}
+                                onChange={(e) =>
+                                    handleKetuaChange(
+                                        'hp',
+                                        e.target.value.replace(/\D/g, '').slice(0, 13),
+                                    )
+                                }
+                                disabled={!canEditDocument}
+                                required
+                            />
+                        </div>
                     </div>
 
                     {/* WAKTU INPUTS */}
@@ -261,7 +270,6 @@ export function BookingForm(props: BookingFormProps) {
                                                 date < new Date(new Date().setHours(0, 0, 0, 0));
                                             return isNotSaturday || isPast;
                                         }}
-                                        initialFocus
                                     />
                                 </PopoverContent>
                             </Popover>

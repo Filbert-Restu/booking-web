@@ -1,4 +1,5 @@
 import api from '@/lib/axios';
+import type { PaginatedData } from '@/types/pagination';
 
 export interface Room {
   id: number;
@@ -20,7 +21,7 @@ export interface Room {
 
 export interface RoomResponse {
   success: boolean;
-  data: Room[];
+  data: PaginatedData<Room>;
 }
 
 export interface SingleRoomResponse {
@@ -123,7 +124,7 @@ export const roomService = {
     const response = await api.get<RoomResponse>(
       `/rooms${params.toString() ? `?${params.toString()}` : ''}`,
     );
-    return response.data.data;
+    return response.data.data.data;
   },
 
   /**
@@ -264,10 +265,10 @@ export const roomService = {
         }
       });
     }
-    const response = await api.get<{ success: boolean; data: RoomBooking[] }>(
+    const response = await api.get<{ success: boolean; data: PaginatedData<RoomBooking> }>(
       `/room-bookings${params.toString() ? `?${params.toString()}` : ''}`,
     );
-    return response.data.data;
+    return response.data.data.data;
   },
 
   /**

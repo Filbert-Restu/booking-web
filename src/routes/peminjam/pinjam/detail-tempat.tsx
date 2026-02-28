@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate } from '@tanstack/react-router';
+import { createFileRoute, redirect, useNavigate } from '@tanstack/react-router';
 import { useQuery } from '@tanstack/react-query';
 import { useMemo } from 'react';
 import { AlertCircle } from 'lucide-react';
@@ -22,6 +22,13 @@ export const Route = createFileRoute('/peminjam/pinjam/detail-tempat')({
     ketuaNim: search.ketuaNim as string | undefined,
     ketuaHp: search.ketuaHp as string | undefined,
   }),
+  beforeLoad: async () => {
+    try {
+      await authService.getUser();
+    } catch (error) {
+      throw redirect({ to: '/' });
+    }
+  },
   component: RouteComponent,
 });
 
@@ -34,17 +41,11 @@ function RouteComponent() {
   const {
     data: currentUser,
     isLoading: authLoading,
-    isError: isAuthError,
   } = useQuery<UserShort>({
     queryKey: ['current-user'],
     queryFn: () => authService.getUser(),
     retry: false,
   });
-
-  // Redirect to login if auth fails
-  if (isAuthError) {
-    navigate({ to: '/login-option' });
-  }
 
   // FETCH ROOMS
   const {

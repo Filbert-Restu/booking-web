@@ -29,6 +29,7 @@ function RouteComponent() {
   const navigate = useNavigate();
   const { documentId, autoApprove } = Route.useSearch();
   const [approvalItems, setApprovalItems] = useState<ApprovalItem[]>([]);
+  const [approvedCount, setApprovedCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const actorRole: ActorRole = 'ketua-ormawa';
@@ -48,14 +49,10 @@ function RouteComponent() {
     if (autoApprove && documentId) {
       const performAutoApprove = async () => {
         try {
-          console.log('🔄 Auto-approving document:', documentId);
           await documentService.approveDocument(
             documentId,
             '',
             'Approved after signature upload',
-          );
-          alert(
-            '✅ Dokumen berhasil disetujui!\n\nTanda tangan telah ditambahkan dan dokumen diteruskan ke step berikutnya.',
           );
 
           // Clear search params
@@ -72,12 +69,8 @@ function RouteComponent() {
           // Refresh data
           await fetchDocuments();
         } catch (err) {
-          console.error('Auto-approve failed:', err);
           if (err instanceof AxiosError) {
-            alert(
-              '❌ Gagal approve otomatis\n\n' +
-              (err.response?.data?.message || err.message),
-            );
+            setError(err.response?.data?.message || 'Gagal approve otomatis');
           }
         }
       };
@@ -96,8 +89,10 @@ function RouteComponent() {
       const pendingDocs = data.pending_documents || [];
       const mappedItems = mapDocumentsToApprovalItems(pendingDocs);
       setApprovalItems(mappedItems);
+
+      // Count documents this user has already approved (processed_documents)
+      setApprovedCount(data.processed_documents?.length ?? 0);
     } catch (err) {
-      console.error('Failed to fetch documents:', err);
       if (err instanceof AxiosError) {
         setError(err.response?.data?.message || 'Gagal memuat data dokumen');
       } else {
@@ -138,13 +133,13 @@ function RouteComponent() {
     },
     {
       title: 'Total Diapprove',
-      value: String(approvalItems.filter((b) => b.status === 'approved').length),
+      value: String(approvedCount),
       icon: CheckCircle,
       textColor: 'text-green-600',
       bgLight: 'bg-green-50',
       onClick: () => navigate({ to: '/ketua-ormawa/riwayat-persetujuan' }),
     },
-  ], [approvalItems, uniqueSubmittersCount, navigate, scrollToTable]);
+  ], [approvalItems, uniqueSubmittersCount, approvedCount, navigate, scrollToTable]);
 
   const handleApprove = useCallback((id: number) => {
     setDialogState({ type: 'approve', id });

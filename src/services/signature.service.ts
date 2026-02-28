@@ -26,14 +26,11 @@ class SignatureService {
    */
   async getSignature(): Promise<Signature | null> {
     try {
-      console.log('🔍 [SignatureService] Fetching user signature...');
       const response = await api.get<SignatureResponse>('/signs');
-      console.log('✅ [SignatureService] Response:', response.data);
       return response.data.data || null;
     } catch (error: any) {
       console.error('❌ [SignatureService] Error fetching signature:', error);
       if (error.response?.status === 404) {
-        console.log('ℹ️ [SignatureService] No signature found (404)');
         return null;
       }
       throw error;

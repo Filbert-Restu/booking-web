@@ -42,7 +42,7 @@ api.interceptors.response.use(
 
       // Opsional: Redirect ke halaman login
       // Karena ini file JS biasa (bukan komponen), kita pakai cara native:
-      window.location.href = '/login';
+      window.location.href = '/';
     }
     return Promise.reject(error);
   },

@@ -18,7 +18,7 @@ function RouteComponent() {
         footerLink={menuConfig.footerLink}
       />
       <main className='flex-1 flex flex-col w-full min-w-0'>
-        <TopBar title='Peminjam' actionLabel='Login' />
+        <TopBar actionLabel='Login' />
         <div className='flex-1 p-6 space-y-6'>
           <Outlet />
         </div>

@@ -10,12 +10,12 @@ export const Route = createFileRoute('/admin')({
 function RouteComponent() {
   const [open, setOpen] = React.useState(false);
   const menuConfig = getMenuConfig('admin');
-  
+
   return (
     <SidebarProvider open={open} onOpenChange={setOpen} className='gap-0'>
       <SideBar menuSections={menuConfig.menuSections} footerLink={menuConfig.footerLink} />
       <main className='flex-1 flex flex-col w-full min-w-0'>
-        <TopBar title="Admin Dashboard" />
+        <TopBar />
         <div className='flex-1 p-6 space-y-6'>
           <Outlet />
         </div>

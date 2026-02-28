@@ -203,7 +203,6 @@ export function SignDocumentContent({
           }
           signatureLoadedRef.current = true;
         } catch {
-          console.log('No signature found');
           signatureLoadedRef.current = true; // Mark as loaded even on error to prevent retry
         } finally {
           globalLockRef.current.signature = false;
@@ -288,7 +287,6 @@ export function SignDocumentContent({
           pdfCacheRef.current.set(cacheKey, url);
         } catch (err: any) {
           if (err.name === 'AbortError' || err.name === 'CanceledError') {
-            console.log('Request was cancelled');
             return;
           }
 
@@ -444,7 +442,7 @@ export function SignDocumentContent({
         showConfirmation(
           'Tanda Tangan Belum Lengkap',
           `Sebagai Wadek 1, Anda wajib menandatangani ${missing.join(' dan ')} sebelum menyetujui dokumen. Silakan pilih dokumen tersebut pada dropdown dan klik "Bubuhkan tanda tangan".`,
-          () => {},
+          () => { },
           'Mengerti',
         );
         return;
@@ -453,7 +451,7 @@ export function SignDocumentContent({
       showConfirmation(
         'Tanda Tangan Belum Dibubuhkan',
         'Silakan klik button "Bubuhkan tanda tangan" terlebih dahulu untuk melihat pratinjau tanda tangan Anda pada dokumen sebelum menyetujuinya.',
-        () => {}, // Just to close the dialog
+        () => { }, // Just to close the dialog
         'Mengerti',
       );
       return;
@@ -531,7 +529,7 @@ export function SignDocumentContent({
       const error = err as AxiosError<{ message?: string }>;
       alert(
         error.response?.data?.message ||
-          'Gagal mengembalikan dokumen untuk revisi',
+        'Gagal mengembalikan dokumen untuk revisi',
       );
     } finally {
       setLoading(false);
@@ -680,11 +678,10 @@ export function SignDocumentContent({
                   <Button
                     onClick={confirmApproveDocument}
                     disabled={loading || pdfLoading}
-                    className={`flex-1 min-w-40 ${
-                      isWadek1 && !isAllSigned
+                    className={`flex-1 min-w-40 ${isWadek1 && !isAllSigned
                         ? 'bg-gray-400 hover:bg-gray-400 cursor-not-allowed opacity-50'
                         : ''
-                    }`}
+                      }`}
                   >
                     {loading ? 'Memproses...' : 'Setujui'}
                   </Button>

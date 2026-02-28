@@ -1,5 +1,6 @@
 import api from '@/lib/axios';
 import type React from 'react';
+import type { PaginatedData } from '@/types/pagination';
 
 export interface RoomBooking {
   id: number;
@@ -47,7 +48,7 @@ export interface BookingFilters {
 
 export interface BookingResponse {
   success: boolean;
-  data: RoomBooking[];
+  data: PaginatedData<RoomBooking> | RoomBooking[];
 }
 
 export interface SingleBookingResponse {
@@ -73,7 +74,12 @@ export const bookingService = {
     const response = await api.get<BookingResponse>(
       `/room-bookings${params.toString() ? `?${params.toString()}` : ''}`,
     );
-    return response.data.data;
+
+    // Handle both paginated and plain array responses
+    if (Array.isArray(response.data.data)) {
+      return response.data.data;
+    }
+    return response.data.data.data;
   },
 
   /**
