@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
     Dialog,
     DialogContent,
@@ -9,6 +9,7 @@ import {
 } from '@/shared/components/ui/dialog';
 import { Button } from '@/shared/components/ui/button/button';
 import { Textarea } from '@/shared/components/ui/textarea';
+import { Loader2 } from 'lucide-react';
 
 interface RevisionDialogProps {
     isOpen: boolean;
@@ -20,6 +21,7 @@ interface RevisionDialogProps {
     confirmLabel?: string;
     cancelLabel?: string;
     variant?: 'default' | 'destructive' | 'outline' | 'secondary' | 'ghost' | 'link';
+    loading?: boolean;
 }
 
 export function RevisionDialog({
@@ -32,17 +34,21 @@ export function RevisionDialog({
     confirmLabel = 'Kirim Revisi',
     cancelLabel = 'Batal',
     variant = 'default',
+    loading = false,
 }: RevisionDialogProps) {
     const [note, setNote] = useState('');
 
+    // Reset note when dialog closes
+    useEffect(() => {
+        if (!isOpen) setNote('');
+    }, [isOpen]);
+
     const handleConfirm = () => {
         onConfirm(note);
-        setNote('');
-        onClose();
     };
 
     return (
-        <Dialog open={isOpen} onOpenChange={onClose}>
+        <Dialog open={isOpen} onOpenChange={(open) => { if (!open && !loading) onClose(); }}>
             <DialogContent className='sm:max-w-md'>
                 <DialogHeader>
                     <DialogTitle>{title}</DialogTitle>
@@ -54,14 +60,16 @@ export function RevisionDialog({
                         onChange={(e) => setNote(e.target.value)}
                         placeholder={placeholder}
                         className='min-h-[100px]'
+                        disabled={loading}
                     />
                 </div>
                 <DialogFooter className='sm:justify-end gap-2'>
-                    <Button variant='outline' onClick={onClose}>
+                    <Button variant='outline' onClick={onClose} disabled={loading}>
                         {cancelLabel}
                     </Button>
-                    <Button variant={variant} onClick={handleConfirm} disabled={!note.trim() && confirmLabel !== 'Setujui'}>
-                        {confirmLabel}
+                    <Button variant={variant} onClick={handleConfirm} disabled={loading || (!note.trim() && confirmLabel !== 'Setujui')}>
+                        {loading && <Loader2 className='mr-2 h-4 w-4 animate-spin' />}
+                        {loading ? 'Memproses...' : confirmLabel}
                     </Button>
                 </DialogFooter>
             </DialogContent>

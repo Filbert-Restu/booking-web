@@ -1,15 +1,14 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
-import { useEffect, useState, useRef, useMemo, useCallback } from 'react';
+import { useState, useRef, useMemo, useCallback } from 'react';
 import { Clock, DoorOpen, CheckCircle } from 'lucide-react';
-import { AxiosError } from 'axios';
+import { useQuery, keepPreviousData } from '@tanstack/react-query';
 import { StatCard } from '@/shared/components/common/StatCard';
-import { dashboardService } from '@/services/dashboard.service';
 import { Approval } from '@/features/approvals';
 import type { ActorRole } from '@/features/approvals';
+import { dashboardService } from '@/services/dashboard.service';
 import { documentService } from '@/services/document.service';
 import {
   mapDocumentsToApprovalItems,
-  type ApprovalItem,
 } from '@/features/approvals/approval-utils';
 import { ConfirmDialog } from '@/shared/components/common/ConfirmDialog';
 import { RevisionDialog } from '@/shared/components/common/RevisionDialog';
@@ -21,53 +20,49 @@ export const Route = createFileRoute('/sumber-daya/')({
 
 function RouteComponent() {
   const navigate = useNavigate();
-  const [approvalItems, setApprovalItems] = useState<ApprovalItem[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const actorRole: ActorRole = 'sumber-daya';
   const tableRef = useRef<HTMLDivElement>(null);
+  const [currentPage, setCurrentPage] = useState(1);
 
   // Dialog States
   const [dialogState, setDialogState] = useState<{
     type: 'approve' | 'revise' | null;
     id: number | null;
   }>({ type: null, id: null });
+  const [actionLoading, setActionLoading] = useState(false);
 
   const [dashboardStats, setDashboardStats] = useState<any>(null);
 
-  useEffect(() => {
-    fetchDocuments();
-    fetchDashboardStats();
-  }, []);
-
-  const fetchDashboardStats = async () => {
-    try {
+  // Fetch dashboard stats
+  const { } = useQuery({
+    queryKey: ['dashboard-stats-sumber-daya'],
+    queryFn: async () => {
       const data = await dashboardService.getStats();
       setDashboardStats(data);
-    } catch (err) {
-      console.error('Failed to fetch dashboard stats:', err);
-    }
-  };
+      return data;
+    },
+  });
 
-  const fetchDocuments = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const data = await documentService.getDocuments();
-      const pendingDocs = data.pending_documents || [];
-      const mappedItems = mapDocumentsToApprovalItems(pendingDocs);
-      setApprovalItems(mappedItems);
-    } catch (err) {
-      console.error('Failed to fetch documents:', err);
-      if (err instanceof AxiosError) {
-        setError(err.response?.data?.message || 'Gagal memuat data dokumen');
-      } else {
-        setError('Terjadi kesalahan saat memuat data');
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
+  // Fetch documents with server-side pagination
+  const {
+    data: queryResult,
+    isLoading: loading,
+    isError,
+    refetch: fetchDocuments,
+  } = useQuery({
+    queryKey: ['documents-sumber-daya', currentPage],
+    queryFn: () => documentService.getDocuments({ page_pending: currentPage }),
+    placeholderData: keepPreviousData,
+  });
+
+  const approvalItems = useMemo(() => {
+    const pendingDocs = queryResult?.pending_documents || [];
+    return mapDocumentsToApprovalItems(pendingDocs);
+  }, [queryResult]);
+
+  const approvedCount = queryResult?.processed_documents_pagination?.total ?? 0;
+  const pagination = queryResult?.pending_documents_pagination;
+  const error = isError ? 'Gagal memuat data dokumen' : null;
 
   const scrollToTable = useCallback(() => {
     tableRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -92,7 +87,7 @@ function RouteComponent() {
     },
     {
       title: 'Total Diapprove',
-      value: String(approvalItems.filter((b) => b.status === 'approved').length),
+      value: String(approvedCount),
       icon: CheckCircle,
       textColor: 'text-green-600',
       bgLight: 'bg-green-50',
@@ -106,11 +101,13 @@ function RouteComponent() {
 
   const onConfirmApprove = useCallback(async () => {
     if (!dialogState.id) return;
+    setActionLoading(true);
 
     try {
-      // Sumber Daya tidak memerlukan tanda tangan untuk approval
       await documentService.approveDocument(dialogState.id, '', 'Approved by Sumber Daya');
+      await fetchDocuments();
     } finally {
+      setActionLoading(false);
       setDialogState({ type: null, id: null });
     }
   }, [dialogState.id, fetchDocuments]);
@@ -121,12 +118,15 @@ function RouteComponent() {
 
   const onConfirmRevise = useCallback(async (note: string) => {
     if (!dialogState.id) return;
+    setActionLoading(true);
 
     try {
       const id = dialogState.id;
       const doc = await documentService.getDocument(id);
       await documentService.reviseDocument(id, doc.creator_id, note);
+      await fetchDocuments();
     } finally {
+      setActionLoading(false);
       setDialogState({ type: null, id: null });
     }
   }, [dialogState.id, fetchDocuments]);
@@ -158,7 +158,7 @@ function RouteComponent() {
       <div className='p-6 flex justify-center items-center min-h-screen'>
         <div className='text-center'>
           <div className='text-lg font-semibold text-red-600 mb-4'>{error}</div>
-          <Button onClick={fetchDocuments}>Coba Lagi</Button>
+          <Button onClick={() => fetchDocuments()}>Coba Lagi</Button>
         </div>
       </div>
     );
@@ -205,6 +205,15 @@ function RouteComponent() {
             actorRole={actorRole}
             onOpenDoc={handleOpenDoc}
             showOrganisasi={true}
+            serverPagination={pagination ? {
+              currentPage: pagination.current_page,
+              lastPage: pagination.last_page,
+              total: pagination.total,
+              from: pagination.from,
+              to: pagination.to,
+              perPage: pagination.per_page,
+              onPageChange: setCurrentPage,
+            } : undefined}
           />
         )}
       </div>
@@ -216,6 +225,7 @@ function RouteComponent() {
         title='⚠️ Persetujuan Dokumen'
         description='Apakah Anda yakin ingin menyetujui dokumen ini? Tindakan ini tidak dapat dibatalkan.'
         confirmLabel='Setujui'
+        loading={actionLoading}
       />
 
       <RevisionDialog
@@ -223,6 +233,7 @@ function RouteComponent() {
         onClose={() => setDialogState({ type: null, id: null })}
         onConfirm={onConfirmRevise}
         variant='destructive'
+        loading={actionLoading}
       />
     </>
   );

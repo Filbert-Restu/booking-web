@@ -1,7 +1,8 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
-import { useEffect, useState, useRef, useMemo, useCallback } from 'react';
+import { useState, useRef, useMemo, useCallback } from 'react';
 import { Clock, CheckCircle, FileText } from 'lucide-react';
 import { AxiosError } from 'axios';
+import { useQuery, keepPreviousData } from '@tanstack/react-query';
 import { StatCard } from '@/shared/components/common/StatCard';
 import { Approval } from '@/features/approvals';
 import type { ActorRole } from '@/features/approvals';
@@ -10,7 +11,6 @@ import { ConfirmDialog } from '@/shared/components/common/ConfirmDialog';
 import { RevisionDialog } from '@/shared/components/common/RevisionDialog';
 import {
   mapDocumentsToApprovalItems,
-  type ApprovalItem,
 } from '@/features/approvals/approval-utils';
 import { Button } from '@/shared/components/ui/button/button';
 import { documentTemplateService } from '@/services/document-template.service';
@@ -21,49 +21,47 @@ export const Route = createFileRoute('/kemahasiswaan/')({
 
 function RouteComponent() {
   const navigate = useNavigate();
-  const [approvalItems, setApprovalItems] = useState<ApprovalItem[]>([]);
-  const [templateCount, setTemplateCount] = useState(0);
-  const [uniqueSubmittersCount, setUniqueSubmittersCount] = useState(0);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const actorRole: ActorRole = 'kemahasiswaan';
   const tableRef = useRef<HTMLDivElement>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [templateCount, setTemplateCount] = useState(0);
+  const [error, setError] = useState<string | null>(null);
 
   // Dialog States
   const [dialogState, setDialogState] = useState<{
     type: 'approve' | 'revise' | null;
     id: number | null;
   }>({ type: null, id: null });
+  const [actionLoading, setActionLoading] = useState(false);
 
-  const fetchDocuments = useCallback(async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const data = await documentService.getDocuments();
-      const pendingDocs = data.pending_documents || [];
-      const mappedItems = mapDocumentsToApprovalItems(pendingDocs);
-      setApprovalItems(mappedItems);
-
-      const submitterIds = new Set(pendingDocs.map((doc: any) => doc.creator_id));
-      setUniqueSubmittersCount(submitterIds.size);
-
+  // Fetch templates count
+  const { } = useQuery({
+    queryKey: ['templates-kemahasiswaan'],
+    queryFn: async () => {
       const templates = await documentTemplateService.getTemplates();
       setTemplateCount(templates.length);
-    } catch (err) {
-      console.error('Failed to fetch documents:', err);
-      if (err instanceof AxiosError) {
-        setError(err.response?.data?.message || 'Gagal memuat data dokumen');
-      } else {
-        setError('Terjadi kesalahan saat memuat data');
-      }
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+      return templates;
+    },
+  });
 
-  useEffect(() => {
-    fetchDocuments();
-  }, [fetchDocuments]);
+  // Fetch documents with server-side pagination
+  const {
+    data: queryResult,
+    isLoading: loading,
+    refetch: fetchDocuments,
+  } = useQuery({
+    queryKey: ['documents-kemahasiswaan', currentPage],
+    queryFn: () => documentService.getDocuments({ page_pending: currentPage }),
+    placeholderData: keepPreviousData,
+  });
+
+  const approvalItems = useMemo(() => {
+    const pendingDocs = queryResult?.pending_documents || [];
+    return mapDocumentsToApprovalItems(pendingDocs);
+  }, [queryResult]);
+
+  const approvedCount = queryResult?.processed_documents_pagination?.total ?? 0;
+  const pagination = queryResult?.pending_documents_pagination;
 
   const scrollToTable = useCallback(() => {
     tableRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -88,13 +86,13 @@ function RouteComponent() {
     },
     {
       title: 'Total Diapprove',
-      value: String(approvalItems.filter((b) => b.status === 'approved').length),
+      value: String(approvedCount),
       icon: CheckCircle,
       textColor: 'text-green-600',
       bgLight: 'bg-green-50',
       onClick: () => navigate({ to: '/kemahasiswaan/riwayat-persetujuan' }),
     },
-  ], [approvalItems, uniqueSubmittersCount, templateCount, navigate, scrollToTable]);
+  ], [approvalItems, templateCount, approvedCount, navigate, scrollToTable]);
 
   const handleApprove = useCallback((id: number) => {
     setDialogState({ type: 'approve', id });
@@ -102,6 +100,7 @@ function RouteComponent() {
 
   const onConfirmApprove = useCallback(async () => {
     if (!dialogState.id) return;
+    setActionLoading(true);
 
     try {
       await documentService.approveDocument(dialogState.id, '', 'Approved by Kemahasiswaan');
@@ -114,6 +113,7 @@ function RouteComponent() {
         setError('Terjadi kesalahan saat menyetujui dokumen');
       }
     } finally {
+      setActionLoading(false);
       setDialogState({ type: null, id: null });
     }
   }, [dialogState.id, fetchDocuments]);
@@ -124,6 +124,7 @@ function RouteComponent() {
 
   const onConfirmRevise = useCallback(async (note: string) => {
     if (!dialogState.id) return;
+    setActionLoading(true);
 
     try {
       const id = dialogState.id;
@@ -138,6 +139,7 @@ function RouteComponent() {
         setError('Terjadi kesalahan saat mengembalikan dokumen');
       }
     } finally {
+      setActionLoading(false);
       setDialogState({ type: null, id: null });
     }
   }, [dialogState.id, fetchDocuments]);
@@ -169,7 +171,7 @@ function RouteComponent() {
       <div className='p-6 flex justify-center items-center min-h-screen'>
         <div className='text-center'>
           <div className='text-lg font-semibold text-red-600 mb-4'>{error}</div>
-          <Button onClick={fetchDocuments}>Coba Lagi</Button>
+          <Button onClick={() => fetchDocuments()}>Coba Lagi</Button>
         </div>
       </div>
     );
@@ -216,6 +218,15 @@ function RouteComponent() {
             actorRole={actorRole}
             onOpenDoc={handleOpenDoc}
             showOrganisasi={true}
+            serverPagination={pagination ? {
+              currentPage: pagination.current_page,
+              lastPage: pagination.last_page,
+              total: pagination.total,
+              from: pagination.from,
+              to: pagination.to,
+              perPage: pagination.per_page,
+              onPageChange: setCurrentPage,
+            } : undefined}
           />
         )}
       </div>
@@ -227,6 +238,7 @@ function RouteComponent() {
         title='⚠️ Persetujuan Dokumen'
         description='Apakah Anda yakin ingin menyetujui dokumen ini? Tindakan ini tidak dapat dibatalkan.'
         confirmLabel='Setujui'
+        loading={actionLoading}
       />
 
       <RevisionDialog
@@ -234,6 +246,7 @@ function RouteComponent() {
         onClose={() => setDialogState({ type: null, id: null })}
         onConfirm={onConfirmRevise}
         variant='destructive'
+        loading={actionLoading}
       />
     </>
   );

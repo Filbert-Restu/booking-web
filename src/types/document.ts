@@ -93,7 +93,7 @@ export interface Document<
     name: string;
     description?: string;
   };
-  currentHolder?: UserShort;
+  current_holder?: UserShort;
   creator?: UserShort;
   unit?: {
     id: number;

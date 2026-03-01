@@ -1,11 +1,10 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
-import { useEffect, useState } from 'react';
-import { AxiosError } from 'axios';
+import { useState, useMemo } from 'react';
+import { useQuery, keepPreviousData } from '@tanstack/react-query';
 import { ApprovalHistory } from '@/features/approvals';
 import { documentService } from '@/services/document.service';
 import {
   mapDocumentsToApprovalItems,
-  type ApprovalItem,
 } from '@/features/approvals/approval-utils';
 import { Button } from '@/shared/components/ui/button/button';
 
@@ -15,43 +14,26 @@ export const Route = createFileRoute('/senat/riwayat-persetujuan')({
 
 function RouteComponent() {
   const navigate = useNavigate();
-  const [approvalItems, setApprovalItems] = useState<ApprovalItem[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
 
-  useEffect(() => {
-    fetchProcessedDocuments();
-  }, []);
+  const {
+    data: queryResult,
+    isLoading: loading,
+    isError,
+    refetch,
+  } = useQuery({
+    queryKey: ['documents-senat-riwayat', currentPage],
+    queryFn: () => documentService.getDocuments({ page_processed: currentPage }),
+    placeholderData: keepPreviousData,
+  });
 
-  const fetchProcessedDocuments = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const data = await documentService.getDocuments();
+  const approvalItems = useMemo(() => {
+    const processedDocs = queryResult?.processed_documents || [];
+    return mapDocumentsToApprovalItems(processedDocs);
+  }, [queryResult]);
 
-      console.log('Raw data from API:', data); // Log raw data from API
-
-      // Use processed_documents instead of all_documents
-      const processedDocs = data.processed_documents || [];
-      console.log('Processed documents:', processedDocs); // Log processed documents
-
-      const mappedItems = mapDocumentsToApprovalItems(processedDocs);
-      console.log('Mapped approval items:', mappedItems); // Log mapped items
-
-      setApprovalItems(mappedItems);
-    } catch (err) {
-      console.error('Failed to fetch processed documents:', err);
-      if (err instanceof AxiosError) {
-        setError(
-          err.response?.data?.message || 'Gagal memuat dokumen yang diproses',
-        );
-      } else {
-        setError('Terjadi kesalahan saat memuat data');
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
+  const pagination = queryResult?.processed_documents_pagination;
+  const error = isError ? 'Gagal memuat dokumen yang diproses' : null;
 
   const handleOpenDoc = (documentId: number) => {
     navigate({
@@ -77,7 +59,7 @@ function RouteComponent() {
       <div className='container mx-auto py-6'>
         <div className='text-center'>
           <div className='text-lg font-semibold text-red-600 mb-4'>{error}</div>
-          <Button onClick={fetchProcessedDocuments}>Coba Lagi</Button>
+          <Button onClick={() => refetch()}>Coba Lagi</Button>
         </div>
       </div>
     );
@@ -100,6 +82,15 @@ function RouteComponent() {
         <ApprovalHistory
           bookings={approvalItems}
           onOpenDoc={handleOpenDoc}
+          serverPagination={pagination ? {
+            currentPage: pagination.current_page,
+            lastPage: pagination.last_page,
+            total: pagination.total,
+            from: pagination.from,
+            to: pagination.to,
+            perPage: pagination.per_page,
+            onPageChange: setCurrentPage,
+          } : undefined}
         />
       )}
     </div>

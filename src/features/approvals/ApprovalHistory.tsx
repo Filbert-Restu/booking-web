@@ -11,11 +11,13 @@ import { Search } from 'lucide-react';
 import { Input } from '@/shared/components/ui/input';
 import { type ApprovalItem } from './Approval';
 import FileActions, { type FileType } from '@/components/FileActions';
+import { PaginationBar, type ServerPagination } from '@/shared/components/ui/data-table';
 
 interface ApprovalHistoryProps {
   bookings: ApprovalItem[];
   showOrganisasi?: boolean;
   onOpenDoc?: (documentId: number) => void;
+  serverPagination?: ServerPagination;
 }
 
 function statusBadge(status: string) {
@@ -36,6 +38,7 @@ function statusBadge(status: string) {
 export function ApprovalHistory({
   bookings,
   showOrganisasi = true,
+  serverPagination,
 }: ApprovalHistoryProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [pdfPreview, setPdfPreview] = useState<{
@@ -133,6 +136,17 @@ export function ApprovalHistory({
           </TableBody>
         </Table>
       </div>
+
+      {serverPagination && serverPagination.lastPage > 1 && (
+        <PaginationBar
+          currentPage={serverPagination.currentPage}
+          totalPages={serverPagination.lastPage}
+          from={serverPagination.from ?? 1}
+          to={serverPagination.to ?? bookings.length}
+          total={serverPagination.total}
+          onPageChange={serverPagination.onPageChange}
+        />
+      )}
     </div>
   );
 }

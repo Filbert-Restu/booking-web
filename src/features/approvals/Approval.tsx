@@ -17,6 +17,7 @@ import {
 import { CheckCircle2, XCircle, Search } from 'lucide-react';
 import { Input } from '@/shared/components/ui/input';
 import FileActions, { type FileType } from '@/components/FileActions';
+import { PaginationBar, type ServerPagination } from '@/shared/components/ui/data-table';
 
 export type ApprovalStatus = 'waiting' | 'approved' | 'revisi' | 'rejected';
 
@@ -67,6 +68,7 @@ interface ApprovalProps {
   showOrganisasi?: boolean;
   actorRole: ActorRole;
   onOpenDoc?: (documentId: number) => void;
+  serverPagination?: ServerPagination;
 }
 
 function statusBadge(status: ApprovalStatus) {
@@ -87,6 +89,7 @@ export function Approval({
   onRevise,
   showOrganisasi = true,
   actorRole,
+  serverPagination,
 }: ApprovalProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [pdfPreview, setPdfPreview] = useState<{
@@ -274,6 +277,17 @@ export function Approval({
           </TableBody>
         </Table>
       </div>
+
+      {serverPagination && serverPagination.lastPage > 1 && (
+        <PaginationBar
+          currentPage={serverPagination.currentPage}
+          totalPages={serverPagination.lastPage}
+          from={serverPagination.from ?? 1}
+          to={serverPagination.to ?? bookings.length}
+          total={serverPagination.total}
+          onPageChange={serverPagination.onPageChange}
+        />
+      )}
     </div>
   );
 }

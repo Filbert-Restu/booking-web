@@ -2,12 +2,12 @@ import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { useEffect, useState, useRef, useMemo, useCallback } from 'react';
 import { Clock, Users, CheckCircle } from 'lucide-react';
 import { AxiosError } from 'axios';
+import { useQuery, keepPreviousData } from '@tanstack/react-query';
 import { StatCard } from '@/shared/components/common/StatCard';
 import { Approval } from '@/features/approvals';
 import type { ActorRole } from '@/features/approvals';
 import {
   mapDocumentsToApprovalItems,
-  type ApprovalItem,
 } from '@/features/approvals/approval-utils';
 import { documentService } from '@/services/document.service';
 import { Button } from '@/shared/components/ui/button/button';
@@ -28,21 +28,34 @@ export const Route = createFileRoute('/ketua-ormawa/')({
 function RouteComponent() {
   const navigate = useNavigate();
   const { documentId, autoApprove } = Route.useSearch();
-  const [approvalItems, setApprovalItems] = useState<ApprovalItem[]>([]);
-  const [approvedCount, setApprovedCount] = useState(0);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const actorRole: ActorRole = 'ketua-ormawa';
+  const [currentPage, setCurrentPage] = useState(1);
+  const [error, setError] = useState<string | null>(null);
 
   // Dialog States
   const [dialogState, setDialogState] = useState<{
     type: 'approve' | 'revise' | null;
     id: number | null;
   }>({ type: null, id: null });
+  const [actionLoading, setActionLoading] = useState(false);
 
-  useEffect(() => {
-    fetchDocuments();
-  }, []);
+  const {
+    data: queryResult,
+    isLoading: loading,
+    refetch: fetchDocuments,
+  } = useQuery({
+    queryKey: ['documents-ketua-ormawa', currentPage],
+    queryFn: () => documentService.getDocuments({ page_pending: currentPage }),
+    placeholderData: keepPreviousData,
+  });
+
+  const approvalItems = useMemo(() => {
+    const pendingDocs = queryResult?.pending_documents || [];
+    return mapDocumentsToApprovalItems(pendingDocs);
+  }, [queryResult]);
+
+  const approvedCount = queryResult?.processed_documents_pagination?.total ?? 0;
+  const pagination = queryResult?.pending_documents_pagination;
 
   // Auto-approve after returning from signature page
   useEffect(() => {
@@ -78,30 +91,6 @@ function RouteComponent() {
       performAutoApprove();
     }
   }, [autoApprove, documentId]);
-
-  const fetchDocuments = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const data = await documentService.getDocuments();
-
-      // Get pending documents (documents waiting for this user's approval)
-      const pendingDocs = data.pending_documents || [];
-      const mappedItems = mapDocumentsToApprovalItems(pendingDocs);
-      setApprovalItems(mappedItems);
-
-      // Count documents this user has already approved (processed_documents)
-      setApprovedCount(data.processed_documents?.length ?? 0);
-    } catch (err) {
-      if (err instanceof AxiosError) {
-        setError(err.response?.data?.message || 'Gagal memuat data dokumen');
-      } else {
-        setError('Terjadi kesalahan saat memuat data');
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const tableRef = useRef<HTMLDivElement>(null);
 
@@ -163,6 +152,7 @@ function RouteComponent() {
 
   const onConfirmRevise = useCallback(async (note: string) => {
     if (!dialogState.id) return;
+    setActionLoading(true);
 
     try {
       const id = dialogState.id;
@@ -172,6 +162,7 @@ function RouteComponent() {
     } catch (err) {
       console.error('Failed to revise document:', err);
     } finally {
+      setActionLoading(false);
       setDialogState({ type: null, id: null });
     }
   }, [dialogState.id, fetchDocuments]);
@@ -200,7 +191,7 @@ function RouteComponent() {
       <div className='p-6 flex justify-center items-center min-h-screen'>
         <div className='text-center'>
           <div className='text-lg font-semibold text-red-600 mb-4'>{error}</div>
-          <Button onClick={fetchDocuments}>Coba Lagi</Button>
+          <Button onClick={() => fetchDocuments()}>Coba Lagi</Button>
         </div>
       </div>
     );
@@ -247,6 +238,15 @@ function RouteComponent() {
             actorRole={actorRole}
             onOpenDoc={handleOpenDoc}
             showOrganisasi={true}
+            serverPagination={pagination ? {
+              currentPage: pagination.current_page,
+              lastPage: pagination.last_page,
+              total: pagination.total,
+              from: pagination.from,
+              to: pagination.to,
+              perPage: pagination.per_page,
+              onPageChange: setCurrentPage,
+            } : undefined}
           />
         )}
       </div>
@@ -265,6 +265,7 @@ function RouteComponent() {
         onClose={() => setDialogState({ type: null, id: null })}
         onConfirm={onConfirmRevise}
         variant='destructive'
+        loading={actionLoading}
       />
     </>
   );

@@ -1,13 +1,13 @@
 import {
     AlertDialog,
-    AlertDialogAction,
-    AlertDialogCancel,
     AlertDialogContent,
     AlertDialogDescription,
     AlertDialogFooter,
     AlertDialogHeader,
     AlertDialogTitle,
 } from '@/shared/components/ui/alert-dialog';
+import { Button } from '@/shared/components/ui/button/button';
+import { Loader2 } from 'lucide-react';
 
 interface ConfirmDialogProps {
     isOpen: boolean;
@@ -18,6 +18,7 @@ interface ConfirmDialogProps {
     confirmLabel?: string;
     cancelLabel?: string;
     variant?: 'default' | 'destructive';
+    loading?: boolean;
 }
 
 export function ConfirmDialog({
@@ -29,9 +30,10 @@ export function ConfirmDialog({
     confirmLabel = 'Lanjutkan',
     cancelLabel = 'Batal',
     variant = 'default',
+    loading = false,
 }: ConfirmDialogProps) {
     return (
-        <AlertDialog open={isOpen} onOpenChange={onClose}>
+        <AlertDialog open={isOpen} onOpenChange={(open) => { if (!open && !loading) onClose(); }}>
             <AlertDialogContent>
                 <AlertDialogHeader>
                     <AlertDialogTitle>{title}</AlertDialogTitle>
@@ -40,13 +42,15 @@ export function ConfirmDialog({
                     </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
-                    <AlertDialogCancel onClick={onClose}>{cancelLabel}</AlertDialogCancel>
-                    <AlertDialogAction
+                    <Button variant='outline' onClick={onClose} disabled={loading}>{cancelLabel}</Button>
+                    <Button
                         onClick={onConfirm}
-                        className={variant === 'destructive' ? 'bg-red-600 hover:bg-red-700' : ''}
+                        variant={variant}
+                        disabled={loading}
                     >
-                        {confirmLabel}
-                    </AlertDialogAction>
+                        {loading && <Loader2 className='mr-2 h-4 w-4 animate-spin' />}
+                        {loading ? 'Memproses...' : confirmLabel}
+                    </Button>
                 </AlertDialogFooter>
             </AlertDialogContent>
         </AlertDialog>

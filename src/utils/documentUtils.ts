@@ -27,8 +27,8 @@ export const documentHelpers = {
   },
 
   getCurrentHolder: (doc: Document) => {
-    if (doc.status === 'IN_PROGRESS' && doc.currentHolder) {
-      return doc.currentHolder.role?.name || doc.currentHolder.name;
+    if (doc.status === 'IN_PROGRESS' && doc.current_holder) {
+      return doc.current_holder.role?.name || doc.current_holder.name;
     }
     return '-';
   },

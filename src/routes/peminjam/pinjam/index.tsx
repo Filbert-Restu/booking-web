@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { useState, useMemo, useCallback } from 'react'; // Tambah useMemo
 import { Plus, FilePlus, AlertCircle, Clock, AlertTriangle } from 'lucide-react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, keepPreviousData } from '@tanstack/react-query';
 import { Button } from '@/shared/components/ui/button/button';
 
 // --- IMPORTS CUSTOM ---
@@ -26,46 +26,48 @@ function RouteComponent() {
     url: string;
   } | null>(null);
 
+  const [currentPage, setCurrentPage] = useState(1);
+
   // --- 1. DATA FETCHING ---
   const {
-    data: documents = [],
+    data: queryResult,
     isLoading,
     isError,
     refetch,
   } = useQuery({
-    queryKey: ['documents'],
-    queryFn: () => documentService.getDocuments(),
+    queryKey: ['documents', currentPage],
+    queryFn: () => documentService.getDocuments({ page_my: currentPage }),
     refetchInterval: 30000,
-    select: (res) => {
-      const myDocs = res.my_documents || [];
+    placeholderData: keepPreviousData,
+  });
 
-      // Deduplicate berdasarkan kombinasi unique: room_id + booking_date + start_time + end_time
-      // Prioritas: IN_PROGRESS > DRAFT (status reservasi)
-      const uniqueMap = new Map<string, Document>();
+  // Deduplicate
+  const documents = useMemo(() => {
+    const myDocs = queryResult?.my_documents || [];
+    const uniqueMap = new Map<string, Document>();
 
-      myDocs.forEach((doc: Document) => {
-        const content = doc.content || {};
-        const key = `${content.room_id || 'null'}_${content.booking_date || 'null'}_${content.start_time || 'null'}_${content.end_time || 'null'}`;
+    myDocs.forEach((doc: Document) => {
+      const content = doc.content || {};
+      const key = `${content.room_id || 'null'}_${content.booking_date || 'null'}_${content.start_time || 'null'}_${content.end_time || 'null'}`;
 
-        const existing = uniqueMap.get(key);
-        if (!existing) {
+      const existing = uniqueMap.get(key);
+      if (!existing) {
+        uniqueMap.set(key, doc);
+      } else {
+        if (doc.status === 'IN_PROGRESS' && existing.status === 'DRAFT') {
           uniqueMap.set(key, doc);
-        } else {
-          // Jika ada duplikat, prioritaskan yang IN_PROGRESS daripada DRAFT
-          if (doc.status === 'IN_PROGRESS' && existing.status === 'DRAFT') {
+        } else if (doc.status === existing.status) {
+          if (doc.id > existing.id) {
             uniqueMap.set(key, doc);
-          } else if (doc.status === existing.status) {
-            // Jika status sama, ambil yang lebih baru (ID lebih besar)
-            if (doc.id > existing.id) {
-              uniqueMap.set(key, doc);
-            }
           }
         }
-      });
+      }
+    });
 
-      return Array.from(uniqueMap.values());
-    },
-  });
+    return Array.from(uniqueMap.values());
+  }, [queryResult]);
+
+  const pagination = queryResult?.my_documents_pagination;
 
   const handleAjukanPinjam = () => {
     navigate({
@@ -296,6 +298,13 @@ function RouteComponent() {
               </div>
             );
           }
+          if (doc.status === 'APPROVED') {
+            return (
+              <span className='text-sm text-green-600 font-medium'>
+                Dokumen telah disetujui
+              </span>
+            );
+          }
           return <span className='text-sm text-gray-400'>-</span>;
         },
       },
@@ -367,6 +376,15 @@ function RouteComponent() {
         columns={columns}
         isLoading={isLoading}
         emptyState={EmptyState}
+        serverPagination={pagination && pagination.last_page > 1 ? {
+          currentPage: pagination.current_page,
+          lastPage: pagination.last_page,
+          total: pagination.total,
+          from: pagination.from,
+          to: pagination.to,
+          perPage: pagination.per_page,
+          onPageChange: setCurrentPage,
+        } : undefined}
       />
     </div>
   );
