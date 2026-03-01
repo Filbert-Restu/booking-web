@@ -32,7 +32,8 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
         try {
             const response = await authService.login(formData);
             authService.saveAuthData(response);
-            window.location.href = '/admin/';
+            const role = response.user.role?.name || '';
+            authService.redirectByRole(role);
         } catch (err: unknown) {
             console.error('Login failed:', err);
             let errorMessage = 'Login gagal. Silakan coba lagi.';

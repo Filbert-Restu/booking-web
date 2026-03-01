@@ -1,9 +1,18 @@
 import { SideBar, TopBar, getMenuConfig } from '@/shared/layouts';
 import { SidebarProvider } from '@/shared/components/ui/sidebar';
-import { createFileRoute, Outlet } from '@tanstack/react-router';
+import { authService } from '@/services/auth.service';
+import { createFileRoute, Outlet, redirect } from '@tanstack/react-router';
 import React from 'react';
 
 export const Route = createFileRoute('/wadek1')({
+  beforeLoad: ({ location }) => {
+    if (!authService.isAuthenticated()) throw redirect({ to: '/login' });
+    const role = authService.getRole() || '';
+    const validPath = authService.getRolePath(role);
+    if (!location.pathname.startsWith(validPath.replace(/\/$/, ''))) {
+      throw redirect({ to: validPath });
+    }
+  },
   component: RouteComponent,
 });
 
