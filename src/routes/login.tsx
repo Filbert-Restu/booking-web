@@ -40,7 +40,8 @@ function RouteComponent() {
       authService.saveAuthData(response);
 
       // Redirect based on role
-      window.location.href = '/admin/'; // Default, will be changed by backend
+      const role = response.user.role?.name || '';
+      authService.redirectByRole(role);
     } catch (err: unknown) {
       console.error('Login failed:', err);
 
