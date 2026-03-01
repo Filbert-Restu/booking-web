@@ -107,11 +107,13 @@ function RouteComponent() {
                 const end = endDate || lastDay;
 
                 const schedule = await roomService.getRoomSchedule(room.id, start, end);
-                setRoomBookings(schedule.bookings || []);
+                // Null-safe: schedule.bookings sudah di-handle di service dengan ?? []
+                setRoomBookings(schedule?.bookings ?? []);
                 setShowRoomDetails(true);
             }
         } catch (err) {
             console.error('Failed to fetch room schedule:', err);
+            setRoomBookings([]);
             alert('Gagal memuat jadwal ruangan');
         } finally {
             setLoading(false);
@@ -378,7 +380,14 @@ function RouteComponent() {
                                                     </TableCell>
                                                     <TableCell>{getUnitCode(item)}</TableCell>
                                                     <TableCell>{getBorrowerName(item)}</TableCell>
-                                                    <TableCell>{new Date(item.booking_date).toLocaleDateString('id-ID')}</TableCell>
+                                                    <TableCell>
+                                                        {/* Ambil hanya bagian tanggal (YYYY-MM-DD) lalu tambahkan 'T00:00:00'
+                                                            agar tidak shift 1 hari akibat konversi UTC di browser */
+                                                            (() => {
+                                                                const dateStr = item.booking_date.split('T')[0];
+                                                                return new Date(`${dateStr}T00:00:00`).toLocaleDateString('id-ID');
+                                                            })()}
+                                                    </TableCell>
                                                     <TableCell>{item.start_time} - {item.end_time}</TableCell>
                                                     <TableCell>
                                                         {getStatusBadge(item.status)}

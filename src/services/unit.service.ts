@@ -45,7 +45,8 @@ export const unitService = {
    */
   async getUnits(): Promise<Unit[]> {
     const response = await api.get<UnitResponse>('/units');
-    return response.data.data;
+    // Backend returns plain array (not paginated)
+    return response.data.data ?? [];
   },
 
   /**

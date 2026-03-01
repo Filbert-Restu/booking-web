@@ -45,7 +45,10 @@ class SignatureService {
     formData.append('signature', signatureFile);
 
     const response = await api.post<SignatureResponse>('/signs', formData);
-    return response.data.data!;
+    if (!response.data.data) {
+      throw new Error('Upload tanda tangan gagal: data tidak ditemukan dalam respons server.');
+    }
+    return response.data.data;
   }
 
   /**
@@ -57,7 +60,10 @@ class SignatureService {
     formData.append('_method', 'PUT'); // Force Laravel to treat this as partial update
 
     const response = await api.post<SignatureResponse>(`/signs/${id}`, formData);
-    return response.data.data!;
+    if (!response.data.data) {
+      throw new Error('Update tanda tangan gagal: data tidak ditemukan dalam respons server.');
+    }
+    return response.data.data;
   }
 
   /**

@@ -28,7 +28,7 @@ export default function BookingCalendar() {
         setError(null);
         const data = await bookingService.getBookings();
 
-        setBookings(data);
+        setBookings(data ?? []);
       } catch (err) {
         console.error('Failed to fetch bookings:', err);
         setError('Gagal memuat data booking. Silakan coba lagi.');

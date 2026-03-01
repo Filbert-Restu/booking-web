@@ -1,5 +1,4 @@
 import api from '@/lib/axios';
-import type { PaginatedData } from '@/types/pagination';
 
 export interface User {
   id: number;
@@ -26,7 +25,7 @@ export interface User {
 
 export interface UserResponse {
   success: boolean;
-  data: PaginatedData<User>;
+  data: User[];
 }
 
 export interface SingleUserResponse {
@@ -63,8 +62,8 @@ export const userService = {
     per_page?: number;
   }): Promise<User[]> {
     const response = await api.get<UserResponse>('/users', { params });
-    // Laravel Paginator returns data inside a 'data' property
-    return response.data.data.data;
+    // Backend returns plain array (not paginated)
+    return response.data.data ?? [];
   },
 
   /**

@@ -1,6 +1,4 @@
 import api from '@/lib/axios';
-import type React from 'react';
-import type { PaginatedData } from '@/types/pagination';
 
 export interface RoomBooking {
   id: number;
@@ -46,9 +44,18 @@ export interface BookingFilters {
   my_unit_bookings?: boolean;
 }
 
+export interface BookingStatistics {
+  total: number;
+  pending: number;
+  approved: number;
+  rejected: number;
+  cancelled: number;
+  completed: number;
+}
+
 export interface BookingResponse {
   success: boolean;
-  data: PaginatedData<RoomBooking> | RoomBooking[];
+  data: RoomBooking[];
 }
 
 export interface SingleBookingResponse {
@@ -61,25 +68,9 @@ export const bookingService = {
    * Get list of room bookings with optional filters
    */
   async getBookings(filters?: BookingFilters): Promise<RoomBooking[]> {
-    const params = new URLSearchParams();
-
-    if (filters) {
-      Object.entries(filters).forEach(([key, value]) => {
-        if (value !== undefined && value !== null) {
-          params.append(key, String(value));
-        }
-      });
-    }
-
-    const response = await api.get<BookingResponse>(
-      `/room-bookings${params.toString() ? `?${params.toString()}` : ''}`,
-    );
-
-    // Handle both paginated and plain array responses
-    if (Array.isArray(response.data.data)) {
-      return response.data.data;
-    }
-    return response.data.data.data;
+    const response = await api.get<BookingResponse>('/room-bookings', { params: filters });
+    // Backend returns plain array (not paginated)
+    return response.data.data ?? [];
   },
 
   /**
@@ -194,8 +185,10 @@ export const bookingService = {
   /**
    * Get booking statistics
    */
-  async getStatistics(): Promise<React.ReactNode> {
-    const response = await api.get('/room-bookings/statistics');
+  async getStatistics(): Promise<BookingStatistics> {
+    const response = await api.get<{ success: boolean; data: BookingStatistics }>(
+      '/room-bookings/statistics',
+    );
     return response.data.data;
   },
 };

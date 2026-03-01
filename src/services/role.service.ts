@@ -34,7 +34,7 @@ export const roleService = {
    */
   async getRoles(): Promise<Role[]> {
     const response = await api.get<RoleResponse>('/roles');
-    return response.data.data;
+    return response.data.data ?? [];
   },
 
   /**

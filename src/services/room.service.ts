@@ -1,5 +1,4 @@
 import api from '@/lib/axios';
-import type { PaginatedData } from '@/types/pagination';
 
 export interface Room {
   id: number;
@@ -21,7 +20,7 @@ export interface Room {
 
 export interface RoomResponse {
   success: boolean;
-  data: PaginatedData<Room>;
+  data: Room[];
 }
 
 export interface SingleRoomResponse {
@@ -111,20 +110,9 @@ export const roomService = {
     available_start?: string;
     available_end?: string;
   }): Promise<Room[]> {
-    const params = new URLSearchParams();
-
-    if (filters) {
-      Object.entries(filters).forEach(([key, value]) => {
-        if (value !== undefined && value !== null) {
-          params.append(key, String(value));
-        }
-      });
-    }
-
-    const response = await api.get<RoomResponse>(
-      `/rooms${params.toString() ? `?${params.toString()}` : ''}`,
-    );
-    return response.data.data.data;
+    const response = await api.get<RoomResponse>('/rooms', { params: filters });
+    // Backend returns plain array (not paginated)
+    return response.data.data ?? [];
   },
 
   /**
@@ -174,7 +162,11 @@ export const roomService = {
     const response = await api.get<ScheduleResponse>(
       `/rooms/${roomId}/schedule?start_date=${startDate}&end_date=${endDate}`,
     );
-    return response.data.data;
+    // Null-safe: jika data atau bookings undefined, kembalikan struktur aman
+    return {
+      ...response.data.data,
+      bookings: response.data.data?.bookings ?? [],
+    };
   },
 
   /**
@@ -257,18 +249,12 @@ export const roomService = {
     date_to?: string;
     my_bookings?: boolean;
   }): Promise<RoomBooking[]> {
-    const params = new URLSearchParams();
-    if (filters) {
-      Object.entries(filters).forEach(([key, value]) => {
-        if (value !== undefined && value !== null) {
-          params.append(key, String(value));
-        }
-      });
-    }
-    const response = await api.get<{ success: boolean; data: PaginatedData<RoomBooking> }>(
-      `/room-bookings${params.toString() ? `?${params.toString()}` : ''}`,
+    const response = await api.get<{ success: boolean; data: RoomBooking[] }>(
+      '/room-bookings',
+      { params: filters },
     );
-    return response.data.data.data;
+    // Backend returns plain array (not paginated)
+    return response.data.data ?? [];
   },
 
   /**

@@ -28,7 +28,7 @@ export const documentTemplateService = {
       '/document-templates',
       { params },
     );
-    return response.data.data;
+    return response.data.data ?? [];
   },
 
   /**
@@ -44,11 +44,11 @@ export const documentTemplateService = {
   /**
    * Get active templates (both types)
    */
-  async getActiveTemplates(): Promise<ActiveTemplates> {
+  async getActiveTemplates(): Promise<ActiveTemplates | null> {
     const response = await api.get<ApiResponse<ActiveTemplates>>(
       '/document-templates/active',
     );
-    return response.data.data;
+    return response.data.data ?? null;
   },
 
   /**
@@ -59,6 +59,10 @@ export const documentTemplateService = {
     formData.append('template_type', data.template_type);
     formData.append('template_name', data.template_name);
     formData.append('file', data.file);
+
+    if (data.organization_type) {
+      formData.append('organization_type', data.organization_type);
+    }
 
     if (data.description) {
       formData.append('description', data.description);
@@ -173,11 +177,11 @@ export const documentTemplateService = {
     const response = await api.get<
       ApiResponse<{
         all: Record<string, AvailableField>;
-        grouped: any;
+        grouped: Record<string, Record<string, AvailableField>>;
         total: number;
       }>
     >('/document-templates/available-fields');
-    return response.data.data.all;
+    return response.data.data?.all ?? {};
   },
 
   /**

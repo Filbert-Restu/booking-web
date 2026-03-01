@@ -117,6 +117,7 @@ export const authService = {
     localStorage.removeItem('roleId');
     localStorage.removeItem('userUnit');
     localStorage.removeItem('unitId');
+    localStorage.removeItem('userUnitCategory');
   },
 
   /**
