@@ -9,7 +9,7 @@ export interface RoomBooking {
   start_time: string;
   end_time: string;
   purpose: string;
-  status: 'pending' | 'approved' | 'rejected' | 'cancelled' | 'completed';
+  status: 'PENDING' | 'APPROVED' | 'REJECTED' | 'CANCELLED' | 'COMPLETED';
   approved_by?: number;
   approved_at?: string;
   rejection_reason?: string;
@@ -55,7 +55,13 @@ export interface BookingStatistics {
 
 export interface BookingResponse {
   success: boolean;
-  data: RoomBooking[];
+  data: {
+    data: RoomBooking[];
+    current_page: number;
+    last_page: number;
+    per_page: number;
+    total: number;
+  };
 }
 
 export interface SingleBookingResponse {
@@ -69,8 +75,8 @@ export const bookingService = {
    */
   async getBookings(filters?: BookingFilters): Promise<RoomBooking[]> {
     const response = await api.get<BookingResponse>('/room-bookings', { params: filters });
-    // Backend returns plain array (not paginated)
-    return response.data.data ?? [];
+    // Backend returns paginated response — extract the actual array
+    return response.data.data?.data ?? [];
   },
 
   /**
@@ -156,7 +162,7 @@ export const bookingService = {
     const response = await api.post<SingleBookingResponse>(
       `/room-bookings/${id}/reject`,
       {
-        rejection_reason: reason,
+        reason: reason,
       },
     );
     return response.data.data;

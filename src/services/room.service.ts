@@ -8,9 +8,6 @@ export interface Room {
   facilities?: string[];
   status: 'ACTIVE' | 'MAINTENANCE' | 'INACTIVE';
   description?: string;
-  location?: string;
-  building?: string;
-  floor?: string;
   images?: string[];
   image_url?: string;
   created_at: string;
@@ -20,7 +17,13 @@ export interface Room {
 
 export interface RoomResponse {
   success: boolean;
-  data: Room[];
+  data: {
+    data: Room[];
+    current_page: number;
+    last_page: number;
+    per_page: number;
+    total: number;
+  };
 }
 
 export interface SingleRoomResponse {
@@ -111,8 +114,8 @@ export const roomService = {
     available_end?: string;
   }): Promise<Room[]> {
     const response = await api.get<RoomResponse>('/rooms', { params: filters });
-    // Backend returns plain array (not paginated)
-    return response.data.data ?? [];
+    // Backend returns paginated response
+    return response.data.data?.data ?? [];
   },
 
   /**
@@ -249,12 +252,12 @@ export const roomService = {
     date_to?: string;
     my_bookings?: boolean;
   }): Promise<RoomBooking[]> {
-    const response = await api.get<{ success: boolean; data: RoomBooking[] }>(
+    const response = await api.get<{ success: boolean; data: { data: RoomBooking[] } }>(
       '/room-bookings',
       { params: filters },
     );
-    // Backend returns plain array (not paginated)
-    return response.data.data ?? [];
+    // Backend returns paginated response
+    return response.data.data?.data ?? [];
   },
 
   /**

@@ -25,7 +25,13 @@ export interface User {
 
 export interface UserResponse {
   success: boolean;
-  data: User[];
+  data: {
+    data: User[];
+    current_page: number;
+    last_page: number;
+    per_page: number;
+    total: number;
+  };
 }
 
 export interface SingleUserResponse {
@@ -62,8 +68,8 @@ export const userService = {
     per_page?: number;
   }): Promise<User[]> {
     const response = await api.get<UserResponse>('/users', { params });
-    // Backend returns plain array (not paginated)
-    return response.data.data ?? [];
+    // Backend returns paginated response
+    return response.data.data?.data ?? [];
   },
 
   /**

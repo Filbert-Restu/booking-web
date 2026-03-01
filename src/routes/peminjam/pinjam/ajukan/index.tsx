@@ -62,8 +62,8 @@ export default function RouteComponent() {
     setRoomsLoading(true);
     try {
       const res = await api.get('/rooms');
-      // API may return { data: [...] } or array directly
-      const data = res.data.data || res.data;
+      // API returns paginated: { data: { data: [...] } }
+      const data = res.data.data?.data || res.data.data || res.data;
       setRooms(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error('Gagal memuat daftar ruang', err);

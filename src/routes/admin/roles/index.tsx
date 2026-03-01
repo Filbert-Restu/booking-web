@@ -135,7 +135,7 @@ function RouteComponent() {
 
     try {
       const response = await api.get(`/users?role_id=${role.id}`);
-      setRoleUsers(response.data.data || []);
+      setRoleUsers(response.data.data?.data || []);
     } catch (err) {
       console.error('Failed to fetch users:', err);
       setRoleUsers([]);

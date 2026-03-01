@@ -159,7 +159,7 @@ function RouteComponent() {
 
     try {
       const response = await api.get(`/users?unit_id=${unit.id}`);
-      setUnitUsers(response.data.data || []);
+      setUnitUsers(response.data.data?.data || []);
     } catch (err) {
       console.error('Failed to fetch users:', err);
       setUnitUsers([]);
