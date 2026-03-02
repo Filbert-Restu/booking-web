@@ -64,7 +64,6 @@ import { Route as AdminUsersIndexRouteImport } from './routes/admin/users/index'
 import { Route as AdminUnitsIndexRouteImport } from './routes/admin/units/index'
 import { Route as AdminRoomsIndexRouteImport } from './routes/admin/rooms/index'
 import { Route as AdminRolesIndexRouteImport } from './routes/admin/roles/index'
-import { Route as AdminPeminjamanRuangIndexRouteImport } from './routes/admin/peminjaman-ruang/index'
 import { Route as PeminjamPinjamTandaTanganRouteImport } from './routes/peminjam/pinjam/tanda-tangan'
 import { Route as PeminjamPinjamProposalRouteImport } from './routes/peminjam/pinjam/proposal'
 import { Route as PeminjamPinjamEditDokumenRouteImport } from './routes/peminjam/pinjam/edit-dokumen'
@@ -365,12 +364,6 @@ const AdminRolesIndexRoute = AdminRolesIndexRouteImport.update({
   path: '/roles/',
   getParentRoute: () => AdminRouteRoute,
 } as any)
-const AdminPeminjamanRuangIndexRoute =
-  AdminPeminjamanRuangIndexRouteImport.update({
-    id: '/peminjaman-ruang/',
-    path: '/peminjaman-ruang/',
-    getParentRoute: () => AdminRouteRoute,
-  } as any)
 const PeminjamPinjamTandaTanganRoute =
   PeminjamPinjamTandaTanganRouteImport.update({
     id: '/pinjam/tanda-tangan',
@@ -478,7 +471,6 @@ export interface FileRoutesByFullPath {
   '/peminjam/pinjam/edit-dokumen': typeof PeminjamPinjamEditDokumenRoute
   '/peminjam/pinjam/proposal': typeof PeminjamPinjamProposalRoute
   '/peminjam/pinjam/tanda-tangan': typeof PeminjamPinjamTandaTanganRoute
-  '/admin/peminjaman-ruang': typeof AdminPeminjamanRuangIndexRoute
   '/admin/roles': typeof AdminRolesIndexRoute
   '/admin/rooms': typeof AdminRoomsIndexRoute
   '/admin/units': typeof AdminUnitsIndexRoute
@@ -536,7 +528,6 @@ export interface FileRoutesByTo {
   '/peminjam/pinjam/edit-dokumen': typeof PeminjamPinjamEditDokumenRoute
   '/peminjam/pinjam/proposal': typeof PeminjamPinjamProposalRoute
   '/peminjam/pinjam/tanda-tangan': typeof PeminjamPinjamTandaTanganRoute
-  '/admin/peminjaman-ruang': typeof AdminPeminjamanRuangIndexRoute
   '/admin/roles': typeof AdminRolesIndexRoute
   '/admin/rooms': typeof AdminRoomsIndexRoute
   '/admin/units': typeof AdminUnitsIndexRoute
@@ -604,7 +595,6 @@ export interface FileRoutesById {
   '/peminjam/pinjam/edit-dokumen': typeof PeminjamPinjamEditDokumenRoute
   '/peminjam/pinjam/proposal': typeof PeminjamPinjamProposalRoute
   '/peminjam/pinjam/tanda-tangan': typeof PeminjamPinjamTandaTanganRoute
-  '/admin/peminjaman-ruang/': typeof AdminPeminjamanRuangIndexRoute
   '/admin/roles/': typeof AdminRolesIndexRoute
   '/admin/rooms/': typeof AdminRoomsIndexRoute
   '/admin/units/': typeof AdminUnitsIndexRoute
@@ -673,7 +663,6 @@ export interface FileRouteTypes {
     | '/peminjam/pinjam/edit-dokumen'
     | '/peminjam/pinjam/proposal'
     | '/peminjam/pinjam/tanda-tangan'
-    | '/admin/peminjaman-ruang'
     | '/admin/roles'
     | '/admin/rooms'
     | '/admin/units'
@@ -731,7 +720,6 @@ export interface FileRouteTypes {
     | '/peminjam/pinjam/edit-dokumen'
     | '/peminjam/pinjam/proposal'
     | '/peminjam/pinjam/tanda-tangan'
-    | '/admin/peminjaman-ruang'
     | '/admin/roles'
     | '/admin/rooms'
     | '/admin/units'
@@ -798,7 +786,6 @@ export interface FileRouteTypes {
     | '/peminjam/pinjam/edit-dokumen'
     | '/peminjam/pinjam/proposal'
     | '/peminjam/pinjam/tanda-tangan'
-    | '/admin/peminjaman-ruang/'
     | '/admin/roles/'
     | '/admin/rooms/'
     | '/admin/units/'
@@ -1214,13 +1201,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminRolesIndexRouteImport
       parentRoute: typeof AdminRouteRoute
     }
-    '/admin/peminjaman-ruang/': {
-      id: '/admin/peminjaman-ruang/'
-      path: '/peminjaman-ruang'
-      fullPath: '/admin/peminjaman-ruang'
-      preLoaderRoute: typeof AdminPeminjamanRuangIndexRouteImport
-      parentRoute: typeof AdminRouteRoute
-    }
     '/peminjam/pinjam/tanda-tangan': {
       id: '/peminjam/pinjam/tanda-tangan'
       path: '/pinjam/tanda-tangan'
@@ -1293,7 +1273,6 @@ interface AdminRouteRouteChildren {
   AdminUsersAddRoute: typeof AdminUsersAddRoute
   AdminUsersDetailRoute: typeof AdminUsersDetailRoute
   AdminUsersEditRoute: typeof AdminUsersEditRoute
-  AdminPeminjamanRuangIndexRoute: typeof AdminPeminjamanRuangIndexRoute
   AdminRolesIndexRoute: typeof AdminRolesIndexRoute
   AdminRoomsIndexRoute: typeof AdminRoomsIndexRoute
   AdminUnitsIndexRoute: typeof AdminUnitsIndexRoute
@@ -1307,7 +1286,6 @@ const AdminRouteRouteChildren: AdminRouteRouteChildren = {
   AdminUsersAddRoute: AdminUsersAddRoute,
   AdminUsersDetailRoute: AdminUsersDetailRoute,
   AdminUsersEditRoute: AdminUsersEditRoute,
-  AdminPeminjamanRuangIndexRoute: AdminPeminjamanRuangIndexRoute,
   AdminRolesIndexRoute: AdminRolesIndexRoute,
   AdminRoomsIndexRoute: AdminRoomsIndexRoute,
   AdminUnitsIndexRoute: AdminUnitsIndexRoute,

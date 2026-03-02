@@ -128,79 +128,31 @@ export function DataTable<T>({
 }: DataTableProps<T>) {
   const [clientPage, setClientPage] = useState(1);
 
-  // --- Server-side pagination mode ---
-  if (serverPagination) {
-    const { currentPage, lastPage, total, from, to, perPage } = serverPagination;
-    const globalStartIndex = (currentPage - 1) * perPage;
+  // All hooks must be called unconditionally (React rules of hooks)
+  const totalPages = serverPagination
+    ? serverPagination.lastPage
+    : Math.max(1, Math.ceil(data.length / pageSize));
 
-    if (isLoading) {
-      return (
-        <div className='w-full space-y-3 p-4'>
-          {[1, 2, 3, 4, 5].map((i) => (
-            <div key={i} className='h-12 w-full bg-gray-100 rounded animate-pulse' />
-          ))}
-        </div>
-      );
+  const safePage = serverPagination
+    ? serverPagination.currentPage
+    : (clientPage > totalPages ? 1 : clientPage);
+
+  // Sync clientPage when it exceeds totalPages (client-side only)
+  React.useEffect(() => {
+    if (!serverPagination && clientPage > totalPages) {
+      setClientPage(1);
     }
-
-    return (
-      <div className='bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden'>
-        <div className='overflow-x-auto'>
-          <Table className='w-full'>
-            <TableHeader>
-              <TableRow>
-                {columns.map((col, index) => (
-                  <TableHead key={index} className={col.className}>{col.header}</TableHead>
-                ))}
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {data.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={columns.length} className='h-24 text-center'>
-                    {emptyState || 'Tidak ada data.'}
-                  </TableCell>
-                </TableRow>
-              ) : (
-                data.map((item, rowIndex) => (
-                  <TableRow key={(item as { id: string }).id || rowIndex}>
-                    {columns.map((col, colIndex) => (
-                      <TableCell key={colIndex} className={`whitespace-normal ${col.className || ''}`}>
-                        {col.cell(item, globalStartIndex + rowIndex)}
-                      </TableCell>
-                    ))}
-                  </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
-        </div>
-
-        {lastPage > 1 && (
-          <PaginationBar
-            currentPage={currentPage}
-            totalPages={lastPage}
-            from={from ?? 1}
-            to={to ?? data.length}
-            total={total}
-            onPageChange={serverPagination.onPageChange}
-          />
-        )}
-      </div>
-    );
-  }
-
-  // --- Client-side pagination mode (default) ---
-  const totalPages = Math.max(1, Math.ceil(data.length / pageSize));
-  const safePage = clientPage > totalPages ? 1 : clientPage;
-  if (safePage !== clientPage) setClientPage(safePage);
+  }, [serverPagination, clientPage, totalPages]);
 
   const paginatedData = useMemo(() => {
+    if (serverPagination) return data; // server already sliced
     const start = (safePage - 1) * pageSize;
     return data.slice(start, start + pageSize);
-  }, [data, safePage, pageSize]);
+  }, [data, safePage, pageSize, serverPagination]);
 
-  const globalStartIndex = (safePage - 1) * pageSize;
+  const globalStartIndex = serverPagination
+    ? (serverPagination.currentPage - 1) * serverPagination.perPage
+    : (safePage - 1) * pageSize;
 
   if (isLoading) {
     return (
@@ -246,14 +198,25 @@ export function DataTable<T>({
       </div>
 
       {totalPages > 1 && (
-        <PaginationBar
-          currentPage={safePage}
-          totalPages={totalPages}
-          from={globalStartIndex + 1}
-          to={Math.min(globalStartIndex + pageSize, data.length)}
-          total={data.length}
-          onPageChange={setClientPage}
-        />
+        serverPagination ? (
+          <PaginationBar
+            currentPage={serverPagination.currentPage}
+            totalPages={serverPagination.lastPage}
+            from={serverPagination.from ?? 1}
+            to={serverPagination.to ?? data.length}
+            total={serverPagination.total}
+            onPageChange={serverPagination.onPageChange}
+          />
+        ) : (
+          <PaginationBar
+            currentPage={safePage}
+            totalPages={totalPages}
+            from={globalStartIndex + 1}
+            to={Math.min(globalStartIndex + pageSize, data.length)}
+            total={data.length}
+            onPageChange={setClientPage}
+          />
+        )
       )}
     </div>
   );

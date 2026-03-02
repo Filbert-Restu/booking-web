@@ -53,11 +53,6 @@ export const menuConfigurations: Record<UserRole, MenuConfig> = {
             icon: ClipboardList,
           },
           {
-            title: 'Peminjaman Ruang',
-            url: '/admin/peminjaman-ruang',
-            icon: Calendar,
-          },
-          {
             title: 'Manajemen Ruang',
             url: '/admin/rooms',
             icon: Building2,
