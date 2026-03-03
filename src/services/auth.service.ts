@@ -135,9 +135,9 @@ export const authService = {
   },
 
   /**
-   * Redirect ke halaman sesuai role
+   * Mendapatkan path halaman utama sesuai role
    */
-  redirectByRole(role: string): void {
+  getRolePath(role: string): string {
     const roleRoutes: Record<string, string> = {
       // Admin & Pimpinan
       Admin: '/admin/',
@@ -162,7 +162,13 @@ export const authService = {
       Peminjam: '/peminjam/',
     };
 
-    const path = roleRoutes[role] || '/peminjam/'; // Default ke peminjam
-    window.location.href = path;
+    return roleRoutes[role] || '/peminjam/'; // Default ke peminjam
+  },
+
+  /**
+   * Redirect ke halaman sesuai role
+   */
+  redirectByRole(role: string): void {
+    window.location.href = this.getRolePath(role);
   },
 };
