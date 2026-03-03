@@ -69,14 +69,9 @@ export function TemplateUploadModal({
                             <Select
                                 value={formData.template_type}
                                 onValueChange={(value) => {
-                                    const newType = value as TemplateType;
                                     onFormChange({
                                         ...formData,
-                                        template_type: newType,
-                                        organization_type:
-                                            newType === 'lembar_pengesahan'
-                                                ? formData.organization_type
-                                                : undefined,
+                                        template_type: value as TemplateType,
                                     });
                                 }}
                             >
@@ -90,34 +85,33 @@ export function TemplateUploadModal({
                             </Select>
                         </div>
 
-                        {formData.template_type === 'lembar_pengesahan' && (
-                            <div>
-                                <label className='text-sm font-medium mb-2 block'>
-                                    Jenis Organisasi <span className='text-red-500'>*</span>
-                                </label>
-                                <Select
-                                    value={formData.organization_type || ''}
-                                    onValueChange={(value) =>
-                                        onFormChange({
-                                            ...formData,
-                                            organization_type: value as OrganizationType,
-                                        })
-                                    }
-                                >
-                                    <SelectTrigger>
-                                        <SelectValue placeholder='Pilih jenis organisasi' />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value='hmd'>HMD (Himpunan)</SelectItem>
-                                        <SelectItem value='bem_ukm'>BEM / UKM</SelectItem>
-                                        <SelectItem value='senat'>Senat</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                                <p className='text-xs text-gray-500 mt-1'>
-                                    Pilih jenis organisasi yang akan menggunakan template ini
-                                </p>
-                            </div>
-                        )}
+                        <div>
+                            <label className='text-sm font-medium mb-2 block'>
+                                Peruntukan Organisasi <span className='text-red-500'>*</span>
+                            </label>
+                            <Select
+                                value={formData.organization_type || 'general'}
+                                onValueChange={(value) =>
+                                    onFormChange({
+                                        ...formData,
+                                        organization_type: value as OrganizationType | 'general',
+                                    })
+                                }
+                            >
+                                <SelectTrigger>
+                                    <SelectValue placeholder='Pilih peruntukan organisasi' />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value='general'>Umum / Semua (Tanpa filter unit)</SelectItem>
+                                    <SelectItem value='hmd'>Khusus HMD (Himpunan)</SelectItem>
+                                    <SelectItem value='bem_ukm'>Khusus BEM / UKM</SelectItem>
+                                    <SelectItem value='senat'>Khusus Senat</SelectItem>
+                                </SelectContent>
+                            </Select>
+                            <p className='text-xs text-gray-500 mt-1'>
+                                Pilih "Umum" jika template ini bisa digunakan oleh semua jenis organisasi.
+                            </p>
+                        </div>
 
                         <div>
                             <label className='text-sm font-medium mb-2 block'>

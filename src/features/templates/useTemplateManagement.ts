@@ -22,7 +22,8 @@ export const TEMPLATE_TYPE_LABELS: Record<TemplateType, string> = {
     lembar_pengesahan: 'Lembar Pengesahan',
 };
 
-export const ORG_TYPE_LABELS: Record<OrganizationType, string> = {
+export const ORG_TYPE_LABELS: Record<string, string> = {
+    general: 'Umum / Semua',
     hmd: 'HMD',
     bem_ukm: 'BEM/UKM',
     senat: 'Senat',
@@ -30,7 +31,7 @@ export const ORG_TYPE_LABELS: Record<OrganizationType, string> = {
 
 export const INITIAL_FORM = {
     template_type: 'executive_summary' as TemplateType,
-    organization_type: undefined as OrganizationType | undefined,
+    organization_type: 'general' as OrganizationType | 'general',
     template_name: '',
     description: '',
     set_as_active: true,
@@ -86,7 +87,9 @@ export function useTemplateManagement() {
         mutationFn: (params: { formData: TemplateFormData; file: File }) =>
             documentTemplateService.createTemplate({
                 template_type: params.formData.template_type,
-                organization_type: params.formData.organization_type,
+                organization_type: params.formData.organization_type === 'general'
+                    ? undefined
+                    : params.formData.organization_type as OrganizationType,
                 template_name: params.formData.template_name,
                 file: params.file,
                 description: params.formData.description || undefined,
@@ -148,7 +151,7 @@ export function useTemplateManagement() {
         setSelectedTemplate(template);
         setFormData({
             template_type: template.template_type,
-            organization_type: template.organization_type || undefined,
+            organization_type: (template.organization_type || 'general') as OrganizationType | 'general',
             template_name: template.template_name,
             description: template.description || '',
             set_as_active: template.is_active,

@@ -9,7 +9,10 @@ import {
     DialogHeader,
     DialogTitle,
 } from '@/shared/components/ui/dialog';
-import type { TemplateFormData } from './useTemplateManagement';
+import {
+    type TemplateFormData,
+    ORG_TYPE_LABELS,
+} from './useTemplateManagement';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -52,6 +55,17 @@ export function TemplateEditModal({
 
                 <form onSubmit={onSubmit}>
                     <div className='space-y-4 py-4'>
+                        <div className="grid grid-cols-2 gap-4 bg-gray-50 p-3 rounded-md border text-xs">
+                            <div>
+                                <span className="text-gray-500 block mb-1">Tipe Template</span>
+                                <span className="font-semibold uppercase">{formData.template_type.replace('_', ' ')}</span>
+                            </div>
+                            <div>
+                                <span className="text-gray-500 block mb-1">Peruntukan Organisasi</span>
+                                <span className="font-semibold">{ORG_TYPE_LABELS[formData.organization_type] || 'Umum'}</span>
+                            </div>
+                        </div>
+
                         <div>
                             <label className='text-sm font-medium mb-2 block'>
                                 Nama Template <span className='text-red-500'>*</span>
