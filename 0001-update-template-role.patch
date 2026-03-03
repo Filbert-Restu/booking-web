@@ -1,0 +1,190 @@
+From fe9341f1cb60db90088482a2d1ec26bf3271a664 Mon Sep 17 00:00:00 2001
+From: Filbert Restu Yudha Firmansyah <nocireka5@gmail.com>
+Date: Tue, 3 Mar 2026 19:54:16 +0700
+Subject: [PATCH] update: template role
+
+---
+ .env                                          |  2 +-
+ .env.example                                  |  1 +
+ src/features/templates/TemplateEditModal.tsx  | 16 ++++-
+ .../templates/TemplateUploadModal.tsx         | 62 +++++++++----------
+ .../templates/useTemplateManagement.ts        | 11 ++--
+ 5 files changed, 52 insertions(+), 40 deletions(-)
+ create mode 100644 .env.example
+
+diff --git a/.env b/.env
+index 3346880..e59387b 100644
+--- a/.env
++++ b/.env
+@@ -1 +1 @@
+-VITE_API_URL=http://10.137.58.124:20082/api
++VITE_API_URL=http://127.0.0.1:8000/api
+diff --git a/.env.example b/.env.example
+new file mode 100644
+index 0000000..292a14c
+--- /dev/null
++++ b/.env.example
+@@ -0,0 +1 @@
++VITE_API_URL=
+diff --git a/src/features/templates/TemplateEditModal.tsx b/src/features/templates/TemplateEditModal.tsx
+index 4e1a4f2..bddb5d6 100644
+--- a/src/features/templates/TemplateEditModal.tsx
++++ b/src/features/templates/TemplateEditModal.tsx
+@@ -9,7 +9,10 @@ import {
+     DialogHeader,
+     DialogTitle,
+ } from '@/shared/components/ui/dialog';
+-import type { TemplateFormData } from './useTemplateManagement';
++import {
++    type TemplateFormData,
++    ORG_TYPE_LABELS,
++} from './useTemplateManagement';
+ 
+ // ---------------------------------------------------------------------------
+ // Types
+@@ -52,6 +55,17 @@ export function TemplateEditModal({
+ 
+                 <form onSubmit={onSubmit}>
+                     <div className='space-y-4 py-4'>
++                        <div className="grid grid-cols-2 gap-4 bg-gray-50 p-3 rounded-md border text-xs">
++                            <div>
++                                <span className="text-gray-500 block mb-1">Tipe Template</span>
++                                <span className="font-semibold uppercase">{formData.template_type.replace('_', ' ')}</span>
++                            </div>
++                            <div>
++                                <span className="text-gray-500 block mb-1">Peruntukan Organisasi</span>
++                                <span className="font-semibold">{ORG_TYPE_LABELS[formData.organization_type] || 'Umum'}</span>
++                            </div>
++                        </div>
++
+                         <div>
+                             <label className='text-sm font-medium mb-2 block'>
+                                 Nama Template <span className='text-red-500'>*</span>
+diff --git a/src/features/templates/TemplateUploadModal.tsx b/src/features/templates/TemplateUploadModal.tsx
+index cf89793..cc6b9cd 100644
+--- a/src/features/templates/TemplateUploadModal.tsx
++++ b/src/features/templates/TemplateUploadModal.tsx
+@@ -69,14 +69,9 @@ export function TemplateUploadModal({
+                             <Select
+                                 value={formData.template_type}
+                                 onValueChange={(value) => {
+-                                    const newType = value as TemplateType;
+                                     onFormChange({
+                                         ...formData,
+-                                        template_type: newType,
+-                                        organization_type:
+-                                            newType === 'lembar_pengesahan'
+-                                                ? formData.organization_type
+-                                                : undefined,
++                                        template_type: value as TemplateType,
+                                     });
+                                 }}
+                             >
+@@ -90,34 +85,33 @@ export function TemplateUploadModal({
+                             </Select>
+                         </div>
+ 
+-                        {formData.template_type === 'lembar_pengesahan' && (
+-                            <div>
+-                                <label className='text-sm font-medium mb-2 block'>
+-                                    Jenis Organisasi <span className='text-red-500'>*</span>
+-                                </label>
+-                                <Select
+-                                    value={formData.organization_type || ''}
+-                                    onValueChange={(value) =>
+-                                        onFormChange({
+-                                            ...formData,
+-                                            organization_type: value as OrganizationType,
+-                                        })
+-                                    }
+-                                >
+-                                    <SelectTrigger>
+-                                        <SelectValue placeholder='Pilih jenis organisasi' />
+-                                    </SelectTrigger>
+-                                    <SelectContent>
+-                                        <SelectItem value='hmd'>HMD (Himpunan)</SelectItem>
+-                                        <SelectItem value='bem_ukm'>BEM / UKM</SelectItem>
+-                                        <SelectItem value='senat'>Senat</SelectItem>
+-                                    </SelectContent>
+-                                </Select>
+-                                <p className='text-xs text-gray-500 mt-1'>
+-                                    Pilih jenis organisasi yang akan menggunakan template ini
+-                                </p>
+-                            </div>
+-                        )}
++                        <div>
++                            <label className='text-sm font-medium mb-2 block'>
++                                Peruntukan Organisasi <span className='text-red-500'>*</span>
++                            </label>
++                            <Select
++                                value={formData.organization_type || 'general'}
++                                onValueChange={(value) =>
++                                    onFormChange({
++                                        ...formData,
++                                        organization_type: value as OrganizationType | 'general',
++                                    })
++                                }
++                            >
++                                <SelectTrigger>
++                                    <SelectValue placeholder='Pilih peruntukan organisasi' />
++                                </SelectTrigger>
++                                <SelectContent>
++                                    <SelectItem value='general'>Umum / Semua (Tanpa filter unit)</SelectItem>
++                                    <SelectItem value='hmd'>Khusus HMD (Himpunan)</SelectItem>
++                                    <SelectItem value='bem_ukm'>Khusus BEM / UKM</SelectItem>
++                                    <SelectItem value='senat'>Khusus Senat</SelectItem>
++                                </SelectContent>
++                            </Select>
++                            <p className='text-xs text-gray-500 mt-1'>
++                                Pilih "Umum" jika template ini bisa digunakan oleh semua jenis organisasi.
++                            </p>
++                        </div>
+ 
+                         <div>
+                             <label className='text-sm font-medium mb-2 block'>
+diff --git a/src/features/templates/useTemplateManagement.ts b/src/features/templates/useTemplateManagement.ts
+index acb3cc9..eeb1e1a 100644
+--- a/src/features/templates/useTemplateManagement.ts
++++ b/src/features/templates/useTemplateManagement.ts
+@@ -22,7 +22,8 @@ export const TEMPLATE_TYPE_LABELS: Record<TemplateType, string> = {
+     lembar_pengesahan: 'Lembar Pengesahan',
+ };
+ 
+-export const ORG_TYPE_LABELS: Record<OrganizationType, string> = {
++export const ORG_TYPE_LABELS: Record<string, string> = {
++    general: 'Umum / Semua',
+     hmd: 'HMD',
+     bem_ukm: 'BEM/UKM',
+     senat: 'Senat',
+@@ -30,7 +31,7 @@ export const ORG_TYPE_LABELS: Record<OrganizationType, string> = {
+ 
+ export const INITIAL_FORM = {
+     template_type: 'executive_summary' as TemplateType,
+-    organization_type: undefined as OrganizationType | undefined,
++    organization_type: 'general' as OrganizationType | 'general',
+     template_name: '',
+     description: '',
+     set_as_active: true,
+@@ -86,7 +87,9 @@ export function useTemplateManagement() {
+         mutationFn: (params: { formData: TemplateFormData; file: File }) =>
+             documentTemplateService.createTemplate({
+                 template_type: params.formData.template_type,
+-                organization_type: params.formData.organization_type,
++                organization_type: params.formData.organization_type === 'general'
++                    ? undefined
++                    : params.formData.organization_type as OrganizationType,
+                 template_name: params.formData.template_name,
+                 file: params.file,
+                 description: params.formData.description || undefined,
+@@ -148,7 +151,7 @@ export function useTemplateManagement() {
+         setSelectedTemplate(template);
+         setFormData({
+             template_type: template.template_type,
+-            organization_type: template.organization_type || undefined,
++            organization_type: (template.organization_type || 'general') as OrganizationType | 'general',
+             template_name: template.template_name,
+             description: template.description || '',
+             set_as_active: template.is_active,
+-- 
+2.50.1.windows.1
+

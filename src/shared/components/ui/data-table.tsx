@@ -95,11 +95,10 @@ export function PaginationBar({
             <button
               key={page}
               onClick={() => onPageChange(page)}
-              className={`min-w-[32px] h-8 rounded-md text-sm font-medium ${
-                page === currentPage
-                  ? 'bg-blue-600 text-white'
-                  : 'border border-gray-300 text-gray-700 hover:bg-gray-100'
-              }`}
+              className={`min-w-[32px] h-8 rounded-md text-sm font-medium ${page === currentPage
+                ? 'bg-blue-600 text-white'
+                : 'border border-gray-300 text-gray-700 hover:bg-gray-100'
+                }`}
             >
               {page}
             </button>

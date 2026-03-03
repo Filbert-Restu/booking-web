@@ -72,6 +72,7 @@ import { Route as AdminUsersEditRouteImport } from './routes/admin/users/edit'
 import { Route as AdminUsersDetailRouteImport } from './routes/admin/users/detail'
 import { Route as AdminUsersAddRouteImport } from './routes/admin/users/add'
 import { Route as PeminjamPinjamAjukanIndexRouteImport } from './routes/peminjam/pinjam/ajukan/index'
+import { Route as PeminjamPinjamDetailIdRouteImport } from './routes/peminjam/pinjam/detail.$id'
 import { Route as KemahasiswaanTemplateDokumenTemplateIdEditRouteImport } from './routes/kemahasiswaan/template-dokumen.$templateId.edit'
 
 const TandaTanganRoute = TandaTanganRouteImport.update({
@@ -408,6 +409,11 @@ const PeminjamPinjamAjukanIndexRoute =
     path: '/pinjam/ajukan/',
     getParentRoute: () => PeminjamRouteRoute,
   } as any)
+const PeminjamPinjamDetailIdRoute = PeminjamPinjamDetailIdRouteImport.update({
+  id: '/pinjam/detail/$id',
+  path: '/pinjam/detail/$id',
+  getParentRoute: () => PeminjamRouteRoute,
+} as any)
 const KemahasiswaanTemplateDokumenTemplateIdEditRoute =
   KemahasiswaanTemplateDokumenTemplateIdEditRouteImport.update({
     id: '/template-dokumen/$templateId/edit',
@@ -479,6 +485,7 @@ export interface FileRoutesByFullPath {
   '/kemahasiswaan/template-dokumen': typeof KemahasiswaanTemplateDokumenIndexRoute
   '/peminjam/pinjam': typeof PeminjamPinjamIndexRoute
   '/kemahasiswaan/template-dokumen/$templateId/edit': typeof KemahasiswaanTemplateDokumenTemplateIdEditRoute
+  '/peminjam/pinjam/detail/$id': typeof PeminjamPinjamDetailIdRoute
   '/peminjam/pinjam/ajukan': typeof PeminjamPinjamAjukanIndexRoute
 }
 export interface FileRoutesByTo {
@@ -536,6 +543,7 @@ export interface FileRoutesByTo {
   '/kemahasiswaan/template-dokumen': typeof KemahasiswaanTemplateDokumenIndexRoute
   '/peminjam/pinjam': typeof PeminjamPinjamIndexRoute
   '/kemahasiswaan/template-dokumen/$templateId/edit': typeof KemahasiswaanTemplateDokumenTemplateIdEditRoute
+  '/peminjam/pinjam/detail/$id': typeof PeminjamPinjamDetailIdRoute
   '/peminjam/pinjam/ajukan': typeof PeminjamPinjamAjukanIndexRoute
 }
 export interface FileRoutesById {
@@ -603,6 +611,7 @@ export interface FileRoutesById {
   '/kemahasiswaan/template-dokumen/': typeof KemahasiswaanTemplateDokumenIndexRoute
   '/peminjam/pinjam/': typeof PeminjamPinjamIndexRoute
   '/kemahasiswaan/template-dokumen/$templateId/edit': typeof KemahasiswaanTemplateDokumenTemplateIdEditRoute
+  '/peminjam/pinjam/detail/$id': typeof PeminjamPinjamDetailIdRoute
   '/peminjam/pinjam/ajukan/': typeof PeminjamPinjamAjukanIndexRoute
 }
 export interface FileRouteTypes {
@@ -671,6 +680,7 @@ export interface FileRouteTypes {
     | '/kemahasiswaan/template-dokumen'
     | '/peminjam/pinjam'
     | '/kemahasiswaan/template-dokumen/$templateId/edit'
+    | '/peminjam/pinjam/detail/$id'
     | '/peminjam/pinjam/ajukan'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -728,6 +738,7 @@ export interface FileRouteTypes {
     | '/kemahasiswaan/template-dokumen'
     | '/peminjam/pinjam'
     | '/kemahasiswaan/template-dokumen/$templateId/edit'
+    | '/peminjam/pinjam/detail/$id'
     | '/peminjam/pinjam/ajukan'
   id:
     | '__root__'
@@ -794,6 +805,7 @@ export interface FileRouteTypes {
     | '/kemahasiswaan/template-dokumen/'
     | '/peminjam/pinjam/'
     | '/kemahasiswaan/template-dokumen/$templateId/edit'
+    | '/peminjam/pinjam/detail/$id'
     | '/peminjam/pinjam/ajukan/'
   fileRoutesById: FileRoutesById
 }
@@ -1257,6 +1269,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PeminjamPinjamAjukanIndexRouteImport
       parentRoute: typeof PeminjamRouteRoute
     }
+    '/peminjam/pinjam/detail/$id': {
+      id: '/peminjam/pinjam/detail/$id'
+      path: '/pinjam/detail/$id'
+      fullPath: '/peminjam/pinjam/detail/$id'
+      preLoaderRoute: typeof PeminjamPinjamDetailIdRouteImport
+      parentRoute: typeof PeminjamRouteRoute
+    }
     '/kemahasiswaan/template-dokumen/$templateId/edit': {
       id: '/kemahasiswaan/template-dokumen/$templateId/edit'
       path: '/template-dokumen/$templateId/edit'
@@ -1381,6 +1400,7 @@ interface PeminjamRouteRouteChildren {
   PeminjamPinjamProposalRoute: typeof PeminjamPinjamProposalRoute
   PeminjamPinjamTandaTanganRoute: typeof PeminjamPinjamTandaTanganRoute
   PeminjamPinjamIndexRoute: typeof PeminjamPinjamIndexRoute
+  PeminjamPinjamDetailIdRoute: typeof PeminjamPinjamDetailIdRoute
   PeminjamPinjamAjukanIndexRoute: typeof PeminjamPinjamAjukanIndexRoute
 }
 
@@ -1392,6 +1412,7 @@ const PeminjamRouteRouteChildren: PeminjamRouteRouteChildren = {
   PeminjamPinjamProposalRoute: PeminjamPinjamProposalRoute,
   PeminjamPinjamTandaTanganRoute: PeminjamPinjamTandaTanganRoute,
   PeminjamPinjamIndexRoute: PeminjamPinjamIndexRoute,
+  PeminjamPinjamDetailIdRoute: PeminjamPinjamDetailIdRoute,
   PeminjamPinjamAjukanIndexRoute: PeminjamPinjamAjukanIndexRoute,
 }
 

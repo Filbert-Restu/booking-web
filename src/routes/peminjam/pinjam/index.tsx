@@ -1,17 +1,15 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
-import { useState, useMemo, useCallback } from 'react'; // Tambah useMemo
-import { Plus, FilePlus, AlertCircle, Clock, AlertTriangle } from 'lucide-react';
+import { useState, useMemo } from 'react';
+import { Plus, FilePlus, AlertCircle, Clock, AlertTriangle, Eye } from 'lucide-react';
 import { useQuery, keepPreviousData } from '@tanstack/react-query';
 import { Button } from '@/shared/components/ui/button/button';
 
 // --- IMPORTS CUSTOM ---
 import { documentService } from '@/services/document.service';
-import FileActions from '@/components/FileActions';
 import { DocumentStatusBadge } from '@/components/DocumentStatusBadge';
 import { documentHelpers } from '@/utils/documentUtils';
-import type { BookingContent, Document } from '@/types/document';
+import type { Document } from '@/types/document';
 
-// --- IMPORT TABLE BARU ---
 import { DataTable, type ColumnDef } from '@/shared/components/ui/data-table';
 
 export const Route = createFileRoute('/peminjam/pinjam/')({
@@ -20,12 +18,6 @@ export const Route = createFileRoute('/peminjam/pinjam/')({
 
 function RouteComponent() {
   const navigate = useNavigate();
-  const [pdfPreview, setPdfPreview] = useState<{
-    id: number;
-    type: 'executive-summary' | 'approval-sheet' | 'proposal';
-    url: string;
-  } | null>(null);
-
   const [currentPage, setCurrentPage] = useState(1);
 
   // --- 1. DATA FETCHING ---
@@ -86,27 +78,6 @@ function RouteComponent() {
     });
   };
 
-  const handleAjukanPinjamWithData = useCallback(
-    (doc: Document<BookingContent>) => {
-      // Untuk dokumen REVISED/DRAFT, gunakan editId agar form auto-fill dari database
-      // Ini memastikan SEMUA field terisi otomatis, tidak hanya yang ada di search params
-      navigate({
-        to: '/peminjam/pinjam/detail-tempat',
-        search: {
-          editId: doc.id, // Kirim document ID untuk auto-fill
-          roomId: undefined,
-          bookingDate: undefined,
-          startTime: undefined,
-          endTime: undefined,
-          purpose: undefined,
-          ketuaNama: undefined,
-          ketuaNim: undefined,
-          ketuaHp: undefined,
-        },
-      });
-    },
-    [navigate],
-  );
 
   // --- 3. DEFINISI KOLOM TABEL (CORE CHANGE) ---
   // Gunakan useMemo agar tidak dire-create setiap render
@@ -114,7 +85,7 @@ function RouteComponent() {
     () => [
       {
         header: 'No',
-        className: 'text-center',
+        className: 'w-12 text-center',
         cell: (_, index) => index + 1,
       },
       {
@@ -164,14 +135,14 @@ function RouteComponent() {
           return (
             <div className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-md border text-xs font-medium ${getColorClasses()}`}>
               {getIcon()}
-              <span className='whitespace-nowrap'>{deadlineText}</span>
+              <span>{deadlineText}</span>
             </div>
           );
         },
       },
       {
         header: 'Nama Kegiatan',
-        className: 'font-medium',
+        className: '',
         cell: (doc) => (
           <div>
             {documentHelpers.getEventName(doc)}
@@ -179,138 +150,33 @@ function RouteComponent() {
         ),
       },
       {
-        header: 'Tgl Acara',
-        className: '',
-        cell: (doc) => documentHelpers.getBookingDate(doc),
-      },
-      {
-        header: 'Jam Pelaksanaan',
-        className: '',
-        cell: (doc) => {
-          const content = doc.content || {};
-          const startTime = content.start_time;
-          const endTime = content.end_time;
-
-          if (startTime && endTime) {
-            return (
-              <div className='text-sm'>
-                <div className='font-medium'>{startTime}</div>
-                <div className='text-gray-500'>s/d {endTime}</div>
-              </div>
-            );
-          }
-          return <span className='text-sm text-gray-400'>-</span>;
-        },
-      },
-      {
-        header: 'Ruangan',
-        className: '',
-        cell: (doc) => documentHelpers.getRoomInfo(doc),
-      },
-      {
         header: 'Status',
         className: '',
         cell: (doc) => <DocumentStatusBadge doc={doc} />,
       },
       {
-        header: 'Dokumen',
-        className: '',
+        header: 'Aksi',
+        className: 'w-24 text-center',
         cell: (doc) => (
-          <FileActions
-            docId={doc.id}
-            fileTypes={[
-              { type: 'proposal', hasFile: !!doc.file_proposal },
-              {
-                type: 'executive-summary',
-                hasFile: !!doc.file_executive_summary,
-              },
-              { type: 'approval-sheet', hasFile: !!doc.file_approval_sheet },
-            ]}
-            pdfPreview={pdfPreview}
-            setPdfPreview={setPdfPreview}
-          />
+          <Button
+            size="sm"
+            variant="outline"
+            className="flex items-center gap-2 w-full justify-center"
+            onClick={() => {
+              navigate({
+                to: '/peminjam/pinjam/detail/$id',
+                params: { id: doc.id.toString() },
+              });
+            }}
+          >
+            <Eye className="w-4 h-4" />
+            Detail
+          </Button>
         ),
       },
-      {
-        header: 'Keterangan',
-        className: '',
-        cell: (doc) => {
-          if (doc.status === 'IN_PROGRESS') {
-            const holderName = documentHelpers.getCurrentHolder(doc);
-            return (
-              <span className='text-sm text-gray-700'>
-                Dokumen sedang di{' '}
-                <span className='font-semibold'>{holderName}</span>
-              </span>
-            );
-          }
-          if (doc.status === 'DRAFT') {
-            return (
-              <button
-                onClick={() => handleAjukanPinjamWithData(doc)}
-                className='text-sm text-blue-600 hover:text-blue-800 hover:underline font-medium'
-              >
-                Lengkapi Pengajuan
-              </button>
-            );
-          }
-          if (doc.status === 'REVISION' || doc.status === 'REJECTED') {
-            // Find the LATEST RETURNED log entry (logs are asc by default)
-            const logs = doc.logs || [];
-            const returnedLog = [...logs].reverse().find(
-              (log) => log.action === 'RETURNED',
-            );
-
-            const revisorUser = returnedLog?.user;
-            const revisorName = revisorUser
-              ? `${revisorUser.name}${revisorUser.unit ? ` (${revisorUser.unit.name})` : ''}`
-              : 'Approver';
-            const revisionNote = returnedLog?.note || 'Perlu revisi';
-
-            return (
-              <div className='flex flex-col gap-2 max-w-[300px] py-1'>
-                <div className='flex flex-col gap-1.5'>
-                  {/* Status & Revisor */}
-                  <div className='flex flex-col'>
-                    <span className='text-[10px] font-bold text-red-500 uppercase tracking-widest mb-0.5'>
-                      Perlu Revisi
-                    </span>
-                    <span className='text-xs font-semibold text-gray-900'>
-                      Oleh: {revisorName}
-                    </span>
-                  </div>
-
-                  {/* Note */}
-                  <div className='bg-gray-50 border border-gray-100 rounded-md p-2.5'>
-                    <p className='text-xs text-gray-600 leading-relaxed italic'>
-                      "{revisionNote}"
-                    </p>
-                  </div>
-
-                  {/* Action Link */}
-                  <button
-                    onClick={() => handleAjukanPinjamWithData(doc)}
-                    className='text-xs font-bold text-blue-600 hover:text-blue-800 hover:underline text-left w-fit'
-                  >
-                    Lengkapi & Ajukan Kembali →
-                  </button>
-                </div>
-              </div>
-            );
-          }
-          if (doc.status === 'APPROVED') {
-            return (
-              <span className='text-sm text-green-600 font-medium'>
-                Dokumen telah disetujui
-              </span>
-            );
-          }
-          return <span className='text-sm text-gray-400'>-</span>;
-        },
-      },
     ],
-    [pdfPreview, handleAjukanPinjamWithData],
-  ); // Dependency array: update jika state pdfPreview berubah
+    [],
+  );
 
   // --- 4. EMPTY STATE UI ---
   const EmptyState = (
