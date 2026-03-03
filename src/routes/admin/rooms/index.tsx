@@ -1,7 +1,4 @@
 import { createFileRoute } from '@tanstack/react-router';
-import { useEffect, useState } from 'react';
-import type { ChangeEvent, FormEvent } from 'react';
-import { AxiosError } from 'axios';
 import { Button } from '@/shared/components/ui/button/button';
 import { Input } from '@/shared/components/ui/input';
 import {
@@ -10,8 +7,12 @@ import {
   Search,
   Trash2,
   Eye,
-  Camera,
+  Users,
 } from 'lucide-react';
+import { RoomForm } from '@/features/rooms/components/RoomForm';
+import { DetailRoomModal } from '@/features/rooms/components/DetailRoomModal';
+import { DeleteRoomDialog } from '@/features/rooms/components/DeleteRoomDialog';
+import { useRooms } from '@/features/rooms/hooks/useRooms';
 import {
   Table,
   TableBody,
@@ -24,20 +25,9 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from '@/shared/components/ui/dialog';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/shared/components/ui/alert-dialog';
 import {
   Select,
   SelectContent,
@@ -45,249 +35,54 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/shared/components/ui/select';
-import { roomService, type Room } from '@/services/room.service';
 
 export const Route = createFileRoute('/admin/rooms/')({
   component: RouteComponent,
 });
 
 function RouteComponent() {
-  const [rooms, setRooms] = useState<Room[]>([]);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const {
+    filteredRooms,
+    searchTerm,
+    setSearchTerm,
+    debouncedSearchTerm,
+    isInitialLoading,
+    isFetching,
+    error,
+    isCreateModalOpen,
+    setIsCreateModalOpen,
+    isEditModalOpen,
+    setIsEditModalOpen,
+    isDetailModalOpen,
+    setIsDetailModalOpen,
+    isDeleteDialogOpen,
+    setIsDeleteDialogOpen,
+    selectedRoom,
+    formData,
+    setFormData,
+    formError,
+    isSubmitting,
+    selectedStatus,
+    setSelectedStatus,
+    capacityRange,
+    setCapacityRange,
+    fetchRooms,
+    handleCreate,
+    handleEdit,
+    handleDetail,
+    handleDelete,
+    handleFileChange,
+    handleSubmitCreate,
+    handleSubmitEdit,
+    handleConfirmDelete,
+  } = useRooms();
 
-  // Modal states
-  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-
-  // Form states
-  const [selectedRoom, setSelectedRoom] = useState<Room | null>(null);
-  const [formData, setFormData] = useState({
-    name: '',
-    code: '',
-    capacity: '10',
-    description: '',
-    facilities: '',
-    status: 'ACTIVE' as Room['status'],
-  });
-  const [roomImage, setRoomImage] = useState<File | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [formError, setFormError] = useState('');
-
-  const [selectedStatus, setSelectedStatus] = useState<Room['status'] | 'all'>('all');
-
-  // Debounce search query
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedSearchTerm(searchTerm);
-    }, 300);
-
-    return () => clearTimeout(timer);
-  }, [searchTerm]);
-
-  const fetchRooms = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const rooms = await roomService.getRooms();
-      setRooms(rooms);
-    } catch (err) {
-      console.error('Failed to fetch rooms:', err);
-      if (err instanceof AxiosError) {
-        setError(err.response?.data?.message || 'Gagal memuat data ruangan');
-      } else {
-        setError('Terjadi kesalahan saat memuat data');
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchRooms();
-  }, []);
-
-  const handleCreate = () => {
-    setFormData({
-      name: '',
-      code: '',
-      capacity: '10',
-      description: '',
-      facilities: '',
-      status: 'ACTIVE',
-    });
-    setRoomImage(null);
-    setFormError('');
-    setIsCreateModalOpen(true);
-  };
-
-  const handleEdit = (room: Room) => {
-    setSelectedRoom(room);
-    setFormData({
-      name: room.name,
-      code: room.code,
-      capacity: String(room.capacity || 10),
-      description: room.description || '',
-      facilities: Array.isArray(room.facilities)
-        ? room.facilities.join(', ')
-        : '',
-      status: room.status,
-    });
-    setRoomImage(null);
-    setFormError('');
-    setIsEditModalOpen(true);
-  };
-
-  const handleDetail = (room: Room) => {
-    setSelectedRoom(room);
-    setIsDetailModalOpen(true);
-  };
-
-  const handleDelete = (room: Room) => {
-    setSelectedRoom(room);
-    setIsDeleteDialogOpen(true);
-  };
-
-  const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0] ?? null;
-    setRoomImage(file);
-  };
-
-  const handleSubmitCreate = async (e: FormEvent) => {
-    e.preventDefault();
-    setFormError('');
-
-    if (!formData.name.trim() || !formData.code.trim()) {
-      setFormError('Nama ruangan dan kode ruangan wajib diisi!');
-      return;
-    }
-
-    try {
-      setIsSubmitting(true);
-
-      const data = new FormData();
-      data.append('name', formData.name);
-      data.append('code', formData.code);
-      data.append('capacity', String(parseInt(formData.capacity)));
-      data.append('description', formData.description);
-      data.append('status', 'ACTIVE');
-
-      const facilitiesArray = formData.facilities
-        .split(',')
-        .map((f) => f.trim())
-        .filter((f) => f.length > 0);
-
-      facilitiesArray.forEach((f, index) => {
-        data.append(`facilities[${index}]`, f);
-      });
-
-      if (roomImage) {
-        data.append('images[]', roomImage);
-      }
-
-      await roomService.createRoom(data);
-
-      setIsCreateModalOpen(false);
-      fetchRooms();
-    } catch (err) {
-      console.error('Failed to create room:', err);
-      const error = err as AxiosError<{ message: string }>;
-      setFormError(
-        error.response?.data?.message || 'Gagal menambahkan ruangan',
-      );
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const handleSubmitEdit = async (e: FormEvent) => {
-    e.preventDefault();
-    setFormError('');
-
-    if (!selectedRoom) return;
-
-    if (!formData.name.trim() || !formData.code.trim()) {
-      setFormError('Nama ruangan dan kode ruangan wajib diisi!');
-      return;
-    }
-
-    try {
-      setIsSubmitting(true);
-
-      const facilitiesArray = formData.facilities
-        .split(',')
-        .map((f) => f.trim())
-        .filter((f) => f.length > 0);
-
-      const roomData = {
-        name: formData.name,
-        code: formData.code,
-        capacity: parseInt(formData.capacity) || 10,
-        description: formData.description,
-        facilities: facilitiesArray,
-        status: formData.status,
-      };
-
-      await roomService.updateRoom(selectedRoom.id, roomData);
-
-      if (roomImage) {
-        try {
-          await roomService.uploadImage(selectedRoom.id, roomImage);
-        } catch (err) {
-          console.error('Failed to upload image:', err);
-        }
-      }
-
-      setIsEditModalOpen(false);
-      fetchRooms();
-    } catch (err) {
-      console.error('Failed to update room:', err);
-      const error = err as AxiosError<{ message: string }>;
-      setFormError(
-        error.response?.data?.message || 'Gagal memperbarui ruangan',
-      );
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const handleConfirmDelete = async () => {
-    if (!selectedRoom) return;
-
-    try {
-      await roomService.deleteRoom(selectedRoom.id);
-      setIsDeleteDialogOpen(false);
-      setRooms((prev) => prev.filter((r) => r.id !== selectedRoom.id));
-    } catch (err) {
-      console.error('Failed to delete room:', err);
-      const error = err as AxiosError<{ message: string }>;
-      alert(error.response?.data?.message || 'Gagal menghapus ruangan');
-    }
-  };
-
-  const filteredRooms = rooms.filter((room) => {
-    const term = searchTerm.toLowerCase();
-    const matchesSearch =
-      room.name.toLowerCase().includes(term) ||
-      room.code.toLowerCase().includes(term) ||
-      (room.description && room.description.toLowerCase().includes(term));
-
-    const matchesStatus =
-      selectedStatus === 'all' || room.status === selectedStatus;
-
-    return matchesSearch && matchesStatus;
-  });
-
-  if (loading) {
+  if (isInitialLoading) {
     return (
-      <div className='flex items-center justify-center min-h-screen'>
+      <div className='flex items-center justify-center min-h-[400px]'>
         <div className='text-center'>
           <div className='animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto'></div>
-          <p className='mt-4 text-gray-600'>Memuat data ruangan...</p>
+          <p className='mt-4 text-gray-600 font-medium'>Memuat data ruangan...</p>
         </div>
       </div>
     );
@@ -305,7 +100,7 @@ function RouteComponent() {
   }
 
   return (
-    <div className='container mx-auto px-2 sm:px-4 py-2 sm:py-4 max-w-7xl'>
+    <div className='container mx-auto px-2 sm:px-4 py-2 sm:py-4'>
       {/* Header */}
       <div className='mb-4 sm:mb-6'>
         <h1 className='text-xl sm:text-2xl font-bold text-gray-900 mb-1 sm:mb-2'>
@@ -316,46 +111,87 @@ function RouteComponent() {
         </p>
       </div>
 
-      <div className='mb-4 sm:mb-6 flex flex-col sm:flex-row justify-between gap-3'>
-        <div className='flex flex-1 gap-2'>
+      <div className='mb-6 space-y-4'>
+        {/* Search & Add Button Row */}
+        <div className='flex items-center gap-2 w-full'>
           <div className='relative flex-1'>
-            <Search className='absolute left-2 sm:left-3 top-1/2 -translate-y-1/2 h-3 w-3 sm:h-4 sm:w-4 text-gray-400' />
+            <Search className='absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400' />
             <Input
               type='text'
               placeholder='Cari ruangan...'
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className='pl-7 sm:pl-10 text-sm h-9 sm:h-10'
+              className='pl-10 text-sm h-11 border-gray-200 focus:ring-blue-500 rounded-xl shadow-sm w-full bg-white'
             />
           </div>
-          <Select
-            value={selectedStatus}
-            onValueChange={(value) =>
-              setSelectedStatus(value as Room['status'] | 'all')
-            }
+          <Button
+            onClick={handleCreate}
+            className='whitespace-nowrap h-11 px-5 text-sm font-semibold bg-blue-600 hover:bg-blue-700 text-white rounded-xl shadow-sm flex items-center gap-2'
           >
-            <SelectTrigger className='w-[140px] h-9 sm:h-10 text-xs sm:text-sm'>
-              <SelectValue placeholder='Filter Status' />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value='all'>Semua Status</SelectItem>
-              <SelectItem value='ACTIVE'>Aktif</SelectItem>
-              <SelectItem value='MAINTENANCE'>Maintenance</SelectItem>
-              <SelectItem value='INACTIVE'>Nonaktif</SelectItem>
-            </SelectContent>
-          </Select>
+            <Plus className='h-5 w-5' />
+            <span>Tambah Ruang</span>
+          </Button>
         </div>
-        <Button
-          onClick={handleCreate}
-          className='whitespace-nowrap h-10 sm:h-11 px-4 sm:px-6 text-sm sm:text-base'
-        >
-          <Plus className='h-5 w-5 mr-2' />
-          <span>Tambah Ruang</span>
-        </Button>
+
+        {/* Filters Row */}
+        <div className='flex flex-col md:flex-row items-start md:items-center gap-4 pt-1'>
+          <div className='flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0 scrollbar-hide max-w-full'>
+            {[
+              { id: 'all', label: 'Semua Status' },
+              { id: 'ACTIVE', label: 'Aktif' },
+              { id: 'MAINTENANCE', label: 'Maintenance' },
+              { id: 'INACTIVE', label: 'Nonaktif' }
+            ].map((status) => (
+              <Button
+                key={status.id}
+                variant={selectedStatus === status.id ? 'default' : 'outline'}
+                size='sm'
+                onClick={() => setSelectedStatus(status.id as any)}
+                className={`h-9 px-4 rounded-full text-xs font-semibold whitespace-nowrap transition-all ${selectedStatus === status.id
+                  ? 'bg-blue-600 text-white shadow-md'
+                  : 'bg-white text-gray-600 hover:bg-gray-50 border-gray-200'
+                  }`}
+              >
+                {status.label}
+              </Button>
+            ))}
+          </div>
+
+          <div className='w-full md:w-[200px]'>
+            <Select
+              value={capacityRange}
+              onValueChange={setCapacityRange}
+            >
+              <SelectTrigger className='h-9 text-xs sm:text-sm rounded-lg border-gray-200 shadow-sm bg-white'>
+                <div className='flex items-center gap-2'>
+                  <Users className='h-3.5 w-3.5 text-gray-400' />
+                  <SelectValue placeholder='Kapasitas' />
+                </div>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value='all'>Semua Kapasitas</SelectItem>
+                <SelectItem value='<20'>Kecil (&lt; 20)</SelectItem>
+                <SelectItem value='20-50'>Sedang (20 - 50)</SelectItem>
+                <SelectItem value='50-100'>Besar (50 - 100)</SelectItem>
+                <SelectItem value='>100'>Sangat Besar (&gt; 100)</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
       </div>
 
-      {/* Table */}
-      <div className='bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden'>
+      {/* Table Section */}
+      <div className='bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden relative'>
+        {/* Subtle Loading Overlay for Updates */}
+        {isFetching && !isInitialLoading && (
+          <div className='absolute inset-0 bg-white/50 backdrop-blur-[1px] z-10 flex items-center justify-center text-center'>
+            <div className='bg-white px-4 py-2 rounded-full shadow-lg flex items-center gap-2 border border-gray-100'>
+              <div className='animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600'></div>
+              <span className='text-xs font-medium text-gray-600'>Memperbarui data...</span>
+            </div>
+          </div>
+        )}
+
         <div className='overflow-x-auto max-w-full'>
           <Table className='w-full min-w-[640px]'>
             <TableHeader>
@@ -478,106 +314,15 @@ function RouteComponent() {
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={handleSubmitCreate}>
-            <div className='grid gap-4 py-4'>
-              <div className='grid gap-2'>
-                <label htmlFor='code' className='text-sm font-medium'>
-                  Kode Ruangan <span className='text-red-500'>*</span>
-                </label>
-                <Input
-                  id='code'
-                  value={formData.code}
-                  onChange={(e) =>
-                    setFormData({ ...formData, code: e.target.value })
-                  }
-                  placeholder='A101'
-                  required
-                />
-              </div>
-              <div className='grid gap-2'>
-                <label htmlFor='name' className='text-sm font-medium'>
-                  Nama Ruangan <span className='text-red-500'>*</span>
-                </label>
-                <Input
-                  id='name'
-                  value={formData.name}
-                  onChange={(e) =>
-                    setFormData({ ...formData, name: e.target.value })
-                  }
-                  placeholder='Ruang Kelas A101'
-                  required
-                />
-              </div>
-              <div className='grid gap-2'>
-                <label htmlFor='capacity' className='text-sm font-medium'>
-                  Kapasitas Ruangan <span className='text-red-500'>*</span>
-                </label>
-                <Input
-                  id='capacity'
-                  type='number'
-                  min={1}
-                  value={formData.capacity}
-                  onChange={(e) =>
-                    setFormData({ ...formData, capacity: e.target.value })
-                  }
-                  required
-                />
-              </div>
-              <div className='grid gap-2'>
-                <label htmlFor='facilities' className='text-sm font-medium'>
-                  Fasilitas (pisahkan dengan koma)
-                </label>
-                <textarea
-                  id='facilities'
-                  value={formData.facilities}
-                  onChange={(e) =>
-                    setFormData({ ...formData, facilities: e.target.value })
-                  }
-                  placeholder='AC, Proyektor, Whiteboard'
-                  rows={3}
-                  className='block w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500'
-                />
-              </div>
-              <div className='grid gap-2'>
-                <label htmlFor='description' className='text-sm font-medium'>
-                  Deskripsi/Catatan
-                </label>
-                <textarea
-                  id='description'
-                  value={formData.description}
-                  onChange={(e) =>
-                    setFormData({ ...formData, description: e.target.value })
-                  }
-                  placeholder='Ruang kelas untuk kuliah umum'
-                  rows={3}
-                  className='block w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500'
-                />
-              </div>
-              <div className='grid gap-2'>
-                <label htmlFor='image' className='text-sm font-medium'>
-                  Foto Ruangan
-                </label>
-                <Input
-                  id='image'
-                  type='file'
-                  accept='image/*'
-                  onChange={handleFileChange}
-                />
-              </div>
-              {formError && <p className='text-sm text-red-600'>{formError}</p>}
-            </div>
-            <DialogFooter>
-              <Button
-                type='button'
-                variant='outline'
-                onClick={() => setIsCreateModalOpen(false)}
-                disabled={isSubmitting}
-              >
-                Batal
-              </Button>
-              <Button type='submit' disabled={isSubmitting}>
-                {isSubmitting ? 'Menyimpan...' : 'Tambah'}
-              </Button>
-            </DialogFooter>
+            <RoomForm
+              formData={formData}
+              setFormData={setFormData}
+              onFileChange={handleFileChange}
+              formError={formError}
+              isSubmitting={isSubmitting}
+              onCancel={() => setIsCreateModalOpen(false)}
+              submitLabel="Tambah"
+            />
           </form>
         </DialogContent>
       </Dialog>
@@ -587,262 +332,37 @@ function RouteComponent() {
         <DialogContent className='sm:max-w-lg max-h-[90vh] overflow-y-auto'>
           <DialogHeader>
             <DialogTitle>Edit Ruangan</DialogTitle>
-            <DialogDescription>Use informasi ruangan</DialogDescription>
+            <DialogDescription>Perbarui informasi ruangan</DialogDescription>
           </DialogHeader>
           <form onSubmit={handleSubmitEdit}>
-            <div className='grid gap-4 py-4'>
-              <div className='grid gap-2'>
-                <label htmlFor='edit-code' className='text-sm font-medium'>
-                  Kode Ruangan <span className='text-red-500'>*</span>
-                </label>
-                <Input
-                  id='edit-code'
-                  value={formData.code}
-                  onChange={(e) =>
-                    setFormData({ ...formData, code: e.target.value })
-                  }
-                  required
-                />
-              </div>
-              <div className='grid gap-2'>
-                <label htmlFor='edit-name' className='text-sm font-medium'>
-                  Nama Ruangan <span className='text-red-500'>*</span>
-                </label>
-                <Input
-                  id='edit-name'
-                  value={formData.name}
-                  onChange={(e) =>
-                    setFormData({ ...formData, name: e.target.value })
-                  }
-                  required
-                />
-              </div>
-              <div className='grid gap-2'>
-                <label htmlFor='edit-capacity' className='text-sm font-medium'>
-                  Kapasitas Ruangan
-                </label>
-                <Input
-                  id='edit-capacity'
-                  type='number'
-                  min={1}
-                  value={formData.capacity}
-                  onChange={(e) =>
-                    setFormData({ ...formData, capacity: e.target.value })
-                  }
-                  required
-                />
-              </div>
-              <div className='grid gap-2'>
-                <label htmlFor='edit-facilities' className='text-sm font-medium'>
-                  Fasilitas (pisahkan dengan koma)
-                </label>
-                <textarea
-                  id='edit-facilities'
-                  value={formData.facilities}
-                  onChange={(e) =>
-                    setFormData({ ...formData, facilities: e.target.value })
-                  }
-                  rows={3}
-                  className='block w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500'
-                />
-              </div>
-              <div className='grid gap-2'>
-                <label
-                  htmlFor='edit-description'
-                  className='text-sm font-medium'
-                >
-                  Deskripsi/Catatan
-                </label>
-                <textarea
-                  id='edit-description'
-                  value={formData.description}
-                  onChange={(e) =>
-                    setFormData({ ...formData, description: e.target.value })
-                  }
-                  rows={3}
-                  className='block w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500'
-                />
-              </div>
-              <div className='grid gap-2'>
-                <label htmlFor='edit-status' className='text-sm font-medium'>
-                  Status Ruangan <span className='text-red-500'>*</span>
-                </label>
-                <Select
-                  value={formData.status}
-                  onValueChange={(value) =>
-                    setFormData({
-                      ...formData,
-                      status: value as Room['status'],
-                    })
-                  }
-                >
-                  <SelectTrigger id='edit-status'>
-                    <SelectValue placeholder='Pilih Status' />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value='ACTIVE'>Aktif</SelectItem>
-                    <SelectItem value='MAINTENANCE'>Maintenance</SelectItem>
-                    <SelectItem value='INACTIVE'>Nonaktif</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className='grid gap-2'>
-                <label htmlFor='edit-image' className='text-sm font-medium'>
-                  Foto Ruangan (Upload baru untuk mengganti)
-                </label>
-                <Input
-                  id='edit-image'
-                  type='file'
-                  accept='image/*'
-                  onChange={handleFileChange}
-                />
-              </div>
-              {formError && <p className='text-sm text-red-600'>{formError}</p>}
-            </div>
-            <DialogFooter>
-              <Button
-                type='button'
-                variant='outline'
-                onClick={() => setIsEditModalOpen(false)}
-                disabled={isSubmitting}
-              >
-                Batal
-              </Button>
-              <Button type='submit' disabled={isSubmitting}>
-                {isSubmitting ? 'Menyimpan...' : 'Simpan'}
-              </Button>
-            </DialogFooter>
+            <RoomForm
+              formData={formData}
+              setFormData={setFormData}
+              onFileChange={handleFileChange}
+              formError={formError}
+              isSubmitting={isSubmitting}
+              onCancel={() => setIsEditModalOpen(false)}
+              submitLabel="Simpan"
+              showStatus
+            />
           </form>
         </DialogContent>
       </Dialog>
 
       {/* Detail Room Modal */}
-      <Dialog open={isDetailModalOpen} onOpenChange={setIsDetailModalOpen}>
-        <DialogContent className='sm:max-w-lg max-h-[90vh] overflow-y-auto'>
-          <DialogHeader>
-            <DialogTitle>Detail Ruangan</DialogTitle>
-          </DialogHeader>
-          {selectedRoom && (
-            <div className='space-y-6 py-4'>
-              {/* Image Gallery */}
-              <div className='space-y-2'>
-                <p className='text-sm font-semibold text-gray-700'>Foto Ruangan</p>
-                {selectedRoom.images && selectedRoom.images.length > 0 ? (
-                  <div className='flex gap-4 overflow-x-auto pb-4 snap-x'>
-                    {selectedRoom.images.map((path, idx) => (
-                      <div
-                        key={idx}
-                        className='relative flex-shrink-0 w-full sm:w-80 aspect-video rounded-xl overflow-hidden bg-gray-100 border border-gray-200 snap-center shadow-sm'
-                      >
-                        <img
-                          src={`${import.meta.env.VITE_API_URL}/rooms/${selectedRoom.id}/image?path=${encodeURIComponent(path)}`}
-                          alt={`${selectedRoom.name} - ${idx + 1}`}
-                          className='h-full w-full object-cover transition-transform hover:scale-105 duration-300'
-                        />
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className='w-full aspect-video rounded-xl bg-gray-50 border-2 border-dashed border-gray-200 flex flex-col items-center justify-center text-gray-400'>
-                    <Camera className='h-12 w-12 mb-2 opacity-20' />
-                    <p className='text-xs font-medium'>Belum ada foto ruangan</p>
-                  </div>
-                )}
-              </div>
-
-              <div className='grid grid-cols-2 gap-6 bg-gray-50 p-4 rounded-xl border border-gray-100'>
-                <div>
-                  <p className='text-[10px] uppercase tracking-wider font-bold text-gray-400 mb-1'>Kode Ruang</p>
-                  <p className='text-sm font-semibold text-gray-900 bg-white px-3 py-2 rounded-lg border border-gray-200 shadow-sm inline-block min-w-[80px] text-center'>
-                    {selectedRoom.code}
-                  </p>
-                </div>
-                <div>
-                  <p className='text-[10px] uppercase tracking-wider font-bold text-gray-400 mb-1'>Kapasitas</p>
-                  <p className='text-sm font-semibold text-gray-900 bg-white px-3 py-2 rounded-lg border border-gray-200 shadow-sm inline-block min-w-[80px] text-center'>
-                    {selectedRoom.capacity} Orang
-                  </p>
-                </div>
-              </div>
-
-              <div className='space-y-1.5'>
-                <p className='text-[10px] uppercase tracking-wider font-bold text-gray-400'>Nama Ruangan</p>
-                <p className='text-base font-bold text-gray-900'>{selectedRoom.name}</p>
-              </div>
-
-              {selectedRoom.description && (
-                <div className='space-y-1.5'>
-                  <p className='text-[10px] uppercase tracking-wider font-bold text-gray-400'>Deskripsi</p>
-                  <p className='text-sm text-gray-600 leading-relaxed bg-blue-50/50 p-3 rounded-lg border border-blue-100/30'>
-                    {selectedRoom.description}
-                  </p>
-                </div>
-              )}
-
-              {selectedRoom.facilities && selectedRoom.facilities.length > 0 && (
-                <div className='space-y-2'>
-                  <p className='text-[10px] uppercase tracking-wider font-bold text-gray-400'>Fasilitas</p>
-                  <div className='flex flex-wrap gap-2'>
-                    {selectedRoom.facilities.map((facility, index) => (
-                      <span
-                        key={index}
-                        className='inline-flex items-center rounded-lg bg-green-50 px-2.5 py-1 text-xs font-semibold text-green-700 border border-green-100 shadow-sm'
-                      >
-                        <div className='w-1 h-1 rounded-full bg-green-400 mr-2' />
-                        {facility}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              <div className='pt-2 border-t border-gray-100'>
-                <p className='text-[10px] uppercase tracking-wider font-bold text-gray-400 mb-2'>Status</p>
-                <span
-                  className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-bold ring-1 ring-inset ${selectedRoom.status === 'ACTIVE'
-                    ? 'bg-green-50 text-green-700 ring-green-600/20'
-                    : selectedRoom.status === 'MAINTENANCE'
-                      ? 'bg-yellow-50 text-yellow-700 ring-yellow-600/20'
-                      : 'bg-red-50 text-red-700 ring-red-600/20'
-                    }`}
-                >
-                  <span className={`w-1.5 h-1.5 rounded-full mr-2 ${selectedRoom.status === 'ACTIVE' ? 'bg-green-500' : selectedRoom.status === 'MAINTENANCE' ? 'bg-yellow-500' : 'bg-red-500'}`} />
-                  {selectedRoom.status === 'ACTIVE' ? 'Aktif' : selectedRoom.status === 'MAINTENANCE' ? 'Maintenance' : 'Nonaktif'}
-                </span>
-              </div>
-            </div>
-          )}
-          <DialogFooter>
-            <Button onClick={() => setIsDetailModalOpen(false)}>Tutup</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <DetailRoomModal
+        room={selectedRoom}
+        isOpen={isDetailModalOpen}
+        onClose={() => setIsDetailModalOpen(false)}
+      />
 
       {/* Delete Confirmation Dialog */}
-      <AlertDialog
-        open={isDeleteDialogOpen}
-        onOpenChange={setIsDeleteDialogOpen}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Hapus Ruangan</AlertDialogTitle>
-            <AlertDialogDescription>
-              Apakah Anda yakin ingin menghapus ruangan{' '}
-              <strong>{selectedRoom?.name}</strong>? Tindakan ini tidak dapat
-              dibatalkan.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Batal</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleConfirmDelete}
-              className='bg-red-600 hover:bg-red-700'
-            >
-              Hapus
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <DeleteRoomDialog
+        room={selectedRoom}
+        isOpen={isDeleteDialogOpen}
+        onClose={() => setIsDeleteDialogOpen(false)}
+        onConfirm={handleConfirmDelete}
+      />
     </div>
   );
 }

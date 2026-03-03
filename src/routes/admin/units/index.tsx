@@ -47,10 +47,12 @@ export const Route = createFileRoute('/admin/units/')({
 function RouteComponent() {
   const [units, setUnits] = useState<Unit[]>([]);
   const [filteredUnits, setFilteredUnits] = useState<Unit[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isInitialLoading, setIsInitialLoading] = useState(true);
+  const [isFetching, setIsFetching] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState<'all' | 'FAKULTAS' | 'PRODI' | 'HIMA'>('all');
 
   // Modal states
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -81,23 +83,26 @@ function RouteComponent() {
     return () => clearTimeout(timer);
   }, [searchQuery]);
 
-  // Filter units based on search
+  // Filter units based on search and category
   useEffect(() => {
-    if (!debouncedSearchQuery.trim()) {
-      setFilteredUnits(units);
-      return;
+    let filtered = units;
+
+    if (debouncedSearchQuery.trim()) {
+      const query = debouncedSearchQuery.toLowerCase();
+      filtered = filtered.filter(
+        (unit) =>
+          unit.name.toLowerCase().includes(query) ||
+          unit.code.toLowerCase().includes(query) ||
+          unit.description?.toLowerCase().includes(query),
+      );
     }
 
-    const query = debouncedSearchQuery.toLowerCase();
-    const filtered = units.filter(
-      (unit) =>
-        unit.name.toLowerCase().includes(query) ||
-        unit.code.toLowerCase().includes(query) ||
-        unit.category.toLowerCase().includes(query) ||
-        unit.description?.toLowerCase().includes(query),
-    );
+    if (selectedCategory !== 'all') {
+      filtered = filtered.filter((unit) => unit.category === selectedCategory);
+    }
+
     setFilteredUnits(filtered);
-  }, [debouncedSearchQuery, units]);
+  }, [debouncedSearchQuery, units, selectedCategory]);
 
   useEffect(() => {
     fetchUnits();
@@ -105,20 +110,20 @@ function RouteComponent() {
 
   const fetchUnits = async () => {
     try {
-      setIsLoading(true);
+      setIsFetching(true);
       setError(null);
       const data = await unitService.getUnits();
       setUnits(data);
-      setFilteredUnits(data);
     } catch (err) {
       console.error('Failed to fetch units:', err);
       const error = err as AxiosError<{ message: string }>;
       setError(
         error.response?.data?.message ||
-          'Gagal memuat data unit. Silakan coba lagi.',
+        'Gagal memuat data unit. Silakan coba lagi.',
       );
     } finally {
-      setIsLoading(false);
+      setIsFetching(false);
+      setIsInitialLoading(false);
     }
   };
 
@@ -193,7 +198,7 @@ function RouteComponent() {
       const error = err as AxiosError<{ message: string }>;
       setFormError(
         error.response?.data?.message ||
-          'Gagal membuat unit. Silakan coba lagi.',
+        'Gagal membuat unit. Silakan coba lagi.',
       );
     } finally {
       setIsSubmitting(false);
@@ -227,7 +232,7 @@ function RouteComponent() {
       const error = err as AxiosError<{ message: string }>;
       setFormError(
         error.response?.data?.message ||
-          'Gagal mengupdate unit. Silakan coba lagi.',
+        'Gagal mengupdate unit. Silakan coba lagi.',
       );
     } finally {
       setIsSubmitting(false);
@@ -246,7 +251,7 @@ function RouteComponent() {
       const error = err as AxiosError<{ message: string }>;
       alert(
         error.response?.data?.message ||
-          'Gagal menghapus unit. Silakan coba lagi.',
+        'Gagal menghapus unit. Silakan coba lagi.',
       );
     }
   };
@@ -266,12 +271,12 @@ function RouteComponent() {
     );
   };
 
-  if (isLoading) {
+  if (isInitialLoading) {
     return (
-      <div className='flex items-center justify-center min-h-screen'>
+      <div className='flex items-center justify-center min-h-[400px]'>
         <div className='text-center'>
           <div className='animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto'></div>
-          <p className='mt-4 text-gray-600'>Memuat data unit...</p>
+          <p className='mt-4 text-gray-600 font-medium'>Memuat data unit...</p>
         </div>
       </div>
     );
@@ -289,7 +294,7 @@ function RouteComponent() {
   }
 
   return (
-    <div className='container mx-auto px-2 sm:px-4 py-2 sm:py-4 max-w-7xl'>
+    <div className='container mx-auto px-2 sm:px-4 py-2 sm:py-4'>
       {/* Header */}
       <div className='mb-4 sm:mb-6'>
         <h1 className='text-xl sm:text-2xl font-bold text-gray-900 mb-1 sm:mb-2'>
@@ -300,37 +305,67 @@ function RouteComponent() {
         </p>
       </div>
 
-      {error && (
-        <div className='bg-red-50 border border-red-200 rounded-lg p-4 mb-4'>
-          <p className='text-red-700'>{error}</p>
+      <div className='mb-6 space-y-4'>
+        {/* Search & Add Button Row */}
+        <div className='flex items-center gap-2 w-full'>
+          <div className='relative flex-1'>
+            <Search className='absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400' />
+            <Input
+              type='text'
+              placeholder='Cari unit...'
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className='pl-10 text-sm h-11 border-gray-200 focus:ring-blue-500 rounded-xl shadow-sm w-full bg-white'
+            />
+          </div>
+          <Button
+            onClick={handleCreate}
+            className='whitespace-nowrap h-11 px-6 text-sm font-semibold bg-blue-600 hover:bg-blue-700 text-white rounded-xl shadow-sm flex items-center gap-2'
+          >
+            <Plus className='h-5 w-5' />
+            <span>Tambah Unit</span>
+          </Button>
         </div>
-      )}
 
-      {/* Search and Add Button */}
-      <div className='mb-4 sm:mb-6 flex flex-row justify-between gap-2'>
-        <div className='relative flex-1'>
-          <Search className='absolute left-2 sm:left-3 top-1/2 -translate-y-1/2 h-3 w-3 sm:h-4 sm:w-4 text-gray-400' />
-          <Input
-            type='text'
-            placeholder='Cari unit...'
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className='pl-7 sm:pl-10 text-sm h-9 sm:h-10'
-          />
+        {/* Filters Row - Chips */}
+        <div className='flex flex-col md:flex-row items-start md:items-center gap-4 pt-1'>
+          <div className='flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0 scrollbar-hide max-w-full'>
+            {[
+              { id: 'all', label: 'Semua Kategori' },
+              { id: 'FAKULTAS', label: 'Fakultas' },
+              { id: 'PRODI', label: 'Program Studi' },
+              { id: 'HIMA', label: 'Himpunan Mahasiswa' }
+            ].map((cat) => (
+              <Button
+                key={cat.id}
+                variant={selectedCategory === cat.id ? 'default' : 'outline'}
+                size='sm'
+                onClick={() => setSelectedCategory(cat.id as any)}
+                className={`h-9 px-4 rounded-full text-xs font-semibold whitespace-nowrap transition-all ${selectedCategory === cat.id
+                  ? 'bg-blue-600 text-white shadow-md'
+                  : 'bg-white text-gray-600 hover:bg-gray-50 border-gray-200'
+                  }`}
+              >
+                {cat.label}
+              </Button>
+            ))}
+          </div>
         </div>
-        <Button
-          onClick={handleCreate}
-          className='whitespace-nowrap h-10 sm:h-11 px-4 sm:px-6 text-sm sm:text-base'
-        >
-          <Plus className='h-5 w-5 mr-2' />
-          <span>Tambah Unit</span>
-        </Button>
       </div>
 
-      {/* Table */}
-      <div className='bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden'>
-        <div className='overflow-x-auto'>
-          <Table>
+      {/* Table Section */}
+      <div className='bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden relative'>
+        {/* Subtle Loading Overlay for Updates */}
+        {isFetching && !isInitialLoading && (
+          <div className='absolute inset-0 bg-white/50 backdrop-blur-[1px] z-10 flex items-center justify-center text-center'>
+            <div className='bg-white px-4 py-2 rounded-full shadow-lg flex items-center gap-2 border border-gray-100'>
+              <div className='animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600'></div>
+              <span className='text-xs font-medium text-gray-600'>Memperbarui data...</span>
+            </div>
+          </div>
+        )}
+        <div className='overflow-x-auto max-w-full'>
+          <Table className='w-full min-w-[640px]'>
             <TableHeader>
               <TableRow>
                 <TableHead className='hidden sm:table-cell w-8 sm:w-12 text-center text-xs sm:text-sm'>ID</TableHead>

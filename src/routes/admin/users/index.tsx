@@ -49,7 +49,8 @@ function RouteComponent() {
   const [users, setUsers] = useState<User[]>([]);
   const [roles, setRoles] = useState<Role[]>([]);
   const [units, setUnits] = useState<Unit[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isInitialLoading, setIsInitialLoading] = useState(true);
+  const [isFetching, setIsFetching] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
@@ -95,7 +96,7 @@ function RouteComponent() {
 
   const fetchData = async () => {
     try {
-      setIsLoading(true);
+      setIsFetching(true);
       setError(null);
 
       // Fetch users with filters and pagination
@@ -112,7 +113,7 @@ function RouteComponent() {
       setTotalPages(response.meta.last_page);
       setTotalItems(response.meta.total);
 
-      // Fetch roles and units (only on initial load or if empty)
+      // Fetch roles and units (only if empty)
       if (roles.length === 0 || units.length === 0) {
         const [rolesData, unitsData] = await Promise.all([
           roleService.getRoles(),
@@ -129,7 +130,8 @@ function RouteComponent() {
         'Gagal memuat data. Silakan coba lagi.',
       );
     } finally {
-      setIsLoading(false);
+      setIsFetching(false);
+      setIsInitialLoading(false);
     }
   };
 
@@ -259,12 +261,12 @@ function RouteComponent() {
     }
   };
 
-  if (isLoading) {
+  if (isInitialLoading) {
     return (
-      <div className='flex items-center justify-center min-h-screen'>
+      <div className='flex items-center justify-center min-h-[400px]'>
         <div className='text-center'>
           <div className='animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto'></div>
-          <p className='mt-4 text-gray-600'>Memuat data user...</p>
+          <p className='mt-4 text-gray-600 font-medium'>Memuat data user...</p>
         </div>
       </div>
     );
@@ -295,22 +297,22 @@ function RouteComponent() {
 
       {/* Actions Bar */}
       <div className='space-y-3 mb-4 sm:mb-6'>
-        <div className='flex flex-row justify-between gap-2'>
+        <div className='flex items-center gap-2 w-full'>
           <div className='relative flex-1'>
-            <Search className='absolute left-2 sm:left-3 top-1/2 -translate-y-1/2 h-3 w-3 sm:h-4 sm:w-4 text-gray-400' />
+            <Search className='absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400' />
             <Input
               type='text'
-              placeholder='Cari...'
+              placeholder='Cari user...'
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className='pl-7 sm:pl-10 text-sm h-9 sm:h-10'
+              className='pl-10 text-sm h-11 border-gray-200 focus:ring-blue-500 rounded-xl shadow-sm w-full bg-white'
             />
           </div>
           <Button
             onClick={handleCreate}
-            className='whitespace-nowrap h-10 sm:h-11 px-4 sm:px-6 text-sm sm:text-base'
+            className='whitespace-nowrap h-11 px-6 text-sm font-semibold bg-blue-600 hover:bg-blue-700 text-white rounded-xl shadow-sm flex items-center gap-2'
           >
-            <Plus className='h-5 w-5 mr-2' />
+            <Plus className='h-5 w-5' />
             <span>Tambah User</span>
           </Button>
         </div>
@@ -344,8 +346,18 @@ function RouteComponent() {
         </div>
       </div>
 
-      {/* Table */}
-      <div className='bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden'>
+      {/* Table Section */}
+      <div className='bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden relative'>
+        {/* Subtle Loading Overlay for Updates */}
+        {isFetching && !isInitialLoading && (
+          <div className='absolute inset-0 bg-white/50 backdrop-blur-[1px] z-10 flex items-center justify-center'>
+            <div className='bg-white px-4 py-2 rounded-full shadow-lg flex items-center gap-2 border border-gray-100'>
+              <div className='animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600'></div>
+              <span className='text-xs font-medium text-gray-600'>Memperbarui data...</span>
+            </div>
+          </div>
+        )}
+
         <div className='overflow-x-auto'>
           <Table>
             <TableHeader>
@@ -469,7 +481,7 @@ function RouteComponent() {
             variant='outline'
             size='sm'
             onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-            disabled={currentPage === 1 || isLoading}
+            disabled={currentPage === 1 || isFetching}
             className='h-8 px-2 sm:px-3 text-xs sm:text-sm border-gray-200 hover:bg-gray-50'
           >
             <ChevronLeft className='h-4 w-4 mr-1 sm:mr-2' />
@@ -512,7 +524,7 @@ function RouteComponent() {
             onClick={() =>
               setCurrentPage((prev) => Math.min(prev + 1, totalPages))
             }
-            disabled={currentPage === totalPages || isLoading}
+            disabled={currentPage === totalPages || isFetching}
             className='h-8 px-2 sm:px-3 text-xs sm:text-sm border-gray-200 hover:bg-gray-50'
           >
             Next
