@@ -15,15 +15,21 @@ function StatCard({
   sub,
   icon,
   color,
+  onClick,
 }: {
   label: string;
   value: number | string;
   sub: string;
   icon: React.ReactNode;
   color: string;
+  onClick?: () => void;
 }) {
   return (
-    <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5 flex flex-col gap-3">
+    <div
+      onClick={onClick}
+      className={`bg-white rounded-xl border border-gray-200 shadow-sm p-5 flex flex-col gap-3 ${onClick ? 'cursor-pointer hover:shadow-md hover:border-blue-300 transition-all' : ''
+        }`}
+    >
       <div className="flex items-start justify-between">
         <span className="text-sm font-medium text-gray-600">{label}</span>
         <div className={`p-2 rounded-lg ${color}`}>{icon}</div>
@@ -55,6 +61,9 @@ function RouteComponent() {
     (d) => d.status === 'DRAFT' || d.status === 'REVISION',
   ).length;
 
+  const goToPinjam = (status: string) =>
+    navigate({ to: '/peminjam/pinjam', search: { status } } as never);
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -73,15 +82,9 @@ function RouteComponent() {
               navigate({
                 to: '/peminjam/pinjam/detail-tempat',
                 search: {
-                  editId: undefined,
-                  roomId: undefined,
-                  bookingDate: undefined,
-                  startTime: undefined,
-                  endTime: undefined,
-                  purpose: undefined,
-                  ketuaNama: undefined,
-                  ketuaNim: undefined,
-                  ketuaHp: undefined,
+                  editId: undefined, roomId: undefined, bookingDate: undefined,
+                  startTime: undefined, endTime: undefined, purpose: undefined,
+                  ketuaNama: undefined, ketuaNim: undefined, ketuaHp: undefined,
                 },
               })
             }
@@ -91,8 +94,7 @@ function RouteComponent() {
           </Button>
           <Button
             className="gap-2"
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            onClick={() => navigate({ to: '/peminjam/reservasi' } as any)}
+            onClick={() => navigate({ to: '/peminjam/reservasi' } as never)}
           >
             <CalendarCheck className="w-4 h-4" />
             Reservasi
@@ -108,6 +110,7 @@ function RouteComponent() {
           sub="Semua pengajuan Anda"
           icon={<FileText className="w-5 h-5 text-blue-600" />}
           color="bg-blue-50"
+          onClick={() => goToPinjam('ALL')}
         />
         <StatCard
           label="Disetujui"
@@ -115,6 +118,7 @@ function RouteComponent() {
           sub="Selesai diproses"
           icon={<CheckCircle className="w-5 h-5 text-green-600" />}
           color="bg-green-50"
+          onClick={() => goToPinjam('APPROVED')}
         />
         <StatCard
           label="Sedang Diproses"
@@ -122,6 +126,7 @@ function RouteComponent() {
           sub="Menunggu persetujuan"
           icon={<Clock className="w-5 h-5 text-amber-600" />}
           color="bg-amber-50"
+          onClick={() => goToPinjam('IN_PROGRESS')}
         />
         <StatCard
           label="Perlu Tindakan"
@@ -129,6 +134,7 @@ function RouteComponent() {
           sub="Draft atau perlu revisi"
           icon={<AlertCircle className="w-5 h-5 text-red-500" />}
           color="bg-red-50"
+          onClick={() => goToPinjam('DRAFT')}
         />
       </div>
 

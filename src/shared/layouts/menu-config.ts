@@ -1,11 +1,9 @@
 import {
   LayoutDashboard,
   Users,
-  Calendar,
   Building2,
   ClipboardList,
   BookOpen,
-  CalendarCheck,
   Home,
   History,
   DoorOpen,
@@ -246,9 +244,9 @@ export const menuConfigurations: Record<UserRole, MenuConfig> = {
             icon: ClipboardList,
           },
           {
-            title: 'Ajukan Peminjaman',
+            title: 'Daftar Pengajuan',
             url: '/peminjam/pinjam',
-            icon: CalendarCheck,
+            icon: ClipboardList,
           },
         ],
       },
