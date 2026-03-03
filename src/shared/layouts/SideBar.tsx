@@ -41,7 +41,7 @@ export function SideBar({ menuSections, footerLink }: SideBarProps) {
 
   return (
     <Sidebar collapsible='icon'>
-      <SidebarHeader>
+      <SidebarHeader className='pt-6'>
         <SidebarTrigger className='text-foreground group-data-[collapsible=icon]:ml-0' />
       </SidebarHeader>
 
