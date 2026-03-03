@@ -55,21 +55,46 @@ export interface UpdateUserData {
   unit_id?: number;
 }
 
+export interface PaginatedUserResponse {
+  users: User[];
+  meta: {
+    current_page: number;
+    last_page: number;
+    per_page: number;
+    total: number;
+  };
+}
+
 export const userService = {
   /**
-   * Get all users
+   * Get all users (Paginated)
    */
   async getUsers(params?: {
-    role_id?: number;
-    unit_id?: number;
+    role_id?: number | string;
+    unit_id?: number | string;
     status?: string;
     search?: string;
     page?: number;
     per_page?: number;
-  }): Promise<User[]> {
-    const response = await api.get<UserResponse>('/users', { params });
-    // Backend returns paginated response
-    return response.data.data?.data ?? [];
+  }): Promise<PaginatedUserResponse> {
+    // Clean params: convert 'all' strings to undefined
+    const cleanParams = { ...params };
+    if (cleanParams.role_id === 'all') cleanParams.role_id = undefined;
+    if (cleanParams.unit_id === 'all') cleanParams.unit_id = undefined;
+
+    const response = await api.get<UserResponse>('/users', {
+      params: cleanParams,
+    });
+
+    return {
+      users: response.data.data?.data ?? [],
+      meta: {
+        current_page: response.data.data?.current_page ?? 1,
+        last_page: response.data.data?.last_page ?? 1,
+        per_page: response.data.data?.per_page ?? 15,
+        total: response.data.data?.total ?? 0,
+      },
+    };
   },
 
   /**

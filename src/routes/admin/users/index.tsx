@@ -6,7 +6,7 @@ import { roleService, type Role } from '@/services/role.service';
 import { unitService, type Unit } from '@/services/unit.service';
 import { Button } from '@/shared/components/ui/button/button';
 import { Input } from '@/shared/components/ui/input';
-import { Plus, Pencil, Trash2, Search, Eye } from 'lucide-react';
+import { Plus, Pencil, Trash2, Search, Eye, ChevronLeft, ChevronRight } from 'lucide-react';
 import {
   Table,
   TableBody,
@@ -47,7 +47,6 @@ export const Route = createFileRoute('/admin/users/')({
 
 function RouteComponent() {
   const [users, setUsers] = useState<User[]>([]);
-  const [filteredUsers, setFilteredUsers] = useState<User[]>([]);
   const [roles, setRoles] = useState<Role[]>([]);
   const [units, setUnits] = useState<Unit[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -56,6 +55,11 @@ function RouteComponent() {
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
   const [selectedRoleId, setSelectedRoleId] = useState<string>('all');
   const [selectedUnitId, setSelectedUnitId] = useState<string>('all');
+
+  // Pagination states
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
 
   // Modal states
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -79,63 +83,50 @@ function RouteComponent() {
   useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedSearchQuery(searchQuery);
-    }, 300);
+    }, 500);
 
     return () => clearTimeout(timer);
   }, [searchQuery]);
 
-  // Filter users based on search, role, and unit
+  // Reset to page 1 when filters change
   useEffect(() => {
-    let filtered = users;
-
-    // Filter by search query
-    if (debouncedSearchQuery.trim()) {
-      const query = debouncedSearchQuery.toLowerCase();
-      filtered = filtered.filter(
-        (user) =>
-          user.name.toLowerCase().includes(query) ||
-          user.email.toLowerCase().includes(query) ||
-          user.role?.name.toLowerCase().includes(query) ||
-          user.unit?.name.toLowerCase().includes(query),
-      );
-    }
-
-    // Filter by role
-    if (selectedRoleId !== 'all') {
-      filtered = filtered.filter(
-        (user) => user.role_id === Number(selectedRoleId),
-      );
-    }
-
-    // Filter by unit
-    if (selectedUnitId !== 'all') {
-      filtered = filtered.filter(
-        (user) => user.unit_id === Number(selectedUnitId),
-      );
-    }
-
-    setFilteredUsers(filtered);
-  }, [debouncedSearchQuery, selectedRoleId, selectedUnitId, users]);
+    setCurrentPage(1);
+  }, [debouncedSearchQuery, selectedRoleId, selectedUnitId]);
 
   const fetchData = async () => {
     try {
       setIsLoading(true);
       setError(null);
-      const [usersData, rolesData, unitsData] = await Promise.all([
-        userService.getUsers(),
-        roleService.getRoles(),
-        unitService.getUnits(),
-      ]);
-      setUsers(usersData);
-      setFilteredUsers(usersData);
-      setRoles(rolesData);
-      setUnits(unitsData);
+
+      // Fetch users with filters and pagination
+      const response = await userService.getUsers({
+        page: currentPage,
+        search: debouncedSearchQuery,
+        role_id: selectedRoleId,
+        unit_id: selectedUnitId,
+        per_page: 10,
+      });
+
+      setUsers(response.users);
+      setCurrentPage(response.meta.current_page);
+      setTotalPages(response.meta.last_page);
+      setTotalItems(response.meta.total);
+
+      // Fetch roles and units (only on initial load or if empty)
+      if (roles.length === 0 || units.length === 0) {
+        const [rolesData, unitsData] = await Promise.all([
+          roleService.getRoles(),
+          unitService.getUnits(),
+        ]);
+        setRoles(rolesData);
+        setUnits(unitsData);
+      }
     } catch (err) {
       console.error('Failed to fetch data:', err);
       const error = err as AxiosError<{ message: string }>;
       setError(
         error.response?.data?.message ||
-          'Gagal memuat data. Silakan coba lagi.',
+        'Gagal memuat data. Silakan coba lagi.',
       );
     } finally {
       setIsLoading(false);
@@ -144,7 +135,7 @@ function RouteComponent() {
 
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [currentPage, debouncedSearchQuery, selectedRoleId, selectedUnitId]);
 
   const handleCreate = () => {
     setFormData({
@@ -204,7 +195,7 @@ function RouteComponent() {
       const error = err as AxiosError<{ message: string }>;
       setFormError(
         error.response?.data?.message ||
-          'Gagal membuat user. Silakan coba lagi.',
+        'Gagal membuat user. Silakan coba lagi.',
       );
     } finally {
       setIsSubmitting(false);
@@ -244,7 +235,7 @@ function RouteComponent() {
       const error = err as AxiosError<{ message: string }>;
       setFormError(
         error.response?.data?.message ||
-          'Gagal mengupdate user. Silakan coba lagi.',
+        'Gagal mengupdate user. Silakan coba lagi.',
       );
     } finally {
       setIsSubmitting(false);
@@ -263,7 +254,7 @@ function RouteComponent() {
       const error = err as AxiosError<{ message: string }>;
       alert(
         error.response?.data?.message ||
-          'Gagal menghapus user. Silakan coba lagi.',
+        'Gagal menghapus user. Silakan coba lagi.',
       );
     }
   };
@@ -379,22 +370,24 @@ function RouteComponent() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredUsers.length === 0 ? (
+              {users.length === 0 ? (
                 <TableRow>
                   <TableCell
                     colSpan={7}
                     className='text-center text-gray-500 h-32'
                   >
-                    {debouncedSearchQuery
-                      ? 'Tidak ada user yang sesuai dengan pencarian'
+                    {debouncedSearchQuery ||
+                      selectedRoleId !== 'all' ||
+                      selectedUnitId !== 'all'
+                      ? 'Tidak ada user yang sesuai dengan filter'
                       : 'Belum ada user'}
                   </TableCell>
                 </TableRow>
               ) : (
-                filteredUsers.map((user, index) => (
+                users.map((user, index) => (
                   <TableRow key={user.id}>
                     <TableCell className='font-medium text-center text-xs sm:text-sm py-2 sm:py-3'>
-                      {index + 1}
+                      {(currentPage - 1) * 10 + index + 1}
                     </TableCell>
                     <TableCell className='text-xs sm:text-sm font-medium text-gray-900 py-2 sm:py-3'>
                       <div>{user.name}</div>
@@ -453,6 +446,78 @@ function RouteComponent() {
               )}
             </TableBody>
           </Table>
+        </div>
+      </div>
+
+      {/* Pagination Controls */}
+      <div className='mt-4 flex flex-col sm:flex-row items-center justify-between gap-4 bg-white p-3 sm:p-4 rounded-lg border border-gray-200 shadow-sm'>
+        <div className='flex flex-col sm:flex-row items-center gap-3 sm:gap-6'>
+          <div className='text-xs sm:text-sm text-gray-600 font-medium'>
+            Menampilkan{' '}
+            <span className='font-bold text-blue-600'>
+              {users.length > 0 ? (currentPage - 1) * 10 + 1 : 0}
+            </span>{' '}
+            -{' '}
+            <span className='font-bold text-blue-600'>
+              {Math.min(currentPage * 10, totalItems)}
+            </span>{' '}
+            dari <span className='font-bold text-blue-600'>{totalItems}</span> entri
+          </div>
+        </div>
+        <div className='flex items-center gap-1 sm:gap-2'>
+          <Button
+            variant='outline'
+            size='sm'
+            onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+            disabled={currentPage === 1 || isLoading}
+            className='h-8 px-2 sm:px-3 text-xs sm:text-sm border-gray-200 hover:bg-gray-50'
+          >
+            <ChevronLeft className='h-4 w-4 mr-1 sm:mr-2' />
+            Prev
+          </Button>
+
+          {/* Page numbers */}
+          <div className='hidden md:flex items-center gap-1'>
+            {Array.from({ length: totalPages }, (_, i) => i + 1)
+              .filter((page) => {
+                return (
+                  page === 1 ||
+                  page === totalPages ||
+                  Math.abs(page - currentPage) <= 1
+                );
+              })
+              .map((page, index, array) => (
+                <div key={page} className='flex items-center gap-1'>
+                  {index > 0 && array[index - 1] !== page - 1 && (
+                    <span className='text-gray-400 px-1'>...</span>
+                  )}
+                  <Button
+                    variant={currentPage === page ? 'default' : 'outline'}
+                    size='sm'
+                    onClick={() => setCurrentPage(page)}
+                    className={`h-8 w-8 text-xs font-medium ${currentPage === page
+                      ? 'bg-blue-600 hover:bg-blue-700'
+                      : 'border-gray-200 hover:bg-gray-50'
+                      }`}
+                  >
+                    {page}
+                  </Button>
+                </div>
+              ))}
+          </div>
+
+          <Button
+            variant='outline'
+            size='sm'
+            onClick={() =>
+              setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+            }
+            disabled={currentPage === totalPages || isLoading}
+            className='h-8 px-2 sm:px-3 text-xs sm:text-sm border-gray-200 hover:bg-gray-50'
+          >
+            Next
+            <ChevronRight className='h-4 w-4 ml-1 sm:ml-2' />
+          </Button>
         </div>
       </div>
 

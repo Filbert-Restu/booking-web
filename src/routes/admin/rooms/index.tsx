@@ -10,6 +10,7 @@ import {
   Search,
   Trash2,
   Eye,
+  Camera,
 } from 'lucide-react';
 import {
   Table,
@@ -722,66 +723,91 @@ function RouteComponent() {
             <DialogTitle>Detail Ruangan</DialogTitle>
           </DialogHeader>
           {selectedRoom && (
-            <div className='space-y-4 py-4'>
-              {selectedRoom.image_url && (
-                <div className='aspect-video w-full overflow-hidden rounded-lg bg-gray-100'>
-                  <img
-                    src={selectedRoom.image_url}
-                    alt={selectedRoom.name}
-                    className='h-full w-full object-cover'
-                  />
-                </div>
-              )}
-              <div className='grid grid-cols-2 gap-4'>
+            <div className='space-y-6 py-4'>
+              {/* Image Gallery */}
+              <div className='space-y-2'>
+                <p className='text-sm font-semibold text-gray-700'>Foto Ruangan</p>
+                {selectedRoom.images && selectedRoom.images.length > 0 ? (
+                  <div className='flex gap-4 overflow-x-auto pb-4 snap-x'>
+                    {selectedRoom.images.map((path, idx) => (
+                      <div
+                        key={idx}
+                        className='relative flex-shrink-0 w-full sm:w-80 aspect-video rounded-xl overflow-hidden bg-gray-100 border border-gray-200 snap-center shadow-sm'
+                      >
+                        <img
+                          src={`${import.meta.env.VITE_API_URL}/rooms/${selectedRoom.id}/image?path=${encodeURIComponent(path)}`}
+                          alt={`${selectedRoom.name} - ${idx + 1}`}
+                          className='h-full w-full object-cover transition-transform hover:scale-105 duration-300'
+                        />
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className='w-full aspect-video rounded-xl bg-gray-50 border-2 border-dashed border-gray-200 flex flex-col items-center justify-center text-gray-400'>
+                    <Camera className='h-12 w-12 mb-2 opacity-20' />
+                    <p className='text-xs font-medium'>Belum ada foto ruangan</p>
+                  </div>
+                )}
+              </div>
+
+              <div className='grid grid-cols-2 gap-6 bg-gray-50 p-4 rounded-xl border border-gray-100'>
                 <div>
-                  <p className='text-sm font-medium text-gray-500'>Kode</p>
-                  <p className='text-sm text-gray-900'>{selectedRoom.code}</p>
+                  <p className='text-[10px] uppercase tracking-wider font-bold text-gray-400 mb-1'>Kode Ruang</p>
+                  <p className='text-sm font-semibold text-gray-900 bg-white px-3 py-2 rounded-lg border border-gray-200 shadow-sm inline-block min-w-[80px] text-center'>
+                    {selectedRoom.code}
+                  </p>
                 </div>
                 <div>
-                  <p className='text-sm font-medium text-gray-500'>Kapasitas</p>
-                  <p className='text-sm text-gray-900'>
+                  <p className='text-[10px] uppercase tracking-wider font-bold text-gray-400 mb-1'>Kapasitas</p>
+                  <p className='text-sm font-semibold text-gray-900 bg-white px-3 py-2 rounded-lg border border-gray-200 shadow-sm inline-block min-w-[80px] text-center'>
                     {selectedRoom.capacity} Orang
                   </p>
                 </div>
               </div>
-              <div>
-                <p className='text-sm font-medium text-gray-500'>
-                  Nama Ruangan
-                </p>
-                <p className='text-sm text-gray-900'>{selectedRoom.name}</p>
+
+              <div className='space-y-1.5'>
+                <p className='text-[10px] uppercase tracking-wider font-bold text-gray-400'>Nama Ruangan</p>
+                <p className='text-base font-bold text-gray-900'>{selectedRoom.name}</p>
               </div>
+
               {selectedRoom.description && (
-                <div>
-                  <p className='text-sm font-medium text-gray-500'>Deskripsi</p>
-                  <p className='text-sm text-gray-900'>
+                <div className='space-y-1.5'>
+                  <p className='text-[10px] uppercase tracking-wider font-bold text-gray-400'>Deskripsi</p>
+                  <p className='text-sm text-gray-600 leading-relaxed bg-blue-50/50 p-3 rounded-lg border border-blue-100/30'>
                     {selectedRoom.description}
                   </p>
                 </div>
               )}
+
               {selectedRoom.facilities && selectedRoom.facilities.length > 0 && (
-                <div>
-                  <p className='text-sm font-medium text-gray-500'>Fasilitas</p>
-                  <div className='mt-1 flex flex-wrap gap-2'>
+                <div className='space-y-2'>
+                  <p className='text-[10px] uppercase tracking-wider font-bold text-gray-400'>Fasilitas</p>
+                  <div className='flex flex-wrap gap-2'>
                     {selectedRoom.facilities.map((facility, index) => (
                       <span
                         key={index}
-                        className='inline-flex items-center rounded-full bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 ring-1 ring-inset ring-blue-700/10'
+                        className='inline-flex items-center rounded-lg bg-green-50 px-2.5 py-1 text-xs font-semibold text-green-700 border border-green-100 shadow-sm'
                       >
+                        <div className='w-1 h-1 rounded-full bg-green-400 mr-2' />
                         {facility}
                       </span>
                     ))}
                   </div>
                 </div>
               )}
-              <div>
-                <p className='text-sm font-medium text-gray-500'>Status</p>
+
+              <div className='pt-2 border-t border-gray-100'>
+                <p className='text-[10px] uppercase tracking-wider font-bold text-gray-400 mb-2'>Status</p>
                 <span
-                  className={`mt-1 inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${selectedRoom.status === 'ACTIVE'
-                    ? 'bg-green-100 text-green-700'
-                    : 'bg-red-100 text-red-700'
+                  className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-bold ring-1 ring-inset ${selectedRoom.status === 'ACTIVE'
+                    ? 'bg-green-50 text-green-700 ring-green-600/20'
+                    : selectedRoom.status === 'MAINTENANCE'
+                      ? 'bg-yellow-50 text-yellow-700 ring-yellow-600/20'
+                      : 'bg-red-50 text-red-700 ring-red-600/20'
                     }`}
                 >
-                  {selectedRoom.status === 'ACTIVE' ? 'Aktif' : 'Nonaktif'}
+                  <span className={`w-1.5 h-1.5 rounded-full mr-2 ${selectedRoom.status === 'ACTIVE' ? 'bg-green-500' : selectedRoom.status === 'MAINTENANCE' ? 'bg-yellow-500' : 'bg-red-500'}`} />
+                  {selectedRoom.status === 'ACTIVE' ? 'Aktif' : selectedRoom.status === 'MAINTENANCE' ? 'Maintenance' : 'Nonaktif'}
                 </span>
               </div>
             </div>
