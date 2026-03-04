@@ -14,6 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/shared/components/ui/select';
+import { InfoIcon, AlertCircleIcon } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -70,13 +71,26 @@ export function SignDocumentContent({
   );
 
   const isWadek1 = currentUser?.role?.slug === 'wadek1';
+  const userRole = currentUser?.role?.slug ?? '';
+  const rolesWithoutSignature = ['sumber-daya', 'kemahasiswaan'];
+  const isSignatureRequiredForRole = !rolesWithoutSignature.includes(userRole);
+
+  const needsSignatureCurrentDoc = useMemo(() => {
+    if (!isSignatureRequiredForRole) return false;
+    if (isWadek1) {
+      return selectedDocType === 'approval-sheet' || selectedDocType === 'executive-summary';
+    }
+    return selectedDocType === 'approval-sheet';
+  }, [userRole, isWadek1, isSignatureRequiredForRole, selectedDocType]);
+
   const isAllSigned = useMemo(() => {
+    if (!isSignatureRequiredForRole) return true;
     if (!isWadek1) return isSignatureEmbedded;
     return (
       signedDocTypes.has('approval-sheet') &&
       signedDocTypes.has('executive-summary')
     );
-  }, [isWadek1, isSignatureEmbedded, signedDocTypes]);
+  }, [isWadek1, isSignatureEmbedded, signedDocTypes, isSignatureRequiredForRole]);
 
   // Global loading lock to prevent any concurrent operations
   const globalLockRef = useRef({
@@ -448,7 +462,8 @@ export function SignDocumentContent({
         );
         return;
       }
-    } else if (!isSignatureEmbedded) {
+    } else if (isSignatureRequiredForRole && !isSignatureEmbedded) {
+      // Validate signature for roles that require it
       showConfirmation(
         'Tanda Tangan Belum Dibubuhkan',
         'Silakan klik button "Bubuhkan tanda tangan" terlebih dahulu untuk melihat pratinjau tanda tangan Anda pada dokumen sebelum menyetujuinya.',
@@ -467,7 +482,7 @@ export function SignDocumentContent({
   };
 
   const handleApproveDocument = async () => {
-    if (!signature) {
+    if (isSignatureRequiredForRole && !signature) {
       alert('Silakan upload atau gambar tanda tangan terlebih dahulu');
       return;
     }
@@ -588,11 +603,10 @@ export function SignDocumentContent({
     <div className='p-6 max-w-7xl mx-auto'>
       <div className='mb-6'>
         <h1 className='text-2xl font-bold text-gray-900'>
-          Tanda Tangani Dokumen
+          Review & Persetujuan
         </h1>
         <p className='text-gray-600 mt-1'>
-          Upload atau gambar tanda tangan Anda, lalu pilih dokumen untuk
-          ditandatangani
+          Silakan periksa detail pengajuan dan pratinjau dokumen sebelum memberikan persetujuan atau catatan revisi.
         </p>
       </div>
 
@@ -611,58 +625,92 @@ export function SignDocumentContent({
           />
         </div>
 
-        {/* Card Kanan: Preview Dokumen */}
-        <Card className='lg:col-span-5 relative z-0'>
-          <CardHeader>
-            <div className='flex items-center justify-between'>
-              <CardTitle>Preview Dokumen</CardTitle>
-              <Select
-                value={selectedDocType}
-                onValueChange={(val) => setSelectedDocType(val as DocumentType)}
-              >
-                <SelectTrigger className='w-50'>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value='proposal'>Proposal</SelectItem>
-                  <SelectItem value='approval-sheet'>
-                    Lembar Pengesahan
-                    {signedDocTypes.has('approval-sheet') && ' (Signed)'}
-                  </SelectItem>
-                  <SelectItem value='executive-summary'>
-                    Executive Summary
-                    {signedDocTypes.has('executive-summary') && ' (Signed)'}
-                  </SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </CardHeader>
-          <CardContent className='space-y-4'>
-            {/* Preview PDF */}
-            {pdfLoading && (
-              <div className='flex items-center justify-center h-150 border rounded-lg bg-gray-50'>
-                <p className='text-gray-500'>Memuat dokumen...</p>
-              </div>
-            )}
-            {!pdfLoading && pdfUrl && (
-              <div className='border rounded-lg overflow-hidden'>
-                <iframe
-                  src={pdfUrl}
-                  className='w-full h-150'
-                  title='Document Preview'
-                />
-              </div>
-            )}
-            {!pdfLoading && !pdfUrl && (
-              <div className='flex items-center justify-center h-150 border rounded-lg bg-gray-50'>
-                <p className='text-gray-500'>Dokumen tidak tersedia</p>
-              </div>
-            )}
+        {/* Container Kanan */}
+        <div className='lg:col-span-5 relative z-0 space-y-4'>
 
-            {/* Buttons: embed signature (no approve) + approve + revise */}
-            {signature && pdfUrl && (
-              <div className='space-y-3'>
-                <div className='w-full'>
+          {/* Info Alert untuk dokumen yang harus ditandatangani */}
+          {isSignatureRequiredForRole && !isAllSigned && (
+            <div className='bg-blue-50 border border-blue-200 rounded-lg p-4 flex gap-3'>
+              <InfoIcon className='w-5 h-5 text-blue-600 shrink-0 mt-0.5' />
+              <div>
+                <h5 className='font-semibold text-blue-800 text-sm mb-1'>
+                  Informasi Tanda Tangan
+                </h5>
+                <div className='text-sm text-blue-700'>
+                  {isWadek1
+                    ? 'Sebagai Wadek 1, Anda diwajibkan untuk menandatangani Lembar Pengesahan dan Executive Summary sebelum dapat menyetujui dokumen ini.'
+                    : 'Anda diwajibkan untuk membubuhkan tanda tangan pada Lembar Pengesahan sebelum dapat menyetujui dokumen ini.'}
+                  <br />
+                  <span className='font-medium'>Silakan pilih dokumen pada dropdown di bawah dan klik "Bubuhkan tanda tangan".</span>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {isSignatureRequiredForRole && isAllSigned && (
+            <div className='bg-green-50 border border-green-200 rounded-lg p-4 flex gap-3'>
+              <InfoIcon className='w-5 h-5 text-green-600 shrink-0 mt-0.5' />
+              <div>
+                <h5 className='font-semibold text-green-800 text-sm mb-1'>
+                  Tanda Tangan Lengkap
+                </h5>
+                <div className='text-sm text-green-700'>
+                  Semua dokumen yang memerlukan tanda tangan Anda telah ditandatangani. Anda dapat melanjutkan untuk menyetujui dokumen.
+                </div>
+              </div>
+            </div>
+          )}
+
+          <Card>
+            <CardHeader>
+              <div className='flex items-center justify-between'>
+                <CardTitle>Preview Dokumen</CardTitle>
+                <Select
+                  value={selectedDocType}
+                  onValueChange={(val) => setSelectedDocType(val as DocumentType)}
+                >
+                  <SelectTrigger className='w-50'>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value='proposal'>Proposal</SelectItem>
+                    <SelectItem value='approval-sheet'>
+                      Lembar Pengesahan
+                      {signedDocTypes.has('approval-sheet') && ' (Signed)'}
+                    </SelectItem>
+                    <SelectItem value='executive-summary'>
+                      Executive Summary
+                      {signedDocTypes.has('executive-summary') && ' (Signed)'}
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </CardHeader>
+            <CardContent className='space-y-4'>
+              {/* Preview PDF */}
+              {pdfLoading && (
+                <div className='flex items-center justify-center h-150 border rounded-lg bg-gray-50'>
+                  <p className='text-gray-500'>Memuat dokumen...</p>
+                </div>
+              )}
+              {!pdfLoading && pdfUrl && (
+                <div className='border rounded-lg overflow-hidden'>
+                  <iframe
+                    src={pdfUrl}
+                    className='w-full h-150'
+                    title='Document Preview'
+                  />
+                </div>
+              )}
+              {!pdfLoading && !pdfUrl && (
+                <div className='flex items-center justify-center h-150 border rounded-lg bg-gray-50'>
+                  <p className='text-gray-500'>Dokumen tidak tersedia</p>
+                </div>
+              )}
+
+              {/* Signature Button only shown when the current doc type needs a signature from the current user role */}
+              {needsSignatureCurrentDoc && signature && pdfUrl && (
+                <div className='w-full mt-4'>
                   <Button
                     onClick={confirmEmbedSignature}
                     disabled={loading || pdfLoading}
@@ -672,40 +720,56 @@ export function SignDocumentContent({
                     {loading ? 'Memproses...' : 'Bubuhkan tanda tangan'}
                   </Button>
                 </div>
-                <div className='flex gap-2 flex-wrap'>
-                  <Button
-                    onClick={handleReviseDocument}
-                    disabled={loading || pdfLoading}
-                    variant='destructive'
-                    className='flex-1 min-w-40'
-                  >
-                    {loading ? 'Memproses...' : 'Kirim Revisi'}
-                  </Button>
-                  <Button
-                    onClick={confirmApproveDocument}
-                    disabled={loading || pdfLoading}
-                    className={`flex-1 min-w-40 ${isWadek1 && !isAllSigned
-                      ? 'bg-gray-400 hover:bg-gray-400 cursor-not-allowed opacity-50'
-                      : ''
-                      }`}
-                  >
-                    {loading ? 'Memproses...' : 'Setujui'}
-                  </Button>
+              )}
+              {needsSignatureCurrentDoc && !signature && !signatureLoading && (
+                <div className='text-center text-sm text-gray-500 p-4 bg-yellow-50 rounded-lg mt-4'>
+                  Silakan upload atau gambar tanda tangan terlebih dahulu
                 </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Action Buttons Pindah Ke Card Tersendiri (Bawah) */}
+          <Card className='mt-6'>
+            <CardHeader className='pb-3'>
+              <CardTitle className='text-lg'>Tindakan</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className='flex gap-4 flex-wrap'>
+                <Button
+                  onClick={handleReviseDocument}
+                  disabled={loading || pdfLoading}
+                  variant='destructive'
+                  className='flex-1 h-12 text-base'
+                >
+                  {loading ? 'Memproses...' : 'Kirim Revisi'}
+                </Button>
+                <Button
+                  onClick={confirmApproveDocument}
+                  disabled={loading || pdfLoading}
+                  className={`flex-1 h-12 text-base ${isWadek1 && !isAllSigned
+                    ? 'bg-gray-400 hover:bg-gray-400 cursor-not-allowed opacity-50'
+                    : ''
+                    }`}
+                >
+                  {loading ? 'Memproses...' : 'Setujui Dokumen'}
+                </Button>
               </div>
-            )}
-            {!signature && !signatureLoading && (
-              <div className='text-center text-sm text-gray-500 p-4 bg-yellow-50 rounded-lg'>
-                Silakan upload atau gambar tanda tangan terlebih dahulu
-              </div>
-            )}
-            {signatureLoading && (
-              <div className='text-center text-sm text-gray-500 p-4 bg-blue-50 rounded-lg'>
-                Memuat tanda tangan...
-              </div>
-            )}
-          </CardContent>
-        </Card>
+              {isWadek1 && !isAllSigned && (
+                <p className='text-xs text-center text-gray-500 mt-3 flex items-center justify-center gap-1'>
+                  <AlertCircleIcon className='w-3 h-3' />
+                  Setujui Dinonaktifkan: Harap tandatangani semua dokumen yang diperlukan terlebih dahulu.
+                </p>
+              )}
+              {!isWadek1 && isSignatureRequiredForRole && !isAllSigned && (
+                <p className='text-xs text-center text-gray-500 mt-3 flex items-center justify-center gap-1'>
+                  <AlertCircleIcon className='w-3 h-3' />
+                  Setujui memerlukan tanda tangan terlebih dahulu.
+                </p>
+              )}
+            </CardContent>
+          </Card>
+        </div>
       </div>
 
       <div className='mt-6 flex justify-end'>
