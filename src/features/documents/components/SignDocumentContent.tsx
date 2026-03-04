@@ -14,7 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/shared/components/ui/select';
-import { InfoIcon, AlertCircleIcon } from 'lucide-react';
+import { InfoIcon, AlertCircleIcon, CheckCircle } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -85,12 +85,12 @@ export function SignDocumentContent({
 
   const isAllSigned = useMemo(() => {
     if (!isSignatureRequiredForRole) return true;
-    if (!isWadek1) return isSignatureEmbedded;
+    if (!isWadek1) return signedDocTypes.has('approval-sheet');
     return (
       signedDocTypes.has('approval-sheet') &&
       signedDocTypes.has('executive-summary')
     );
-  }, [isWadek1, isSignatureEmbedded, signedDocTypes, isSignatureRequiredForRole]);
+  }, [isWadek1, signedDocTypes, isSignatureRequiredForRole]);
 
   // Global loading lock to prevent any concurrent operations
   const globalLockRef = useRef({
@@ -275,14 +275,8 @@ export function SignDocumentContent({
           // Create new abort controller for this request
           abortControllerRef.current = new AbortController();
 
-          // Clean up previous URL before creating new one
-          if (pdfUrlRef.current) {
-            try {
-              window.URL.revokeObjectURL(pdfUrlRef.current);
-            } catch {
-              // Ignore cleanup errors
-            }
-          }
+          // We no longer revoke the previously displayed URL here because it might still
+          // be needed by the cache if the user switches back to that document type.
 
           const response = await api.get(
             `/documents/${documentId}/file/${docType}/pdf`,
@@ -365,6 +359,15 @@ export function SignDocumentContent({
     if (currentDocumentIdRef.current !== documentId) {
       // Reset cache when document changes
       documentLoadedRef.current = false;
+      pdfCacheRef.current.forEach((url) => {
+        if (url && url.startsWith('blob:')) {
+          try {
+            window.URL.revokeObjectURL(url);
+          } catch {
+            // Ignore error
+          }
+        }
+      });
       pdfCacheRef.current.clear();
       currentDocumentIdRef.current = documentId;
 
@@ -374,6 +377,22 @@ export function SignDocumentContent({
       }
     }
   }, [documentId, loadDocument]);
+
+  // Restore signed documents state from local storage so it persists across refreshes
+  useEffect(() => {
+    if (documentId && currentUser?.id) {
+      const storedKeys = localStorage.getItem(`signed-${currentUser.id}-${documentId}`);
+      if (storedKeys) {
+        try {
+          const parsed = JSON.parse(storedKeys);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            setSignedDocTypes(new Set(parsed as DocumentType[]));
+            setIsSignatureEmbedded(true);
+          }
+        } catch (e) { }
+      }
+    }
+  }, [documentId, currentUser?.id]);
 
   // Handle document type changes
   useEffect(() => {
@@ -422,9 +441,23 @@ export function SignDocumentContent({
         type: selectedDocType,
       });
       setIsSignatureEmbedded(true);
-      setSignedDocTypes((prev) => new Set(prev).add(selectedDocType));
+      setSignedDocTypes((prev) => {
+        const newSet = new Set(prev).add(selectedDocType);
+        if (currentUser?.id) {
+          localStorage.setItem(`signed-${currentUser.id}-${documentId}`, JSON.stringify(Array.from(newSet)));
+        }
+        return newSet;
+      });
       // Reload the document preview to show updated signature
       const cacheKey = `${documentId}-${selectedDocType}`;
+      const oldUrl = pdfCacheRef.current.get(cacheKey);
+      if (oldUrl && oldUrl.startsWith('blob:')) {
+        try {
+          window.URL.revokeObjectURL(oldUrl);
+        } catch {
+          // Ignore error
+        }
+      }
       pdfCacheRef.current.delete(cacheKey);
       loadDocumentPreview(selectedDocType);
     } catch (err) {
@@ -462,7 +495,7 @@ export function SignDocumentContent({
         );
         return;
       }
-    } else if (isSignatureRequiredForRole && !isSignatureEmbedded) {
+    } else if (isSignatureRequiredForRole && !signedDocTypes.has('approval-sheet')) {
       // Validate signature for roles that require it
       showConfirmation(
         'Tanda Tangan Belum Dibubuhkan',
@@ -500,6 +533,10 @@ export function SignDocumentContent({
         '',
         'Approved with signature',
       );
+
+      if (currentUser?.id) {
+        localStorage.removeItem(`signed-${currentUser.id}-${documentId}`);
+      }
 
       if (returnPath) {
         navigate({ to: returnPath });
@@ -709,7 +746,7 @@ export function SignDocumentContent({
               )}
 
               {/* Signature Button only shown when the current doc type needs a signature from the current user role */}
-              {needsSignatureCurrentDoc && signature && pdfUrl && (
+              {needsSignatureCurrentDoc && signature && pdfUrl && !signedDocTypes.has(selectedDocType) && (
                 <div className='w-full mt-4'>
                   <Button
                     onClick={confirmEmbedSignature}
@@ -721,7 +758,13 @@ export function SignDocumentContent({
                   </Button>
                 </div>
               )}
-              {needsSignatureCurrentDoc && !signature && !signatureLoading && (
+              {needsSignatureCurrentDoc && signature && pdfUrl && signedDocTypes.has(selectedDocType) && (
+                <div className='w-full mt-4 flex items-center justify-center gap-2 p-3 bg-green-50 text-green-700 text-sm font-medium border border-green-200 rounded-lg'>
+                  <CheckCircle className='w-5 h-5' />
+                  Dokumen ini telah ditandatangani
+                </div>
+              )}
+              {needsSignatureCurrentDoc && !signature && !signatureLoading && !signedDocTypes.has(selectedDocType) && (
                 <div className='text-center text-sm text-gray-500 p-4 bg-yellow-50 rounded-lg mt-4'>
                   Silakan upload atau gambar tanda tangan terlebih dahulu
                 </div>

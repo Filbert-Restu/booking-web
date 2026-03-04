@@ -70,7 +70,7 @@ function RouteComponent() {
 
   const stats = useMemo(() => [
     {
-      title: 'Antrean Approval',
+      title: 'Antrean Persetujuan',
       value: String(approvalItems.filter((b) => b.status === 'waiting').length),
       icon: Clock,
       textColor: 'text-yellow-600',
@@ -86,7 +86,7 @@ function RouteComponent() {
       onClick: () => navigate({ to: '/sumber-daya/manajemen-ruang' }),
     },
     {
-      title: 'Total Diapprove',
+      title: 'Total Disetujui',
       value: String(approvedCount),
       icon: CheckCircle,
       textColor: 'text-green-600',
@@ -190,7 +190,7 @@ function RouteComponent() {
       </div>
 
       <div className='mt-6' ref={tableRef}>
-        <h2 className='text-lg font-semibold mb-4'>Persetujuan Peminjaman</h2>
+        <h2 className='text-lg font-semibold mb-4'>Antrean Persetujuan</h2>
         {approvalItems.length === 0 ? (
           <div className='bg-white rounded-lg border border-gray-200 p-8 text-center'>
             <p className='text-gray-500'>
