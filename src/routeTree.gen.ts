@@ -53,6 +53,7 @@ import { Route as KetuaDepartemenSignDocumentRouteImport } from './routes/ketua-
 import { Route as KetuaDepartemenRiwayatPersetujuanRouteImport } from './routes/ketua-departemen/riwayat-persetujuan'
 import { Route as KetuaDepartemenPreviewDocumentRouteImport } from './routes/ketua-departemen/preview-document'
 import { Route as KemahasiswaanRiwayatPersetujuanRouteImport } from './routes/kemahasiswaan/riwayat-persetujuan'
+import { Route as KemahasiswaanPreviewDocumentRouteImport } from './routes/kemahasiswaan/preview-document'
 import { Route as DosenPendampingSignDocumentRouteImport } from './routes/dosen-pendamping/sign-document'
 import { Route as DosenPendampingRiwayatPersetujuanRouteImport } from './routes/dosen-pendamping/riwayat-persetujuan'
 import { Route as DosenPendampingPreviewDocumentRouteImport } from './routes/dosen-pendamping/preview-document'
@@ -306,6 +307,12 @@ const KemahasiswaanRiwayatPersetujuanRoute =
     path: '/riwayat-persetujuan',
     getParentRoute: () => KemahasiswaanRouteRoute,
   } as any)
+const KemahasiswaanPreviewDocumentRoute =
+  KemahasiswaanPreviewDocumentRouteImport.update({
+    id: '/preview-document',
+    path: '/preview-document',
+    getParentRoute: () => KemahasiswaanRouteRoute,
+  } as any)
 const DosenPendampingSignDocumentRoute =
   DosenPendampingSignDocumentRouteImport.update({
     id: '/sign-document',
@@ -440,6 +447,7 @@ export interface FileRoutesByFullPath {
   '/dosen-pendamping/preview-document': typeof DosenPendampingPreviewDocumentRoute
   '/dosen-pendamping/riwayat-persetujuan': typeof DosenPendampingRiwayatPersetujuanRoute
   '/dosen-pendamping/sign-document': typeof DosenPendampingSignDocumentRoute
+  '/kemahasiswaan/preview-document': typeof KemahasiswaanPreviewDocumentRoute
   '/kemahasiswaan/riwayat-persetujuan': typeof KemahasiswaanRiwayatPersetujuanRoute
   '/ketua-departemen/preview-document': typeof KetuaDepartemenPreviewDocumentRoute
   '/ketua-departemen/riwayat-persetujuan': typeof KetuaDepartemenRiwayatPersetujuanRoute
@@ -498,6 +506,7 @@ export interface FileRoutesByTo {
   '/dosen-pendamping/preview-document': typeof DosenPendampingPreviewDocumentRoute
   '/dosen-pendamping/riwayat-persetujuan': typeof DosenPendampingRiwayatPersetujuanRoute
   '/dosen-pendamping/sign-document': typeof DosenPendampingSignDocumentRoute
+  '/kemahasiswaan/preview-document': typeof KemahasiswaanPreviewDocumentRoute
   '/kemahasiswaan/riwayat-persetujuan': typeof KemahasiswaanRiwayatPersetujuanRoute
   '/ketua-departemen/preview-document': typeof KetuaDepartemenPreviewDocumentRoute
   '/ketua-departemen/riwayat-persetujuan': typeof KetuaDepartemenRiwayatPersetujuanRoute
@@ -566,6 +575,7 @@ export interface FileRoutesById {
   '/dosen-pendamping/preview-document': typeof DosenPendampingPreviewDocumentRoute
   '/dosen-pendamping/riwayat-persetujuan': typeof DosenPendampingRiwayatPersetujuanRoute
   '/dosen-pendamping/sign-document': typeof DosenPendampingSignDocumentRoute
+  '/kemahasiswaan/preview-document': typeof KemahasiswaanPreviewDocumentRoute
   '/kemahasiswaan/riwayat-persetujuan': typeof KemahasiswaanRiwayatPersetujuanRoute
   '/ketua-departemen/preview-document': typeof KetuaDepartemenPreviewDocumentRoute
   '/ketua-departemen/riwayat-persetujuan': typeof KetuaDepartemenRiwayatPersetujuanRoute
@@ -635,6 +645,7 @@ export interface FileRouteTypes {
     | '/dosen-pendamping/preview-document'
     | '/dosen-pendamping/riwayat-persetujuan'
     | '/dosen-pendamping/sign-document'
+    | '/kemahasiswaan/preview-document'
     | '/kemahasiswaan/riwayat-persetujuan'
     | '/ketua-departemen/preview-document'
     | '/ketua-departemen/riwayat-persetujuan'
@@ -693,6 +704,7 @@ export interface FileRouteTypes {
     | '/dosen-pendamping/preview-document'
     | '/dosen-pendamping/riwayat-persetujuan'
     | '/dosen-pendamping/sign-document'
+    | '/kemahasiswaan/preview-document'
     | '/kemahasiswaan/riwayat-persetujuan'
     | '/ketua-departemen/preview-document'
     | '/ketua-departemen/riwayat-persetujuan'
@@ -760,6 +772,7 @@ export interface FileRouteTypes {
     | '/dosen-pendamping/preview-document'
     | '/dosen-pendamping/riwayat-persetujuan'
     | '/dosen-pendamping/sign-document'
+    | '/kemahasiswaan/preview-document'
     | '/kemahasiswaan/riwayat-persetujuan'
     | '/ketua-departemen/preview-document'
     | '/ketua-departemen/riwayat-persetujuan'
@@ -1136,6 +1149,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof KemahasiswaanRiwayatPersetujuanRouteImport
       parentRoute: typeof KemahasiswaanRouteRoute
     }
+    '/kemahasiswaan/preview-document': {
+      id: '/kemahasiswaan/preview-document'
+      path: '/preview-document'
+      fullPath: '/kemahasiswaan/preview-document'
+      preLoaderRoute: typeof KemahasiswaanPreviewDocumentRouteImport
+      parentRoute: typeof KemahasiswaanRouteRoute
+    }
     '/dosen-pendamping/sign-document': {
       id: '/dosen-pendamping/sign-document'
       path: '/sign-document'
@@ -1335,6 +1355,7 @@ const DosenPendampingRouteRouteWithChildren =
   DosenPendampingRouteRoute._addFileChildren(DosenPendampingRouteRouteChildren)
 
 interface KemahasiswaanRouteRouteChildren {
+  KemahasiswaanPreviewDocumentRoute: typeof KemahasiswaanPreviewDocumentRoute
   KemahasiswaanRiwayatPersetujuanRoute: typeof KemahasiswaanRiwayatPersetujuanRoute
   KemahasiswaanIndexRoute: typeof KemahasiswaanIndexRoute
   KemahasiswaanTemplateDokumenIndexRoute: typeof KemahasiswaanTemplateDokumenIndexRoute
@@ -1342,6 +1363,7 @@ interface KemahasiswaanRouteRouteChildren {
 }
 
 const KemahasiswaanRouteRouteChildren: KemahasiswaanRouteRouteChildren = {
+  KemahasiswaanPreviewDocumentRoute: KemahasiswaanPreviewDocumentRoute,
   KemahasiswaanRiwayatPersetujuanRoute: KemahasiswaanRiwayatPersetujuanRoute,
   KemahasiswaanIndexRoute: KemahasiswaanIndexRoute,
   KemahasiswaanTemplateDokumenIndexRoute:

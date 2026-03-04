@@ -53,6 +53,7 @@ export interface ApprovalItem {
   hasExecutiveSummary?: boolean;
   hasApprovalSheet?: boolean;
   tanggalMasuk?: string;
+  keterangan?: string;
 }
 
 interface ApprovalProps {
