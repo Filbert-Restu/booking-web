@@ -1,12 +1,5 @@
 import { useMemo, useState } from 'react';
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/shared/components/ui/select';
-import {
   Table,
   TableBody,
   TableCell,
@@ -14,9 +7,9 @@ import {
   TableHeader,
   TableRow,
 } from '@/shared/components/ui/table';
-import { CheckCircle2, XCircle, Search } from 'lucide-react';
+import { Search } from 'lucide-react';
 import { Input } from '@/shared/components/ui/input';
-import FileActions, { type FileType } from '@/components/FileActions';
+import { Button } from '@/shared/components/ui/button/button';
 import { PaginationBar, type ServerPagination } from '@/shared/components/ui/data-table';
 
 export type ApprovalStatus = 'waiting' | 'approved' | 'revisi' | 'rejected';
@@ -59,6 +52,7 @@ export interface ApprovalItem {
   hasProposal?: boolean;
   hasExecutiveSummary?: boolean;
   hasApprovalSheet?: boolean;
+  tanggalMasuk?: string;
 }
 
 interface ApprovalProps {
@@ -71,39 +65,15 @@ interface ApprovalProps {
   serverPagination?: ServerPagination;
 }
 
-function statusBadge(status: ApprovalStatus) {
-  const base =
-    'inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold tracking-wide';
-  if (status === 'approved') {
-    return `${base} bg-green-100 text-green-700`;
-  }
-  if (status === 'revisi') {
-    return `${base} bg-yellow-100 text-yellow-700`;
-  }
-  return `${base} bg-blue-100 text-blue-700`;
-}
+
 
 export function Approval({
   bookings,
-  onApprove,
-  onRevise,
   showOrganisasi = true,
-  actorRole,
+  onOpenDoc,
   serverPagination,
 }: ApprovalProps) {
   const [searchTerm, setSearchTerm] = useState('');
-  const [pdfPreview, setPdfPreview] = useState<{
-    id: number;
-    type: FileType;
-    url: string;
-  } | null>(null);
-  const isKemahasiswaan = actorRole === 'kemahasiswaan';
-
-  const totalColumns = useMemo(() => {
-    const optionalColumns =
-      (showOrganisasi ? 1 : 0) + (isKemahasiswaan ? 1 : 0);
-    return 7 + optionalColumns;
-  }, [isKemahasiswaan, showOrganisasi]);
 
   const filteredItems = useMemo(() => {
     return bookings.filter(
@@ -118,13 +88,7 @@ export function Approval({
     );
   }, [bookings, searchTerm]);
 
-  const handleActionSelect = (id: number, value: ApprovalStatus) => {
-    if (value === 'approved') {
-      onApprove?.(id);
-    } else if (value === 'revisi') {
-      onRevise?.(id);
-    }
-  };
+
 
   return (
     <div className='w-full space-y-6'>
@@ -144,28 +108,17 @@ export function Approval({
           <TableHeader>
             <TableRow>
               <TableHead className='w-12'>No</TableHead>
-              <TableHead>Token</TableHead>
-              <TableHead>Kegiatan</TableHead>
-              <TableHead>No. HP</TableHead>
-              <TableHead>Nama Peminjam</TableHead>
+              <TableHead>Tanggal Masuk</TableHead>
+              <TableHead>Nama Kegiatan</TableHead>
               {showOrganisasi && <TableHead>Organisasi</TableHead>}
-              <TableHead>Ruang</TableHead>
-              <TableHead>Tanggal</TableHead>
-              <TableHead>Waktu</TableHead>
-              <TableHead className='text-center'>Dokumen</TableHead>
-              {isKemahasiswaan && (
-                <TableHead className='text-center'>Aksi</TableHead>
-              )}
-              {!isKemahasiswaan && (
-                <TableHead className='text-center'>Status</TableHead>
-              )}
+              <TableHead className='text-center'>Detail</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {filteredItems.length === 0 ? (
               <TableRow>
                 <TableCell
-                  colSpan={totalColumns}
+                  colSpan={showOrganisasi ? 5 : 4}
                   className='h-24 text-center text-gray-500'
                 >
                   Tidak ada data ditemukan
@@ -175,102 +128,20 @@ export function Approval({
               filteredItems.map((item, index) => (
                 <TableRow key={item.id}>
                   <TableCell className='font-medium'>{index + 1}</TableCell>
-                  <TableCell>{item.token || '-'}</TableCell>
+                  <TableCell>{item.tanggalMasuk || '-'}</TableCell>
                   <TableCell>{item.kegiatan}</TableCell>
-                  <TableCell>{item.noHp}</TableCell>
-                  <TableCell>{item.namaPeminjam}</TableCell>
                   {showOrganisasi && (
                     <TableCell>{item.organisasiMahasiswa || '-'}</TableCell>
                   )}
-                  <TableCell>{item.namaRuang}</TableCell>
-                  <TableCell>{item.tanggal}</TableCell>
-                  <TableCell>{item.waktu}</TableCell>
                   <TableCell className='text-center'>
-                    <FileActions
-                      docId={item.id}
-                      fileTypes={[
-                        { type: 'proposal', hasFile: !!item.hasProposal },
-                        {
-                          type: 'executive-summary',
-                          hasFile: !!item.hasExecutiveSummary,
-                        },
-                        {
-                          type: 'approval-sheet',
-                          hasFile: !!item.hasApprovalSheet,
-                        },
-                      ]}
-                      pdfPreview={pdfPreview}
-                      setPdfPreview={setPdfPreview}
-                    />
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => onOpenDoc?.(item.id)}
+                    >
+                      Lihat Detail
+                    </Button>
                   </TableCell>
-                  {isKemahasiswaan && (
-                    <TableCell>
-                      <div className='flex items-center justify-center'>
-                        {item.status === 'waiting' ? (
-                          <Select
-                            onValueChange={(value) =>
-                              handleActionSelect(
-                                item.id,
-                                value as ApprovalStatus,
-                              )
-                            }
-                          >
-                            <SelectTrigger className='min-w-[140px] justify-center rounded-full data-[placeholder]:text-center'>
-                              <SelectValue placeholder='Aksi' />
-                            </SelectTrigger>
-                            <SelectContent className='rounded-lg'>
-                              <SelectItem value='approved'>
-                                <CheckCircle2 className='h-3.5 w-3.5 text-green-600' />
-                                <span>Setuju</span>
-                              </SelectItem>
-                              <SelectItem value='revisi'>
-                                <XCircle className='h-3.5 w-3.5 text-yellow-600' />
-                                <span>Revisi</span>
-                              </SelectItem>
-                            </SelectContent>
-                          </Select>
-                        ) : (
-                          <span className={statusBadge(item.status)}>
-                            {item.status.toUpperCase()}
-                          </span>
-                        )}
-                      </div>
-                    </TableCell>
-                  )}
-                  {!isKemahasiswaan && (
-                    <TableCell>
-                      <div className='flex items-center justify-center'>
-                        {item.status === 'waiting' ? (
-                          <Select
-                            onValueChange={(value) =>
-                              handleActionSelect(
-                                item.id,
-                                value as ApprovalStatus,
-                              )
-                            }
-                          >
-                            <SelectTrigger className='min-w-[140px] justify-center rounded-full data-[placeholder]:text-center'>
-                              <SelectValue placeholder='Aksi' />
-                            </SelectTrigger>
-                            <SelectContent className='rounded-lg'>
-                              <SelectItem value='approved'>
-                                <CheckCircle2 className='h-3.5 w-3.5 text-green-600' />
-                                <span>Setuju</span>
-                              </SelectItem>
-                              <SelectItem value='revisi'>
-                                <XCircle className='h-3.5 w-3.5 text-yellow-600' />
-                                <span>Revisi</span>
-                              </SelectItem>
-                            </SelectContent>
-                          </Select>
-                        ) : (
-                          <span className={statusBadge(item.status)}>
-                            {item.status.toUpperCase()}
-                          </span>
-                        )}
-                      </div>
-                    </TableCell>
-                  )}
                 </TableRow>
               ))
             )}

@@ -12,8 +12,7 @@ import {
 } from '@/shared/components/ui/select';
 import { documentService } from '@/services/document.service';
 import { workflowService } from '@/services/workflow.service';
-import { DocumentStatusBadge } from '@/components/DocumentStatusBadge';
-import { documentHelpers } from '@/utils/documentUtils';
+import { SubmissionDetailCard } from '@/shared/components/common/SubmissionDetailCard';
 import api from '@/lib/axios';
 
 export const Route = createFileRoute('/peminjam/pinjam/detail/$id')({
@@ -106,7 +105,6 @@ function DetailPengajuanPage() {
         );
     }
 
-    const content = doc.content || {};
     const currentStep = doc.current_step_order ?? 0;
     const steps = workflow?.steps ?? [];
     const logs = doc.logs ?? [];
@@ -137,83 +135,32 @@ function DetailPengajuanPage() {
                 {/* ── Kolom Kiri: Info + Workflow Steps ── */}
                 <div className="lg:col-span-3 space-y-4">
                     {/* Info Kegiatan */}
-                    <div className="bg-white rounded-lg border border-gray-200 p-5 space-y-4">
-                        <h2 className="text-base font-semibold text-gray-800 border-b pb-2">
-                            Informasi Kegiatan
-                        </h2>
+                    <SubmissionDetailCard doc={doc} />
 
-                        <InfoRow label="Nama Kegiatan" value={documentHelpers.getEventName(doc)} />
-                        <InfoRow
-                            label="Tgl Pengajuan"
-                            value={new Date(doc.created_at).toLocaleDateString('id-ID', {
-                                day: '2-digit',
-                                month: 'long',
-                                year: 'numeric',
-                            })}
-                        />
-                        <InfoRow label="Tanggal Acara" value={documentHelpers.getBookingDate(doc)} />
-                        <InfoRow
-                            label="Waktu"
-                            value={
-                                content.start_time && content.end_time
-                                    ? `${content.start_time} – ${content.end_time}`
-                                    : '-'
+                    {(doc.status === 'DRAFT' || doc.status === 'REVISION') && (
+                        <button
+                            onClick={() =>
+                                navigate({
+                                    to: '/peminjam/pinjam/detail-tempat',
+                                    search: {
+                                        editId: doc.id,
+                                        roomId: undefined,
+                                        bookingDate: undefined,
+                                        startTime: undefined,
+                                        endTime: undefined,
+                                        purpose: undefined,
+                                        ketuaNama: undefined,
+                                        ketuaNim: undefined,
+                                        ketuaHp: undefined,
+                                    },
+                                })
                             }
-                        />
-                        <InfoRow label="Ruangan" value={documentHelpers.getRoomInfo(doc)} />
-
-                        <div>
-                            <div className="text-xs text-gray-500 mb-1">Status</div>
-                            <DocumentStatusBadge doc={doc} />
-                        </div>
-
-                        {(doc.status === 'DRAFT' || doc.status === 'REVISION') && (
-                            <button
-                                onClick={() =>
-                                    navigate({
-                                        to: '/peminjam/pinjam/detail-tempat',
-                                        search: {
-                                            editId: doc.id,
-                                            roomId: undefined,
-                                            bookingDate: undefined,
-                                            startTime: undefined,
-                                            endTime: undefined,
-                                            purpose: undefined,
-                                            ketuaNama: undefined,
-                                            ketuaNim: undefined,
-                                            ketuaHp: undefined,
-                                        },
-                                    })
-                                }
-                                className="w-full flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-medium bg-blue-600 hover:bg-blue-700 text-white transition-colors"
-                            >
-                                <ClipboardList className="w-4 h-4" />
-                                Lengkapi Pengajuan
-                            </button>
-                        )}
-
-                        {doc.status === 'IN_PROGRESS' && (
-                            <div className="bg-blue-50 border border-blue-200 rounded-md p-3 text-sm text-blue-800">
-                                Dokumen sedang direview oleh{' '}
-                                <span className="font-semibold">{documentHelpers.getCurrentHolder(doc)}</span>
-                            </div>
-                        )}
-
-                        {(doc.status === 'REVISION' || doc.status === 'REJECTED') && (() => {
-                            const returnedLog = [...logs].reverse().find((l) => l.action === 'RETURNED');
-                            const note = returnedLog?.note || 'Perlu revisi';
-                            const revisor = returnedLog?.user
-                                ? `${returnedLog.user.name}${returnedLog.user.unit ? ` (${returnedLog.user.unit.name})` : ''}`
-                                : 'Approver';
-                            return (
-                                <div className="bg-red-50 border border-red-200 rounded-md p-3 space-y-1">
-                                    <div className="text-xs font-bold text-red-500 uppercase tracking-wide">Perlu Revisi</div>
-                                    <div className="text-xs text-gray-700">Oleh: <span className="font-semibold">{revisor}</span></div>
-                                    <div className="text-xs text-gray-600 italic">"{note}"</div>
-                                </div>
-                            );
-                        })()}
-                    </div>
+                            className="w-full mt-4 flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-medium bg-blue-600 hover:bg-blue-700 text-white transition-colors"
+                        >
+                            <ClipboardList className="w-4 h-4" />
+                            Lengkapi Pengajuan
+                        </button>
+                    )}
 
                     {/* Workflow Steps */}
                     {steps.length > 0 && (
@@ -345,15 +292,6 @@ function DetailPengajuanPage() {
                     )}
                 </div>
             </div>
-        </div>
-    );
-}
-
-function InfoRow({ label, value }: { label: string; value: React.ReactNode }) {
-    return (
-        <div>
-            <div className="text-xs text-gray-500">{label}</div>
-            <div className="text-sm font-medium text-gray-900">{value || '-'}</div>
         </div>
     );
 }

@@ -28,6 +28,7 @@ import api from '@/lib/axios';
 import { AxiosError } from 'axios';
 import { SignatureUpload } from '@/shared/components/common/SignatureUpload';
 import { RevisionDialog } from '@/shared/components/common/RevisionDialog';
+import { SubmissionDetailCard } from '@/shared/components/common/SubmissionDetailCard';
 
 type DocumentType = 'proposal' | 'approval-sheet' | 'executive-summary';
 
@@ -596,14 +597,19 @@ export function SignDocumentContent({
       </div>
 
       <div className='grid grid-cols-1 lg:grid-cols-8 gap-6 items-start'>
-        {/* Card Kiri: Tanda Tangan */}
-        <SignatureUpload
-          className='lg:col-span-3 self-start fix md:sticky top-24 z-10'
-          onSignatureUploaded={() => {
-            signatureLoadedRef.current = false;
-            loadSignature();
-          }}
-        />
+        {/* Card Kiri: Detail Pengajuan & Tanda Tangan */}
+        <div className='lg:col-span-3 self-start fix md:sticky top-24 z-10 space-y-6'>
+          {document && (
+            <SubmissionDetailCard doc={document} />
+          )}
+
+          <SignatureUpload
+            onSignatureUploaded={() => {
+              signatureLoadedRef.current = false;
+              loadSignature();
+            }}
+          />
+        </div>
 
         {/* Card Kanan: Preview Dokumen */}
         <Card className='lg:col-span-5 relative z-0'>
@@ -679,8 +685,8 @@ export function SignDocumentContent({
                     onClick={confirmApproveDocument}
                     disabled={loading || pdfLoading}
                     className={`flex-1 min-w-40 ${isWadek1 && !isAllSigned
-                        ? 'bg-gray-400 hover:bg-gray-400 cursor-not-allowed opacity-50'
-                        : ''
+                      ? 'bg-gray-400 hover:bg-gray-400 cursor-not-allowed opacity-50'
+                      : ''
                       }`}
                   >
                     {loading ? 'Memproses...' : 'Setujui'}
