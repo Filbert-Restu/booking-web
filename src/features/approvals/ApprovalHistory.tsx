@@ -74,7 +74,7 @@ export function ApprovalHistory({
           <TableHeader>
             <TableRow>
               <TableHead className='w-12'>No</TableHead>
-              <TableHead>Tanggal Masuk</TableHead>
+              <TableHead>Tanggal Diproses</TableHead>
               <TableHead>Nama Kegiatan</TableHead>
               {showOrganisasi && <TableHead>Organisasi</TableHead>}
               <TableHead className='text-center'>Status</TableHead>

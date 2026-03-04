@@ -68,7 +68,7 @@ export function mapDocumentToApprovalItem(doc: Document): ApprovalItem {
     hasProposal: !!doc.file_proposal,
     hasExecutiveSummary: !!doc.file_executive_summary,
     hasApprovalSheet: !!doc.file_approval_sheet,
-    tanggalMasuk: formatDate(doc.updated_at || doc.created_at),
+    tanggalMasuk: relevantLog ? formatDate(relevantLog.created_at) : formatDate(doc.updated_at || doc.created_at),
     keterangan,
   };
 }
