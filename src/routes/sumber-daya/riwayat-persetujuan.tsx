@@ -78,6 +78,7 @@ function RouteComponent() {
         <ApprovalHistory
           bookings={approvalItems}
           onOpenDoc={handleOpenDoc}
+          showOrganisasi={true}
           serverPagination={pagination ? {
             currentPage: pagination.current_page,
             lastPage: pagination.last_page,

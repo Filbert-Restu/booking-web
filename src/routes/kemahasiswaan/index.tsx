@@ -1,7 +1,6 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { useState, useRef, useMemo, useCallback } from 'react';
 import { Clock, CheckCircle, FileText } from 'lucide-react';
-import { AxiosError } from 'axios';
 import { useQuery, keepPreviousData } from '@tanstack/react-query';
 import { StatCard } from '@/shared/components/common/StatCard';
 import { Approval } from '@/features/approvals';
@@ -25,7 +24,6 @@ function RouteComponent() {
   const tableRef = useRef<HTMLDivElement>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [templateCount, setTemplateCount] = useState(0);
-  const [error, setError] = useState<string | null>(null);
 
   // Dialog States
   const [dialogState, setDialogState] = useState<{
@@ -48,6 +46,7 @@ function RouteComponent() {
   const {
     data: queryResult,
     isLoading: loading,
+    isError,
     refetch: fetchDocuments,
   } = useQuery({
     queryKey: ['documents-kemahasiswaan', currentPage],
@@ -62,6 +61,7 @@ function RouteComponent() {
 
   const approvedCount = queryResult?.processed_documents_pagination?.total ?? 0;
   const pagination = queryResult?.pending_documents_pagination;
+  const error = isError ? 'Gagal memuat data dokumen' : null;
 
   const scrollToTable = useCallback(() => {
     tableRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -94,29 +94,20 @@ function RouteComponent() {
     },
   ], [approvalItems, templateCount, approvedCount, navigate, scrollToTable]);
 
+  // Same pattern as wadek1: approve dialog → navigate to sign-document
   const handleApprove = useCallback((id: number) => {
     setDialogState({ type: 'approve', id });
   }, []);
 
-  const onConfirmApprove = useCallback(async () => {
-    if (!dialogState.id) return;
-    setActionLoading(true);
-
-    try {
-      await documentService.approveDocument(dialogState.id, '', 'Approved by Kemahasiswaan');
-      await fetchDocuments();
-    } catch (err) {
-      console.error('Failed to approve document:', err);
-      if (err instanceof AxiosError) {
-        setError(err.response?.data?.message || 'Gagal menyetujui dokumen');
-      } else {
-        setError('Terjadi kesalahan saat menyetujui dokumen');
-      }
-    } finally {
-      setActionLoading(false);
-      setDialogState({ type: null, id: null });
+  const onConfirmApprove = useCallback(() => {
+    if (dialogState.id) {
+      navigate({
+        to: '/kemahasiswaan/approve-document',
+        search: { documentId: dialogState.id },
+      });
     }
-  }, [dialogState.id, fetchDocuments]);
+    setDialogState({ type: null, id: null });
+  }, [dialogState.id, navigate]);
 
   const handleRevise = useCallback((id: number) => {
     setDialogState({ type: 'revise', id });
@@ -133,24 +124,17 @@ function RouteComponent() {
       await fetchDocuments();
     } catch (err) {
       console.error('Failed to revise document:', err);
-      if (err instanceof AxiosError) {
-        setError(err.response?.data?.message || 'Gagal mengembalikan dokumen');
-      } else {
-        setError('Terjadi kesalahan saat mengembalikan dokumen');
-      }
     } finally {
       setActionLoading(false);
       setDialogState({ type: null, id: null });
     }
   }, [dialogState.id, fetchDocuments]);
 
+  // Lihat Detail → same as approve, navigate to sign-document
   const handleOpenDoc = useCallback((documentId: number) => {
     navigate({
-      to: '/preview-document',
-      search: {
-        documentId,
-        return: '/kemahasiswaan',
-      },
+      to: '/kemahasiswaan/approve-document',
+      search: { documentId },
     });
   }, [navigate]);
 
@@ -158,9 +142,7 @@ function RouteComponent() {
     return (
       <div className='p-6 flex justify-center items-center min-h-screen'>
         <div className='text-center'>
-          <div className='text-lg font-semibold text-gray-700'>
-            Memuat data...
-          </div>
+          <div className='text-lg font-semibold text-gray-700'>Memuat data...</div>
         </div>
       </div>
     );
@@ -235,10 +217,9 @@ function RouteComponent() {
         isOpen={dialogState.type === 'approve'}
         onClose={() => setDialogState({ type: null, id: null })}
         onConfirm={onConfirmApprove}
-        title='⚠️ Persetujuan Dokumen'
-        description='Apakah Anda yakin ingin menyetujui dokumen ini? Tindakan ini tidak dapat dibatalkan.'
-        confirmLabel='Setujui'
-        loading={actionLoading}
+        title='📋 Review Dokumen'
+        description='Anda akan diarahkan ke halaman review dokumen untuk melihat detail dan menyetujui dokumen.'
+        confirmLabel='Lanjutkan'
       />
 
       <RevisionDialog

@@ -33,10 +33,10 @@ function RouteComponent() {
   const pagination = queryResult?.processed_documents_pagination;
   const error = isError ? 'Gagal memuat riwayat persetujuan' : null;
 
-  const handleOpenDoc = (payload: any) => {
+  const handleOpenDoc = (documentId: number) => {
     navigate({
-      to: '/preview-document',
-      search: { doc: payload.doc, id: payload.booking.id, return: '/dosen-pendamping/riwayat-persetujuan' } as any
+      to: '/dosen-pendamping/preview-document',
+      search: { documentId }
     });
   };
 

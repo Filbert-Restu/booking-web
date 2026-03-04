@@ -35,7 +35,7 @@ export function HistoryDetailContent({
     const navigate = useNavigate();
     const docId = documentId ?? 0;
 
-    // ── Fetch dokumen ──────────────────────────────────────────────────────────
+    // ── Fetch dokumen ─────────────────────────────────────────────────────────
     const {
         data: doc,
         isLoading,
@@ -46,14 +46,14 @@ export function HistoryDetailContent({
         enabled: docId > 0,
     });
 
-    // ── Fetch workflow steps ───────────────────────────────────────────────────
+    // ── Fetch workflow steps ──────────────────────────────────────────────────
     const { data: workflow } = useQuery({
         queryKey: ['workflow', doc?.workflow_id],
         queryFn: () => workflowService.getWorkflow(doc!.workflow_id),
         enabled: !!doc?.workflow_id,
     });
 
-    // ── PDF Preview State ──────────────────────────────────────────────────────
+    // ── PDF Preview State ─────────────────────────────────────────────────────
     const [selectedDocType, setSelectedDocType] = useState<DocType>('proposal');
     const [pdfUrl, setPdfUrl] = useState<string | null>(null);
     const [pdfLoading, setPdfLoading] = useState(false);
@@ -78,9 +78,7 @@ export function HistoryDetailContent({
             try {
                 const response = await api.get(
                     `/documents/${docId}/file/${type}/pdf`,
-                    {
-                        responseType: 'blob',
-                    },
+                    { responseType: 'blob' },
                 );
                 const blob = new Blob([response.data], { type: 'application/pdf' });
                 setBlobUrl(URL.createObjectURL(blob));
@@ -97,7 +95,7 @@ export function HistoryDetailContent({
         if (doc) loadPdf(selectedDocType);
     }, [doc, selectedDocType, loadPdf]);
 
-    // ── Loading / Error ────────────────────────────────────────────────────────
+    // ── Loading / Error ───────────────────────────────────────────────────────
     if (isLoading) {
         return (
             <div className="flex items-center justify-center py-20">
@@ -125,7 +123,6 @@ export function HistoryDetailContent({
     const steps = workflow?.steps ?? [];
     const logs = doc.logs ?? [];
 
-    // Cari log aksi RECEIVED/APPROVED per step_snapshot untuk mendapat timestamp
     const getStepLog = (stepOrder: number) =>
         logs.find(
             (l) =>
@@ -142,7 +139,7 @@ export function HistoryDetailContent({
     ];
     const hasAnyDoc = availableDocs.some((d) => d.hasFile);
 
-    // ── Render ─────────────────────────────────────────────────────────────────
+    // ── Render ────────────────────────────────────────────────────────────────
     return (
         <div className="space-y-4">
             {/* Header */}
@@ -155,14 +152,13 @@ export function HistoryDetailContent({
                     <ArrowLeft className="w-4 h-4 mr-2" /> Kembali
                 </Button>
                 <h1 className="text-xl font-bold text-gray-900">
-                    Detail Riwayat Persetujuan
+                    Detail Pengajuan
                 </h1>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-8 gap-6 items-start">
                 {/* ── Kolom Kiri: Info + Workflow Steps ── */}
                 <div className="lg:col-span-3 space-y-4">
-                    {/* Info Kegiatan */}
                     <SubmissionDetailCard doc={doc} />
 
                     {/* Workflow Steps */}
@@ -177,8 +173,7 @@ export function HistoryDetailContent({
                                     .sort((a, b) => a.step_order - b.step_order)
                                     .map((step, idx, arr) => {
                                         const isCompleted =
-                                            step.step_order < currentStep ||
-                                            doc.status === 'APPROVED';
+                                            step.step_order < currentStep || doc.status === 'APPROVED';
                                         const isActive =
                                             step.step_order === currentStep &&
                                             doc.status === 'IN_PROGRESS';
@@ -190,7 +185,6 @@ export function HistoryDetailContent({
                                                 key={step.id ?? step.step_order}
                                                 className="flex gap-4"
                                             >
-                                                {/* Icon + garis vertikal */}
                                                 <div className="flex flex-col items-center">
                                                     <div
                                                         className={`w-8 h-8 rounded-full border-2 flex items-center justify-center shrink-0 ${isCompleted
@@ -216,9 +210,7 @@ export function HistoryDetailContent({
                                                         />
                                                     )}
                                                 </div>
-
-                                                {/* Konten step */}
-                                                <div className={`pb-5 flex-1`}>
+                                                <div className="pb-5 flex-1">
                                                     <div
                                                         className={`text-sm font-semibold ${isCompleted
                                                                 ? 'text-blue-700'
@@ -229,13 +221,11 @@ export function HistoryDetailContent({
                                                     >
                                                         {step.step_name}
                                                     </div>
-
                                                     {isActive && doc.current_holder && (
                                                         <div className="text-xs text-gray-500 mt-0.5">
                                                             Assigned to: {doc.current_holder.name}
                                                         </div>
                                                     )}
-
                                                     <div
                                                         className={`text-xs mt-0.5 ${isCompleted
                                                                 ? 'text-blue-500'
@@ -244,14 +234,8 @@ export function HistoryDetailContent({
                                                                     : 'text-gray-400'
                                                             }`}
                                                     >
-                                                        Status:{' '}
-                                                        {isCompleted
-                                                            ? 'Selesai'
-                                                            : isActive
-                                                                ? 'Pending'
-                                                                : 'Pending'}
+                                                        Status: {isCompleted ? 'Selesai' : 'Pending'}
                                                     </div>
-
                                                     {stepLog && (
                                                         <div className="text-xs text-gray-500 mt-0.5">
                                                             <span className="font-semibold">Received:</span>{' '}

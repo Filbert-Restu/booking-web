@@ -654,12 +654,14 @@ export function SignDocumentContent({
             <SubmissionDetailCard doc={document} />
           )}
 
-          <SignatureUpload
-            onSignatureUploaded={() => {
-              signatureLoadedRef.current = false;
-              loadSignature();
-            }}
-          />
+          {isSignatureRequiredForRole && (
+            <SignatureUpload
+              onSignatureUploaded={() => {
+                signatureLoadedRef.current = false;
+                loadSignature();
+              }}
+            />
+          )}
         </div>
 
         {/* Container Kanan */}

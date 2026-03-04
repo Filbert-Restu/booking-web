@@ -99,18 +99,15 @@ function RouteComponent() {
     setDialogState({ type: 'approve', id });
   }, []);
 
-  const onConfirmApprove = useCallback(async () => {
-    if (!dialogState.id) return;
-    setActionLoading(true);
-
-    try {
-      await documentService.approveDocument(dialogState.id, '', 'Approved by Sumber Daya');
-      await fetchDocuments();
-    } finally {
-      setActionLoading(false);
-      setDialogState({ type: null, id: null });
+  const onConfirmApprove = useCallback(() => {
+    if (dialogState.id) {
+      navigate({
+        to: '/sumber-daya/approve-document',
+        search: { documentId: dialogState.id },
+      });
     }
-  }, [dialogState.id, fetchDocuments]);
+    setDialogState({ type: null, id: null });
+  }, [dialogState.id, navigate]);
 
   const handleRevise = useCallback((id: number) => {
     setDialogState({ type: 'revise', id });
@@ -133,11 +130,8 @@ function RouteComponent() {
 
   const handleOpenDoc = useCallback((documentId: number) => {
     navigate({
-      to: '/preview-document',
-      search: {
-        documentId,
-        return: '/sumber-daya'
-      }
+      to: '/sumber-daya/approve-document',
+      search: { documentId },
     });
   }, [navigate]);
 
@@ -222,10 +216,9 @@ function RouteComponent() {
         isOpen={dialogState.type === 'approve'}
         onClose={() => setDialogState({ type: null, id: null })}
         onConfirm={onConfirmApprove}
-        title='⚠️ Persetujuan Dokumen'
-        description='Apakah Anda yakin ingin menyetujui dokumen ini? Tindakan ini tidak dapat dibatalkan.'
-        confirmLabel='Setujui'
-        loading={actionLoading}
+        title='📋 Review Dokumen'
+        description='Anda akan diarahkan ke halaman review dokumen untuk melihat detail dan menyetujui dokumen.'
+        confirmLabel='Lanjutkan'
       />
 
       <RevisionDialog
