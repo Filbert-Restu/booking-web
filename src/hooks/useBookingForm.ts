@@ -232,6 +232,8 @@ export function useBookingForm({
         ketua_pelaksana_nama: content.ketua_pelaksana_nama,
         ketua_pelaksana_nim: content.ketua_pelaksana_nim,
         ketua_pelaksana_hp: content.ketua_pelaksana_hp,
+        // Autofill nama kegiatan dari reservasi ke stepper proposal
+        event_name: content.purpose || '',
       });
       // Navigate
       navigate({ to: '/peminjam/pinjam/proposal' });

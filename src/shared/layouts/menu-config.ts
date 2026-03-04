@@ -9,6 +9,7 @@ import {
   DoorOpen,
   PlusCircle,
   FileText,
+  CalendarDays,
 } from 'lucide-react';
 
 import type { MenuSection, SidebarFooterLink } from './SideBar';
@@ -241,7 +242,7 @@ export const menuConfigurations: Record<UserRole, MenuConfig> = {
           {
             title: 'Reservasi Ruang',
             url: '/peminjam/reservasi',
-            icon: ClipboardList,
+            icon: CalendarDays,
           },
           {
             title: 'Daftar Pengajuan',

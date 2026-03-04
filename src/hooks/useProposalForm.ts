@@ -156,6 +156,8 @@ export function useProposalForm() {
     const [error, setError] = useState<string | null>(null);
     const [fileError, setFileError] = useState<string | null>(null);
     const autoSaveRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    // Ref untuk menyimpan fungsi autoSave terbaru agar bisa dipanggil saat unmount
+    const autoSaveFnRef = useRef<() => Promise<void>>(() => Promise.resolve());
 
     // --- HYDRATE FROM API WHEN CONTEXT IS EMPTY (e.g. after refresh) ---
     useEffect(() => {
@@ -190,6 +192,12 @@ export function useProposalForm() {
             if (Object.keys(newFields).length > 0) {
                 setFields((prev) => ({ ...prev, ...newFields }));
                 updateFormData(hydrated);
+            }
+
+            // Fallback autofill: jika event_name masih kosong, gunakan purpose (nama kegiatan dari reservasi)
+            if (!newFields.event_name && c.purpose && typeof c.purpose === 'string' && c.purpose.trim()) {
+                setFields((prev) => ({ ...prev, event_name: String(c.purpose) }));
+                updateFormData({ event_name: String(c.purpose) });
             }
 
             // Check if a proposal file already exists on the server
@@ -259,6 +267,11 @@ export function useProposalForm() {
         }
     }, [formData, fields, syncToContext]);
 
+    // Selalu update ref ke fungsi autoSave terbaru
+    useEffect(() => {
+        autoSaveFnRef.current = autoSave;
+    }, [autoSave]);
+
     // Debounced autosave
     useEffect(() => {
         if (autoSaveRef.current) clearTimeout(autoSaveRef.current);
@@ -267,6 +280,13 @@ export function useProposalForm() {
             if (autoSaveRef.current) clearTimeout(autoSaveRef.current);
         };
     }, [autoSave]);
+
+    // Save-on-unmount: simpan data saat user navigasi sebelum autosave timer habis
+    useEffect(() => {
+        return () => {
+            autoSaveFnRef.current();
+        };
+    }, []);
 
     // --- SUBMIT ---
     const handleSubmit = useCallback(

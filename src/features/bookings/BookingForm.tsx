@@ -2,7 +2,6 @@ import React, { useMemo, useState, useEffect } from 'react';
 import { useNavigate } from '@tanstack/react-router';
 import { Stepper } from '@/shared/components/common/Stepper';
 import { Input } from '@/shared/components/ui/input';
-import { Textarea } from '@/shared/components/ui/textarea';
 import { Button } from '@/shared/components/ui/button/button';
 import {
     Select,
@@ -23,6 +22,7 @@ import { id } from 'date-fns/locale';
 import { cn } from '@/shared/lib/utils';
 import { TimePicker } from '@/shared/components/common/TimePicker';
 import { useBookingForm } from '@/hooks/useBookingForm';
+import { RoomDetailModal } from '@/features/bookings/RoomDetailModal';
 import type { Room } from '@/services/room.service';
 import type { ReservationContent } from '@/types/booking';
 import type { Document } from '@/types/document';
@@ -46,6 +46,9 @@ export function BookingForm(props: BookingFormProps) {
         availabilityMsg,
         submitMutation,
     } = useBookingForm(props);
+
+    // --- ROOM DETAIL MODAL ---
+    const [showRoomDetail, setShowRoomDetail] = useState(false);
 
     // --- DERIVED VALIDATION ---
     const isSaturday = useMemo(() => {
@@ -103,8 +106,8 @@ export function BookingForm(props: BookingFormProps) {
         e.preventDefault();
         setValidationError(null);
 
-        if (!form.roomId || !form.bookingDate || !form.activity) {
-            setValidationError('Lengkapi semua data wajib (ruangan, tanggal, aktivitas)');
+        if (!form.roomId || !form.bookingDate) {
+            setValidationError('Lengkapi semua data wajib (ruangan dan tanggal)');
             return;
         }
         if (!/^\d{14}$/.test(form.ketua.nim)) {
@@ -119,7 +122,7 @@ export function BookingForm(props: BookingFormProps) {
         submitMutation.mutate();
     };
 
-    return (
+    return (<>
         <div className='space-y-3'>
             <Stepper
                 steps={[
@@ -135,6 +138,15 @@ export function BookingForm(props: BookingFormProps) {
                     <h2 className='text-xl font-semibold'>
                         Detail Tempat - {selectedRoom?.name || 'Pilih Ruangan'}
                     </h2>
+                    {selectedRoom && (
+                        <button
+                            type='button'
+                            onClick={() => setShowRoomDetail(true)}
+                            className='text-sm text-blue-600 hover:text-blue-800 hover:underline font-medium transition-colors mt-1'
+                        >
+                            Lihat Detail Tempat
+                        </button>
+                    )}
                 </div>
 
                 <form onSubmit={handleSubmit} className='space-y-5'>
@@ -325,24 +337,13 @@ export function BookingForm(props: BookingFormProps) {
                         </div>
                     )}
 
-                    {/* ACTIVITY INPUT */}
-                    <div>
-                        <label className='text-sm'>Aktivitas</label>
-                        <Textarea
-                            rows={3}
-                            value={form.activity}
-                            onChange={(e) => handleChange('activity', e.target.value)}
-                            disabled={!canEditDocument}
-                            required
-                        />
-                    </div>
 
                     {/* BUTTONS */}
                     <div className='flex justify-end gap-3 pt-4'>
                         <Button
                             type='button'
                             variant='outline'
-                            onClick={() => navigate({ to: '/peminjam/pinjam' })}
+                            onClick={() => navigate({ to: '/peminjam/pinjam', search: { status: 'ALL' } })}
                         >
                             Batal
                         </Button>
@@ -362,5 +363,10 @@ export function BookingForm(props: BookingFormProps) {
                 </form>
             </div>
         </div>
-    );
+        <RoomDetailModal
+            open={showRoomDetail}
+            onOpenChange={setShowRoomDetail}
+            room={selectedRoom ?? null}
+        />
+    </>);
 }

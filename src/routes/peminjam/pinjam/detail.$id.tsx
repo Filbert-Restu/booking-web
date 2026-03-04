@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { ArrowLeft, RefreshCw, CheckCircle2 } from 'lucide-react';
+import { ArrowLeft, RefreshCw, CheckCircle2, ClipboardList } from 'lucide-react';
 import { Button } from '@/shared/components/ui/button/button';
 import {
     Select,
@@ -99,7 +99,7 @@ function DetailPengajuanPage() {
         return (
             <div className="flex flex-col items-center justify-center py-20 gap-4">
                 <p className="text-gray-500">Pengajuan tidak ditemukan.</p>
-                <Button variant="outline" onClick={() => navigate({ to: '/peminjam/pinjam' })}>
+                <Button variant="outline" onClick={() => navigate({ to: '/peminjam/pinjam', search: { status: 'ALL' } })}>
                     <ArrowLeft className="w-4 h-4 mr-2" /> Kembali
                 </Button>
             </div>
@@ -113,7 +113,7 @@ function DetailPengajuanPage() {
 
     // Cari log aksi RECEIVED/APPROVED per step_snapshot untuk mendapat timestamp
     const getStepLog = (stepOrder: number) =>
-        logs.find((l) => l.step_snapshot === stepOrder && (l.action === 'RECEIVED' || l.action === 'APPROVED' || l.action === 'SUBMITTED'));
+        logs.find((l) => l.step_snapshot === stepOrder && ((l.action as string) === 'RECEIVED' || l.action === 'APPROVED' || (l.action as string) === 'SUBMITTED'));
 
     const availableDocs: { type: DocType; hasFile: boolean }[] = [
         { type: 'proposal', hasFile: !!doc.file_proposal },
@@ -127,7 +127,7 @@ function DetailPengajuanPage() {
         <div className="space-y-4">
             {/* Header */}
             <div className="flex items-center gap-4">
-                <Button variant="outline" size="sm" onClick={() => navigate({ to: '/peminjam/pinjam' })}>
+                <Button variant="outline" size="sm" onClick={() => navigate({ to: '/peminjam/pinjam', search: { status: 'ALL' } })}>
                     <ArrowLeft className="w-4 h-4 mr-2" /> Kembali
                 </Button>
                 <h1 className="text-xl font-bold text-gray-900">Detail Pengajuan</h1>
@@ -167,6 +167,31 @@ function DetailPengajuanPage() {
                             <DocumentStatusBadge doc={doc} />
                         </div>
 
+                        {(doc.status === 'DRAFT' || doc.status === 'REVISION') && (
+                            <button
+                                onClick={() =>
+                                    navigate({
+                                        to: '/peminjam/pinjam/detail-tempat',
+                                        search: {
+                                            editId: doc.id,
+                                            roomId: undefined,
+                                            bookingDate: undefined,
+                                            startTime: undefined,
+                                            endTime: undefined,
+                                            purpose: undefined,
+                                            ketuaNama: undefined,
+                                            ketuaNim: undefined,
+                                            ketuaHp: undefined,
+                                        },
+                                    })
+                                }
+                                className="w-full flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-medium bg-blue-600 hover:bg-blue-700 text-white transition-colors"
+                            >
+                                <ClipboardList className="w-4 h-4" />
+                                Lengkapi Pengajuan
+                            </button>
+                        )}
+
                         {doc.status === 'IN_PROGRESS' && (
                             <div className="bg-blue-50 border border-blue-200 rounded-md p-3 text-sm text-blue-800">
                                 Dokumen sedang direview oleh{' '}
@@ -203,7 +228,7 @@ function DetailPengajuanPage() {
                                     .map((step, idx, arr) => {
                                         const isCompleted = step.step_order < currentStep || doc.status === 'APPROVED';
                                         const isActive = step.step_order === currentStep && doc.status === 'IN_PROGRESS';
-                                        const isPending = step.step_order > currentStep || (!isCompleted && !isActive);
+                                        const _isPending = step.step_order > currentStep || (!isCompleted && !isActive);
                                         const stepLog = getStepLog(step.step_order);
                                         const isLast = idx === arr.length - 1;
 
@@ -212,10 +237,10 @@ function DetailPengajuanPage() {
                                                 {/* Icon + garis vertikal */}
                                                 <div className="flex flex-col items-center">
                                                     <div className={`w-8 h-8 rounded-full border-2 flex items-center justify-center shrink-0 ${isCompleted
-                                                            ? 'border-blue-500 bg-blue-50'
-                                                            : isActive
-                                                                ? 'border-blue-400 bg-white'
-                                                                : 'border-gray-300 bg-white'
+                                                        ? 'border-blue-500 bg-blue-50'
+                                                        : isActive
+                                                            ? 'border-blue-400 bg-white'
+                                                            : 'border-gray-300 bg-white'
                                                         }`}>
                                                         {isCompleted ? (
                                                             <CheckCircle2 className="w-4 h-4 text-blue-500" />
