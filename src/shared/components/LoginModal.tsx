@@ -31,7 +31,7 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
         try {
             const response = await authService.login(formData);
             authService.saveAuthData(response);
-	    authService.redirectByRole(response.user.role?.name || '');
+            authService.redirectByRole(response.user.role?.name || '');
         } catch (err: unknown) {
             console.error('Login failed:', err);
             let errorMessage = 'Login gagal. Silakan coba lagi.';
@@ -59,12 +59,12 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
 
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
-            <DialogContent className="max-w-7xl w-[90vw] p-0 overflow-hidden border-none shadow-2xl rounded-xl sm:rounded-2xl">
-                <div className="flex flex-col md:flex-row h-full min-h-[600px]">
+            <DialogContent className="max-w-5xl w-[90vw] p-0 overflow-hidden border-none shadow-2xl rounded-xl sm:rounded-2xl">
+                <div className="flex flex-col md:flex-row h-full min-h-[500px]">
                     {/* Left Pane: Branding & Illustration */}
-                    <div className="flex-1 bg-secondary p-14 hidden md:flex flex-col items-center justify-center text-center space-y-10 animate-in slide-in-from-left duration-700">
+                    <div className="flex-1 bg-secondary p-8 md:p-10 hidden md:flex flex-col items-center justify-center text-center space-y-8 animate-in slide-in-from-left duration-700">
                         <div className="space-y-4">
-                            <h2 className="text-3xl font-bold text-white tracking-tight">
+                            <h2 className="text-2xl font-bold text-white tracking-tight">
                                 Peminjaman <br /> Ruang & Fasilitas
                             </h2>
                             <p className="text-white/70 text-sm font-medium">
@@ -74,9 +74,9 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
                         <img
                             src="/illustration.png"
                             alt="FSM Illustration"
-                            className="w-full max-w-[320px] h-auto drop-shadow-2xl brightness-110 contrast-105"
+                            className="w-full max-w-[260px] h-auto drop-shadow-2xl brightness-110 contrast-105"
                         />
-                        <div className="pt-4">
+                        <div className="pt-2">
                             <div className="flex gap-2 justify-center opacity-40">
                                 <div className="w-8 h-1 bg-white rounded-full" />
                                 <div className="w-2 h-1 bg-white rounded-full" />
@@ -86,13 +86,13 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
                     </div>
 
                     {/* Right Pane: Login Form */}
-                    <div className="flex-[1.4] bg-white p-10 md:p-20 flex flex-col justify-center animate-in slide-in-from-right duration-700">
-                        <div className="space-y-8">
+                    <div className="flex-[1.2] bg-white p-8 md:p-12 flex flex-col justify-center animate-in slide-in-from-right duration-700">
+                        <div className="space-y-6">
                             <div className="space-y-2">
-                                <DialogTitle className="text-4xl font-black text-foreground tracking-tight">
+                                <DialogTitle className="text-3xl font-black text-foreground tracking-tight">
                                     Log In
                                 </DialogTitle>
-                                <DialogDescription className="text-muted-foreground font-medium">
+                                <DialogDescription className="text-muted-foreground font-medium text-sm">
                                     Selamat datang kembali! Silakan masuk ke akun Anda.
                                 </DialogDescription>
                             </div>

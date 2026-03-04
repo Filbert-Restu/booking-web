@@ -100,7 +100,7 @@ export function TopBar({
 
             <button
               onClick={handleLogout}
-              className='inline-flex items-center gap-2 bg-white/20 text-white hover:bg-white/30 border border-white/30 px-4 py-2 rounded-xl shadow-sm transition-all duration-200 text-sm font-bold active:scale-95'
+              className='inline-flex items-center gap-2 bg-white text-primary hover:bg-gray-100 border border-white px-4 py-2 rounded-xl shadow-sm transition-all duration-200 text-sm font-bold active:scale-95'
             >
               Logout
             </button>
