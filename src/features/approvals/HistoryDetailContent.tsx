@@ -11,7 +11,7 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import { documentService } from '@/services/document.service';
-import { workflowService } from '@/services/workflow.service';
+
 import { SubmissionDetailCard } from '@/components/common/SubmissionDetailCard';
 import api from '@/lib/axios';
 
@@ -46,12 +46,7 @@ export function HistoryDetailContent({
         enabled: docId > 0,
     });
 
-    // ── Fetch workflow steps ──────────────────────────────────────────────────
-    const { data: workflow } = useQuery({
-        queryKey: ['workflow', doc?.workflow_id],
-        queryFn: () => workflowService.getWorkflow(doc!.workflow_id),
-        enabled: !!doc?.workflow_id,
-    });
+
 
     // ── PDF Preview State ─────────────────────────────────────────────────────
     const [selectedDocType, setSelectedDocType] = useState<DocType>('proposal');
@@ -120,7 +115,7 @@ export function HistoryDetailContent({
     }
 
     const currentStep = doc.current_step_order ?? 0;
-    const steps = workflow?.steps ?? [];
+    const steps = doc.workflow?.steps ?? [];
     const logs = doc.logs ?? [];
 
     const getStepLog = (stepOrder: number) =>
@@ -188,10 +183,10 @@ export function HistoryDetailContent({
                                                 <div className="flex flex-col items-center">
                                                     <div
                                                         className={`w-8 h-8 rounded-full border-2 flex items-center justify-center shrink-0 ${isCompleted
-                                                                ? 'border-blue-500 bg-blue-50'
-                                                                : isActive
-                                                                    ? 'border-blue-400 bg-white'
-                                                                    : 'border-gray-300 bg-white'
+                                                            ? 'border-blue-500 bg-blue-50'
+                                                            : isActive
+                                                                ? 'border-blue-400 bg-white'
+                                                                : 'border-gray-300 bg-white'
                                                             }`}
                                                     >
                                                         {isCompleted ? (
@@ -213,10 +208,10 @@ export function HistoryDetailContent({
                                                 <div className="pb-5 flex-1">
                                                     <div
                                                         className={`text-sm font-semibold ${isCompleted
-                                                                ? 'text-blue-700'
-                                                                : isActive
-                                                                    ? 'text-gray-900'
-                                                                    : 'text-gray-500'
+                                                            ? 'text-blue-700'
+                                                            : isActive
+                                                                ? 'text-gray-900'
+                                                                : 'text-gray-500'
                                                             }`}
                                                     >
                                                         {step.step_name}
@@ -228,10 +223,10 @@ export function HistoryDetailContent({
                                                     )}
                                                     <div
                                                         className={`text-xs mt-0.5 ${isCompleted
-                                                                ? 'text-blue-500'
-                                                                : isActive
-                                                                    ? 'text-blue-500 font-medium'
-                                                                    : 'text-gray-400'
+                                                            ? 'text-blue-500'
+                                                            : isActive
+                                                                ? 'text-blue-500 font-medium'
+                                                                : 'text-gray-400'
                                                             }`}
                                                     >
                                                         Status: {isCompleted ? 'Selesai' : 'Pending'}

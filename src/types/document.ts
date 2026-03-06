@@ -92,6 +92,14 @@ export interface Document<
     id: number;
     name: string;
     description?: string;
+    steps?: Array<{
+      id: number;
+      workflow_id: number;
+      step_order: number;
+      step_name: string;
+      target_role_slug: string;
+      scope_type: string;
+    }>;
   };
   current_holder?: UserShort;
   creator?: UserShort;
