@@ -31,14 +31,30 @@ export function mapDocumentToApprovalItem(doc: Document): ApprovalItem {
     RETURNED: 'Revisi',
     REVISION: 'Revisi',
     REJECTED: 'Ditolak',
+    SUBMITTED: 'Diajukan',
   };
+
+  // Get current user ID from localStorage
+  const currentUserId = Number(localStorage.getItem('userId'));
+
+  // Find the latest log specific to the current user
   const relevantLog = (doc.logs ?? [])
-    .filter((l) => ['APPROVED', 'RETURNED', 'REVISION', 'REJECTED'].includes(l.action as string))
-    .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
-  [0];
+    .filter((l) => l.user_id === currentUserId && ['APPROVED', 'RETURNED', 'REVISION', 'REJECTED', 'SUBMITTED'].includes(l.action as string))
+    .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0];
+
   const keterangan = relevantLog
-    ? `${actionLabels[relevantLog.action as string] ?? relevantLog.action} oleh ${relevantLog.user?.role?.name ?? relevantLog.user?.name ?? '-'}`
+    ? `${actionLabels[relevantLog.action as string] ?? relevantLog.action} oleh Anda`
     : '-';
+
+  // Override status visually for this role if they have acted
+  let displayStatus = doc.status;
+  if (relevantLog) {
+    if (relevantLog.action === 'APPROVED') displayStatus = 'APPROVED';
+    if (relevantLog.action === 'RETURNED' || relevantLog.action === 'REVISION') displayStatus = 'REVISION';
+    if (relevantLog.action === 'REJECTED') displayStatus = 'REJECTED';
+    if (relevantLog.action === 'SUBMITTED') displayStatus = 'APPROVED'; // Assuming submitting means they approved it in their step
+  }
+
 
   return {
     id: doc.id,
@@ -58,7 +74,7 @@ export function mapDocumentToApprovalItem(doc: Document): ApprovalItem {
         ? `${formatTime(String(content.start_time))} - ${formatTime(String(content.end_time))}`
         : '-',
     proposalUrl: doc.id ? `/documents/${doc.id}/file/proposal/pdf` : undefined,
-    status: mapDocumentStatus(doc.status),
+    status: mapDocumentStatus(displayStatus),
     tanggalPersetujuan: doc.completed_at
       ? formatDate(doc.completed_at)
       : undefined,

@@ -26,11 +26,13 @@ const DOC_LABELS: Record<DocType, string> = {
 interface HistoryDetailContentProps {
     documentId: number | undefined;
     returnPath: string;
+    children?: React.ReactNode;
 }
 
 export function HistoryDetailContent({
     documentId,
     returnPath,
+    children,
 }: HistoryDetailContentProps) {
     const navigate = useNavigate();
     const docId = documentId ?? 0;
@@ -221,6 +223,8 @@ export function HistoryDetailContent({
                 {/* ── Kolom Kiri: Info + Workflow Timeline ── */}
                 <div className="lg:col-span-3 space-y-4">
                     <SubmissionDetailCard doc={doc} />
+
+                    {children && <div className="mt-4">{children}</div>}
 
                     {/* Log-based Workflow Timeline */}
                     {timeline.length > 0 && (

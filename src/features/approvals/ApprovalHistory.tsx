@@ -53,7 +53,7 @@ export function ApprovalHistory({
   const [searchTerm, setSearchTerm] = useState('');
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
-  const [keteranganFilter, setKeteranganFilter] = useState('all');
+  const [aksiFilter, setAksiFilter] = useState('all');
 
   const filteredItems = useMemo(() => {
     return bookings.filter((item) => {
@@ -85,19 +85,19 @@ export function ApprovalHistory({
         }
       }
 
-      // Keterangan filter
-      let matchesKeterangan = true;
-      if (keteranganFilter === 'disetujui') {
-        matchesKeterangan = (item.keterangan ?? '').startsWith('Disetujui');
-      } else if (keteranganFilter === 'revisi') {
-        matchesKeterangan = (item.keterangan ?? '').startsWith('Revisi');
+      // Aksi filter
+      let matchesAksi = true;
+      if (aksiFilter === 'disetujui' || aksiFilter === 'diajukan') {
+        matchesAksi = (item.keterangan ?? '').startsWith('Disetujui') || (item.keterangan ?? '').startsWith('Diajukan');
+      } else if (aksiFilter === 'revisi') {
+        matchesAksi = (item.keterangan ?? '').startsWith('Revisi');
       }
 
-      return matchesSearch && matchesDate && matchesKeterangan;
+      return matchesSearch && matchesDate && matchesAksi;
     });
-  }, [bookings, searchTerm, dateFrom, dateTo, keteranganFilter]);
+  }, [bookings, searchTerm, dateFrom, dateTo, aksiFilter]);
 
-  const hasActiveFilters = dateFrom || dateTo || keteranganFilter !== 'all';
+  const hasActiveFilters = dateFrom || dateTo || aksiFilter !== 'all';
 
   return (
     <div className='w-full space-y-6'>
@@ -132,17 +132,17 @@ export function ApprovalHistory({
             />
           </div>
           <div>
-            <label className='block text-xs font-medium text-gray-500 mb-1'>Keterangan</label>
+            <label className='block text-xs font-medium text-gray-500 mb-1'>Aksi</label>
             <div className='flex rounded-lg border border-gray-200 overflow-hidden'>
               {[
                 { value: 'all', label: 'Semua' },
-                { value: 'disetujui', label: 'Disetujui' },
+                { value: 'disetujui', label: 'Disetujui/Diajukan' },
                 { value: 'revisi', label: 'Revisi' },
               ].map((tab) => (
                 <button
                   key={tab.value}
-                  onClick={() => setKeteranganFilter(tab.value)}
-                  className={`px-4 py-2 text-sm font-medium transition-colors ${keteranganFilter === tab.value
+                  onClick={() => setAksiFilter(tab.value)}
+                  className={`px-4 py-2 text-sm font-medium transition-colors ${aksiFilter === tab.value
                     ? 'bg-gray-900 text-white'
                     : 'bg-white text-gray-600 hover:bg-gray-50'
                     }`}
@@ -159,7 +159,7 @@ export function ApprovalHistory({
               onClick={() => {
                 setDateFrom('');
                 setDateTo('');
-                setKeteranganFilter('all');
+                setAksiFilter('all');
               }}
               className='text-gray-500'
             >
@@ -177,8 +177,7 @@ export function ApprovalHistory({
               <TableHead>Tanggal Diproses</TableHead>
               <TableHead>Nama Kegiatan</TableHead>
               {showOrganisasi && <TableHead>Organisasi</TableHead>}
-              <TableHead className='text-center'>Status</TableHead>
-              <TableHead>Keterangan</TableHead>
+              <TableHead className='text-center'>Aksi</TableHead>
               <TableHead className='text-center'>Detail</TableHead>
             </TableRow>
           </TableHeader>
@@ -186,7 +185,7 @@ export function ApprovalHistory({
             {filteredItems.length === 0 ? (
               <TableRow>
                 <TableCell
-                  colSpan={showOrganisasi ? 7 : 6}
+                  colSpan={showOrganisasi ? 6 : 5}
                   className='h-24 text-center text-gray-500'
                 >
                   Belum ada riwayat persetujuan
@@ -206,11 +205,6 @@ export function ApprovalHistory({
                     <TableCell className='text-center'>
                       <span className={badge.className}>
                         {badge.label}
-                      </span>
-                    </TableCell>
-                    <TableCell>
-                      <span className='text-sm text-gray-600'>
-                        {item.keterangan || '-'}
                       </span>
                     </TableCell>
                     <TableCell className='text-center'>
