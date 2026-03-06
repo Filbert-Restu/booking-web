@@ -117,6 +117,9 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
                                     </div>
 
                                     <div className="space-y-2">
+                                        <label htmlFor="password" className="text-sm font-bold text-foreground tracking-wide uppercase">
+                                            Password
+                                        </label>
                                         <Input
                                             id="password"
                                             name="password"
