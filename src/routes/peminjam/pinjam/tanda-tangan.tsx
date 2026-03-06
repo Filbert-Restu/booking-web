@@ -1,16 +1,16 @@
 import { createFileRoute } from '@tanstack/react-router';
-import { Stepper } from '@/shared/components/common/Stepper';
-import { Button } from '@/shared/components/ui/button/button';
-import { Checkbox } from '@/shared/components/ui/checkbox';
+import { Stepper } from '@/components/common/Stepper';
+import { Button } from '@/components/ui/button/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Download, RefreshCw, AlertCircle, CheckCircle, AlertTriangle } from 'lucide-react';
-import { SignatureUpload } from '@/shared/components/common/SignatureUpload';
+import { SignatureUpload } from '@/components/common/SignatureUpload';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/shared/components/ui/select';
+} from '@/components/ui/select';
 import {
   useSignaturePage,
   type DocumentType,

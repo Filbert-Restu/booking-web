@@ -3,8 +3,8 @@ import { useEffect, useState } from 'react';
 import { AxiosError } from 'axios';
 import api from '@/lib/axios';
 import { unitService, type Unit } from '@/services/unit.service';
-import { Button } from '@/shared/components/ui/button/button';
-import { Input } from '@/shared/components/ui/input';
+import { Button } from '@/components/ui/button/button';
+import { Input } from '@/components/ui/input';
 import { Plus, Pencil, Trash2, Search, Eye } from 'lucide-react';
 import {
   Table,
@@ -13,7 +13,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/shared/components/ui/table';
+} from '@/components/ui/table';
 import {
   Dialog,
   DialogContent,
@@ -21,7 +21,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/shared/components/ui/dialog';
+} from '@/components/ui/dialog';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -31,14 +31,14 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from '@/shared/components/ui/alert-dialog';
+} from '@/components/ui/alert-dialog';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/shared/components/ui/select';
+} from '@/components/ui/select';
 
 export const Route = createFileRoute('/admin/units/')({
   component: RouteComponent,

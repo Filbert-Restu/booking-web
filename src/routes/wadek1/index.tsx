@@ -2,14 +2,14 @@ import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { useState, useRef, useMemo, useCallback } from 'react';
 import { Clock, Users, CheckCircle } from 'lucide-react';
 import { useQuery, keepPreviousData } from '@tanstack/react-query';
-import { StatCard } from '@/shared/components/common/StatCard';
+import { StatCard } from '@/components/common/StatCard';
 import { Approval } from '@/features/approvals';
 import type { ActorRole } from '@/features/approvals';
 import { documentService } from '@/services/document.service';
 import { mapDocumentsToApprovalItems } from '@/features/approvals/approval-utils';
-import { Button } from '@/shared/components/ui/button/button';
-import { ConfirmDialog } from '@/shared/components/common/ConfirmDialog';
-import { RevisionDialog } from '@/shared/components/common/RevisionDialog';
+import { Button } from '@/components/ui/button/button';
+import { ConfirmDialog } from '@/components/common/ConfirmDialog';
+import { RevisionDialog } from '@/components/common/RevisionDialog';
 
 export const Route = createFileRoute('/wadek1/')({
   component: RouteComponent,
@@ -60,7 +60,7 @@ function RouteComponent() {
 
   const stats = useMemo(() => [
     {
-      title: 'Antrean Approval',
+      title: 'Antrean Persetujuan',
       value: String(approvalItems.filter((b) => b.status === 'waiting').length),
       icon: Clock,
       textColor: 'text-yellow-600',
@@ -76,7 +76,7 @@ function RouteComponent() {
       onClick: scrollToTable,
     },
     {
-      title: 'Total Diapprove',
+      title: 'Total Disetujui',
       value: String(approvedCount),
       icon: CheckCircle,
       textColor: 'text-green-600',
@@ -176,7 +176,7 @@ function RouteComponent() {
       </div>
 
       <div className='mt-6' ref={tableRef}>
-        <h2 className='text-lg font-semibold mb-4'>Persetujuan Peminjaman</h2>
+        <h2 className='text-lg font-semibold mb-4'>Antrean Persetujuan</h2>
         {approvalItems.length === 0 ? (
           <div className='bg-white rounded-lg border border-gray-200 p-8 text-center'>
             <p className='text-gray-500'>Tidak ada dokumen yang menunggu persetujuan</p>

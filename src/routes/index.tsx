@@ -1,9 +1,9 @@
 import { createFileRoute } from '@tanstack/react-router';
 
-import { TopBar } from '@/shared/layouts/TopBar';
-import { LoginModal } from '@/shared/components/LoginModal';
+import { TopBar } from '@/layouts/TopBar';
+import { LoginModal } from '@/components/LoginModal';
 import { useState } from 'react';
-import { Button } from '@/shared/components/ui/button/button';
+import { Button } from '@/components/ui/button/button';
 
 export const Route = createFileRoute('/')({
   component: RouteComponent,

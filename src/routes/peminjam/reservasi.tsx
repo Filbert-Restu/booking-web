@@ -5,8 +5,8 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/shared/components/ui/select';
-import { Button } from '@/shared/components/ui/button/button';
+} from '@/components/ui/select';
+import { Button } from '@/components/ui/button/button';
 import { useReservation } from '@/hooks/useReservation';
 import { ReservationForm } from '@/features/bookings/ReservationForm';
 import { BookingScheduleTable } from '@/features/bookings/BookingScheduleTable';

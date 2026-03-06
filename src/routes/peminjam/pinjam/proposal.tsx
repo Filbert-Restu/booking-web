@@ -1,7 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router';
-import { Stepper } from '@/shared/components/common/Stepper';
-import { Input } from '@/shared/components/ui/input';
-import { Button } from '@/shared/components/ui/button/button';
+import { Stepper } from '@/components/common/Stepper';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button/button';
 import { AlertCircle } from 'lucide-react';
 import { useProposalForm, type ProposalFields } from '@/hooks/useProposalForm';
 

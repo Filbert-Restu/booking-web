@@ -1,4 +1,4 @@
-import { WordEditorPlaceholder } from '@/shared/components/common/WordEditorPlaceholder';
+import { WordEditorPlaceholder } from '@/components/common/WordEditorPlaceholder';
 
 export type ApprovalDocType = 'executive-summary' | 'lembar-pengesahan';
 export type ApprovalModeType = 'preview' | 'sign';

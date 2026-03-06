@@ -8,10 +8,10 @@ import {
 	SelectItem,
 	SelectTrigger,
 	SelectValue,
-} from '@/shared/components/ui/select';
-import { Input } from '@/shared/components/ui/input';
-import { Textarea } from '@/shared/components/ui/textarea';
-import { Button } from '@/shared/components/ui/button/button';
+} from '@/components/ui/select';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Button } from '@/components/ui/button/button';
 import {
 	Table,
 	TableBody,
@@ -19,7 +19,7 @@ import {
 	TableHead,
 	TableHeader,
 	TableRow,
-} from '@/shared/components/ui/table';
+} from '@/components/ui/table';
 import { roomService, type Room, type RoomBooking } from '@/services/room.service';
 import { documentService } from '@/services/document.service';
 

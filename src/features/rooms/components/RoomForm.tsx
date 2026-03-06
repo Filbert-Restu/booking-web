@@ -1,6 +1,6 @@
-import { Input } from '@/shared/components/ui/input';
-import { Button } from '@/shared/components/ui/button/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/components/ui/select';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import type { Room } from '@/services/room.service';
 import type { ChangeEvent } from 'react';
 

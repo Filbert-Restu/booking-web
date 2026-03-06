@@ -6,7 +6,7 @@ import { documentService } from '@/services/document.service';
 import {
   mapDocumentsToApprovalItems,
 } from '@/features/approvals/approval-utils';
-import { Button } from '@/shared/components/ui/button/button';
+import { Button } from '@/components/ui/button/button';
 
 export const Route = createFileRoute('/senat/riwayat-persetujuan')({
   component: RouteComponent,

@@ -4,7 +4,7 @@ import { useQuery, keepPreviousData } from '@tanstack/react-query';
 import { ApprovalHistory } from '@/features/approvals';
 import { documentService } from '@/services/document.service';
 import { mapDocumentsToApprovalItems } from '@/features/approvals/approval-utils';
-import { Button } from '@/shared/components/ui/button/button';
+import { Button } from '@/components/ui/button/button';
 
 export const Route = createFileRoute('/sumber-daya/riwayat-persetujuan')({
   component: RouteComponent,
@@ -78,6 +78,7 @@ function RouteComponent() {
         <ApprovalHistory
           bookings={approvalItems}
           onOpenDoc={handleOpenDoc}
+          showOrganisasi={true}
           serverPagination={pagination ? {
             currentPage: pagination.current_page,
             lastPage: pagination.last_page,

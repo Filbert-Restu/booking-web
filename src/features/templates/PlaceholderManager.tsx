@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { Tag, Plus, X, Info } from 'lucide-react';
-import { Button } from '@/shared/components/ui/button/button';
-import { Input } from '@/shared/components/ui/input';
-import { Textarea } from '@/shared/components/ui/textarea';
+import { Button } from '@/components/ui/button/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 
 interface PlaceholderInfo {
   key: string;

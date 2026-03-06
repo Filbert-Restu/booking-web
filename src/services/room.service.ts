@@ -8,6 +8,9 @@ export interface Room {
   facilities?: string[];
   status: 'ACTIVE' | 'MAINTENANCE' | 'INACTIVE';
   description?: string;
+  building?: string;
+  floor?: string;
+  location?: string;
   images?: string[];
   image_url?: string;
   created_at: string;

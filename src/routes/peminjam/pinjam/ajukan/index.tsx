@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import api from '@/lib/axios';
 import { documentService } from '@/services/document.service';
 import type { CreateDocumentData } from '@/types/document';
-import { Button } from '@/shared/components/ui/button/button';
+import { Button } from '@/components/ui/button/button';
 
 export const Route = createFileRoute('/peminjam/pinjam/ajukan/')({
   component: RouteComponent,
@@ -115,7 +115,7 @@ export default function RouteComponent() {
 
       // 3. Sukses & Navigasi
       setSuccess('Dokumen berhasil dibuat');
-      navigate({ to: '/peminjam/pinjam' });
+      navigate({ to: '/peminjam/pinjam', search: { status: 'ALL' } });
     } catch (err: any) {
       console.error('createDocument error:', err);
 
@@ -235,7 +235,7 @@ export default function RouteComponent() {
           <Button
             type='button'
             variant='outline'
-            onClick={() => navigate({ to: '/peminjam/pinjam' })}
+            onClick={() => navigate({ to: '/peminjam/pinjam', search: { status: 'ALL' } })}
           >
             Batal
           </Button>

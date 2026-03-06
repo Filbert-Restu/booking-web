@@ -4,7 +4,7 @@ import {
     DialogDescription,
     DialogHeader,
     DialogTitle,
-} from '@/shared/components/ui/dialog';
+} from '@/components/ui/dialog';
 import { Building2, Users, MapPin, Layers, Info } from 'lucide-react';
 import type { Room } from '@/services/room.service';
 

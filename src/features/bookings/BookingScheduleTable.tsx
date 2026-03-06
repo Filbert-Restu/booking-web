@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import type { RoomBooking } from '@/services/room.service';
-import { Input } from '@/shared/components/ui/input';
+import { Input } from '@/components/ui/input';
 import {
     Table,
     TableBody,
@@ -8,7 +8,7 @@ import {
     TableHead,
     TableHeader,
     TableRow,
-} from '@/shared/components/ui/table';
+} from '@/components/ui/table';
 import { StatusBadge } from './StatusBadge';
 
 interface BookingScheduleTableProps {

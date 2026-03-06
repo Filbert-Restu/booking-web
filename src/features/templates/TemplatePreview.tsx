@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import mammoth from 'mammoth';
 import { FileText, Download, AlertCircle, FileType, Eye } from 'lucide-react';
-import { Button } from '@/shared/components/ui/button/button';
+import { Button } from '@/components/ui/button/button';
 import api from '@/lib/axios';
 
 interface TemplatePreviewProps {

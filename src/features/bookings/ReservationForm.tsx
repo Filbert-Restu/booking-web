@@ -1,23 +1,23 @@
 import { Calendar as CalendarIcon, AlertCircle } from 'lucide-react';
 import { format } from 'date-fns';
 import { id } from 'date-fns/locale';
-import { cn } from '@/shared/lib/utils';
-import { Calendar } from '@/shared/components/ui/calendar';
+import { cn } from '@/lib/utils';
+import { Calendar } from '@/components/ui/calendar';
 import {
     Popover,
     PopoverContent,
     PopoverTrigger,
-} from '@/shared/components/ui/popover';
+} from '@/components/ui/popover';
 import {
     Select,
     SelectContent,
     SelectItem,
     SelectTrigger,
     SelectValue,
-} from '@/shared/components/ui/select';
-import { Input } from '@/shared/components/ui/input';
-import { Textarea } from '@/shared/components/ui/textarea';
-import { Button } from '@/shared/components/ui/button/button';
+} from '@/components/ui/select';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Button } from '@/components/ui/button/button';
 import type { Room } from '@/services/room.service';
 import type { ReservationFormState } from '@/hooks/useReservation';
 import { AvailabilityIndicator } from './AvailabilityIndicator';

@@ -5,8 +5,8 @@ import {
     DialogDescription,
     DialogHeader,
     DialogTitle,
-} from '@/shared/components/ui/dialog';
-import { Button } from '@/shared/components/ui/button/button';
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button/button';
 import { Calendar, FileText } from 'lucide-react';
 
 interface DateSelectionModalProps {

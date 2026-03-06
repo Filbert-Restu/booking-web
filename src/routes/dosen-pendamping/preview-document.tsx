@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router';
-import { DocumentPreviewContent } from '@/routes/preview-document';
+import { HistoryDetailContent } from '@/features/approvals';
 
 export const Route = createFileRoute('/dosen-pendamping/preview-document')({
   component: RouteComponent,
@@ -13,5 +13,5 @@ export const Route = createFileRoute('/dosen-pendamping/preview-document')({
 function RouteComponent() {
   const { documentId } = Route.useSearch();
 
-  return <DocumentPreviewContent documentId={documentId} returnPath='/dosen-pendamping' />;
+  return <HistoryDetailContent documentId={documentId} returnPath='/dosen-pendamping/riwayat-persetujuan' />;
 }

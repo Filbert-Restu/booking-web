@@ -4,8 +4,8 @@ import {
 } from '@tanstack/react-router';
 import { useState } from 'react';
 import { ArrowLeft, Save, CheckCircle } from 'lucide-react';
-import { Button } from '@/shared/components/ui/button/button';
-import { SignatureUpload } from '@/shared/components/common/SignatureUpload';
+import { Button } from '@/components/ui/button/button';
+import { SignatureUpload } from '@/components/common/SignatureUpload';
 import type { Signature } from '@/services/signature.service';
 
 export const Route = createFileRoute('/tanda-tangan')({

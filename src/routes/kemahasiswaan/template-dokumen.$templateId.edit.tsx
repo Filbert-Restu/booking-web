@@ -9,9 +9,9 @@ import {
   ArrowLeft,
   CheckCircle,
 } from 'lucide-react';
-import { Button } from '@/shared/components/ui/button/button';
-import { Input } from '@/shared/components/ui/input';
-import { Textarea } from '@/shared/components/ui/textarea';
+import { Button } from '@/components/ui/button/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { TemplatePreview } from '@/features/templates/TemplatePreview';
 
 import { documentTemplateService } from '@/services/document-template.service';

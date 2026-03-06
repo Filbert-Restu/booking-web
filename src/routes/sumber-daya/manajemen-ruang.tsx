@@ -2,8 +2,8 @@ import { createFileRoute } from '@tanstack/react-router';
 import { useEffect, useState } from 'react';
 import type { ChangeEvent, FormEvent } from 'react';
 import { AxiosError } from 'axios';
-import { Button } from '@/shared/components/ui/button/button';
-import { Input } from '@/shared/components/ui/input';
+import { Button } from '@/components/ui/button/button';
+import { Input } from '@/components/ui/input';
 import {
 	Plus,
 	Pencil,
@@ -18,7 +18,7 @@ import {
 	TableHead,
 	TableHeader,
 	TableRow,
-} from '@/shared/components/ui/table';
+} from '@/components/ui/table';
 import {
 	Dialog,
 	DialogContent,
@@ -26,7 +26,7 @@ import {
 	DialogFooter,
 	DialogHeader,
 	DialogTitle,
-} from '@/shared/components/ui/dialog';
+} from '@/components/ui/dialog';
 import {
 	AlertDialog,
 	AlertDialogAction,
@@ -36,14 +36,14 @@ import {
 	AlertDialogFooter,
 	AlertDialogHeader,
 	AlertDialogTitle,
-} from '@/shared/components/ui/alert-dialog';
+} from '@/components/ui/alert-dialog';
 import {
 	Select,
 	SelectContent,
 	SelectItem,
 	SelectTrigger,
 	SelectValue,
-} from '@/shared/components/ui/select';
+} from '@/components/ui/select';
 import { roomService, type Room } from '@/services/room.service';
 
 export const Route = createFileRoute('/sumber-daya/manajemen-ruang')({

@@ -7,7 +7,7 @@ import {
     AlertDialogFooter,
     AlertDialogHeader,
     AlertDialogTitle,
-} from '@/shared/components/ui/alert-dialog';
+} from '@/components/ui/alert-dialog';
 import type { Room } from '@/services/room.service';
 
 interface DeleteRoomDialogProps {

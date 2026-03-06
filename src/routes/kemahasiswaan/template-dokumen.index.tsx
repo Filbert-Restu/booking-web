@@ -1,13 +1,13 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { AlertCircle } from 'lucide-react';
-import { Button } from '@/shared/components/ui/button/button';
+import { Button } from '@/components/ui/button/button';
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from '@/shared/components/ui/dialog';
+} from '@/components/ui/dialog';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -17,7 +17,7 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from '@/shared/components/ui/alert-dialog';
+} from '@/components/ui/alert-dialog';
 import {
   useTemplateManagement,
   TemplateTable,

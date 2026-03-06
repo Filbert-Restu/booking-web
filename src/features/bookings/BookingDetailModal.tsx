@@ -3,9 +3,9 @@
 import * as React from 'react';
 import * as Dialog from '@radix-ui/react-dialog';
 import { X } from 'lucide-react';
-import { Button } from '@/shared/components/ui/button/button';
-import { cn } from '@/shared/lib/utils';
-import { Badge } from '@/shared/components/ui/badge';
+import { Button } from '@/components/ui/button/button';
+import { cn } from '@/lib/utils';
+import { Badge } from '@/components/ui/badge';
 import type { RoomBooking } from '@/services/booking.service';
 
 interface Props {
@@ -69,55 +69,55 @@ export function BookingDetailModal({ open, onOpenChange, booking }: Props) {
 
           <div className='overflow-y-auto px-6 md:px-8 flex-1'>
             <div className='grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6'>
-            <DetailRow label='Tujuan / Kegiatan' className='sm:col-span-2'>
-              {booking.purpose}
-            </DetailRow>
-
-            {booking.room && (
-              <DetailRow label='Ruangan' className='sm:col-span-2'>
-                {booking.room.name}
-                {booking.room.capacity &&
-                  ` (Kapasitas: ${booking.room.capacity} orang)`}
+              <DetailRow label='Tujuan / Kegiatan' className='sm:col-span-2'>
+                {booking.purpose}
               </DetailRow>
-            )}
 
-            <DetailRow label='Tanggal'>{formattedDate}</DetailRow>
-            <DetailRow label='Waktu'>{timeRange}</DetailRow>
+              {booking.room && (
+                <DetailRow label='Ruangan' className='sm:col-span-2'>
+                  {booking.room.name}
+                  {booking.room.capacity &&
+                    ` (Kapasitas: ${booking.room.capacity} orang)`}
+                </DetailRow>
+              )}
 
-            {booking.expected_participants && (
-              <DetailRow label='Jumlah Peserta'>
-                {booking.expected_participants} orang
+              <DetailRow label='Tanggal'>{formattedDate}</DetailRow>
+              <DetailRow label='Waktu'>{timeRange}</DetailRow>
+
+              {booking.expected_participants && (
+                <DetailRow label='Jumlah Peserta'>
+                  {booking.expected_participants} orang
+                </DetailRow>
+              )}
+
+              <DetailRow label='Status'>
+                <BookingStatus status={booking.status} />
               </DetailRow>
-            )}
 
-            <DetailRow label='Status'>
-              <BookingStatus status={booking.status} />
-            </DetailRow>
+              {booking.special_requirements && (
+                <DetailRow label='Kebutuhan Khusus' className='sm:col-span-2'>
+                  {booking.special_requirements}
+                </DetailRow>
+              )}
 
-            {booking.special_requirements && (
-              <DetailRow label='Kebutuhan Khusus' className='sm:col-span-2'>
-                {booking.special_requirements}
-              </DetailRow>
-            )}
+              {booking.rejection_reason && (
+                <DetailRow label='Alasan Penolakan' className='sm:col-span-2'>
+                  <span className='text-red-600'>{booking.rejection_reason}</span>
+                </DetailRow>
+              )}
 
-            {booking.rejection_reason && (
-              <DetailRow label='Alasan Penolakan' className='sm:col-span-2'>
-                <span className='text-red-600'>{booking.rejection_reason}</span>
-              </DetailRow>
-            )}
+              {booking.booked_by_user && (
+                <DetailRow label='Peminjam'>
+                  {booking.booked_by_user.name}
+                </DetailRow>
+              )}
 
-            {booking.booked_by_user && (
-              <DetailRow label='Peminjam'>
-                {booking.booked_by_user.name}
-              </DetailRow>
-            )}
-
-            {booking.document && (
-              <DetailRow label='Dokumen Terkait'>
-                {booking.document.title}
-              </DetailRow>
-            )}
-          </div>
+              {booking.document && (
+                <DetailRow label='Dokumen Terkait'>
+                  {booking.document.title}
+                </DetailRow>
+              )}
+            </div>
           </div>
 
           <div className='p-6 md:p-8 pt-4 flex justify-end gap-2 shrink-0 border-t'>
@@ -162,7 +162,7 @@ function DetailRow({
 function BookingStatus({
   status,
 }: {
-  status: 'approved' | 'pending' | 'rejected' | 'cancelled' | 'completed';
+  status: string;
 }) {
   // Normalize status ke lowercase untuk matching
   const normalizedStatus = status?.toLowerCase() as keyof typeof statusMap;
@@ -177,12 +177,12 @@ function BookingStatus({
     <Badge
       variant={
         variant as
-          | 'default'
-          | 'destructive'
-          | 'outline'
-          | 'secondary'
-          | 'success'
-          | 'warning'
+        | 'default'
+        | 'destructive'
+        | 'outline'
+        | 'secondary'
+        | 'success'
+        | 'warning'
       }
     >
       {text}

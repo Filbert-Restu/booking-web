@@ -1,8 +1,8 @@
 import { createFileRoute, useNavigate, useSearch } from '@tanstack/react-router';
 import { useState } from 'react';
 import { PenTool, CheckCircle } from 'lucide-react';
-import { Button } from '@/shared/components/ui/button/button';
-import { Checkbox } from '@/shared/components/ui/checkbox';
+import { Button } from '@/components/ui/button/button';
+import { Checkbox } from '@/components/ui/checkbox';
 
 export const Route = createFileRoute('/ketua-ormawa/sign')({
   component: RouteComponent,

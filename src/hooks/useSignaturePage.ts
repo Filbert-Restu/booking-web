@@ -77,15 +77,7 @@ export function useSignaturePage() {
             navigate({
                 to: '/peminjam/pinjam',
                 search: {
-                    editId: undefined,
-                    roomId: undefined,
-                    bookingDate: undefined,
-                    startTime: undefined,
-                    endTime: undefined,
-                    purpose: undefined,
-                    ketuaNama: undefined,
-                    ketuaNim: undefined,
-                    ketuaHp: undefined,
+                    status: 'ALL',
                 },
             });
         }
@@ -342,7 +334,7 @@ export function useSignaturePage() {
 
             // 5. Success
             resetFormData();
-            navigate({ to: '/peminjam/pinjam' });
+            navigate({ to: '/peminjam/pinjam', search: { status: 'ALL' } });
         } catch (err) {
             setStatusMessage({
                 type: 'error',
@@ -361,7 +353,7 @@ export function useSignaturePage() {
     ]);
 
     const handleBack = useCallback(() => {
-        navigate({ to: '/peminjam/pinjam/proposal' });
+        navigate({ to: '/peminjam/pinjam', search: { status: 'ALL' } });
     }, [navigate]);
 
     return {

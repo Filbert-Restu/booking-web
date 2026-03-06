@@ -7,8 +7,8 @@ import {
   Save,
   RefreshCw,
 } from 'lucide-react';
-import { Button } from '@/shared/components/ui/button/button';
-import { Input } from '@/shared/components/ui/input';
+import { Button } from '@/components/ui/button/button';
+import { Input } from '@/components/ui/input';
 
 import { documentTemplateService } from '@/services/document-template.service';
 import type {

@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { Clock, DoorOpen, Users } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { StatCard } from '@/shared/components/common/StatCard';
+import { StatCard } from '@/components/common/StatCard';
 import BookingCalendar from '@/features/bookings/BookingCalendar';
 import {
   dashboardService,

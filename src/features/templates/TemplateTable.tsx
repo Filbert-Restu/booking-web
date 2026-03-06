@@ -8,14 +8,14 @@ import {
     Pencil,
     Plus,
 } from 'lucide-react';
-import { Button } from '@/shared/components/ui/button/button';
+import { Button } from '@/components/ui/button/button';
 import {
     Select,
     SelectContent,
     SelectItem,
     SelectTrigger,
     SelectValue,
-} from '@/shared/components/ui/select';
+} from '@/components/ui/select';
 import {
     Table,
     TableBody,
@@ -23,7 +23,7 @@ import {
     TableHead,
     TableHeader,
     TableRow,
-} from '@/shared/components/ui/table';
+} from '@/components/ui/table';
 import type { DocumentTemplate } from '@/types/template.types';
 import { TEMPLATE_TYPE_LABELS, ORG_TYPE_LABELS } from './useTemplateManagement';
 

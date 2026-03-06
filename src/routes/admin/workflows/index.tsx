@@ -9,10 +9,10 @@ import {
 } from '@/services/workflow.service';
 import { roleService, type Role } from '@/services/role.service';
 import { categories, scopeTypes } from '@/services/workflow.constants';
-import { Button } from '@/shared/components/ui/button/button';
-import { Input } from '@/shared/components/ui/input';
-import { Label } from '@/shared/components/ui/label';
-import { Textarea } from '@/shared/components/ui/textarea';
+import { Button } from '@/components/ui/button/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import { Plus, Search } from 'lucide-react';
 import {
   Dialog,
@@ -21,20 +21,20 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/shared/components/ui/dialog';
+} from '@/components/ui/dialog';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/shared/components/ui/select';
-import { CreateWorkflowDialog } from '@/shared/components/ui/workflows/CreateWorkflowDialog';
-import { WorkflowDetailDialog } from '@/shared/components/ui/workflows/WorkflowDetailDialog';
-import { WorkflowDeleteDialog } from '@/shared/components/ui/workflows/WorkflowDeleteDialog';
-import { WorkflowTable } from '@/shared/components/ui/workflows/WorkflowTable';
-import { WorkflowStepDialog } from '@/shared/components/ui/workflows/WorkflowStepDialog';
-import { WorkflowStepDeleteDialog } from '@/shared/components/ui/workflows/WorkflowStepDeleteDialog';
+} from '@/components/ui/select';
+import { CreateWorkflowDialog } from '@/components/ui/workflows/CreateWorkflowDialog';
+import { WorkflowDetailDialog } from '@/components/ui/workflows/WorkflowDetailDialog';
+import { WorkflowDeleteDialog } from '@/components/ui/workflows/WorkflowDeleteDialog';
+import { WorkflowTable } from '@/components/ui/workflows/WorkflowTable';
+import { WorkflowStepDialog } from '@/components/ui/workflows/WorkflowStepDialog';
+import { WorkflowStepDeleteDialog } from '@/components/ui/workflows/WorkflowStepDeleteDialog';
 
 export const Route = createFileRoute('/admin/workflows/')({
   component: RouteComponent,

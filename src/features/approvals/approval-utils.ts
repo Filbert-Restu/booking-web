@@ -25,6 +25,20 @@ export function mapDocumentToApprovalItem(doc: Document): ApprovalItem {
     if (!time) return '-';
     return time.substring(0, 5);
   };
+  // Build keterangan from logs
+  const actionLabels: Record<string, string> = {
+    APPROVED: 'Disetujui',
+    RETURNED: 'Revisi',
+    REVISION: 'Revisi',
+    REJECTED: 'Ditolak',
+  };
+  const relevantLog = (doc.logs ?? [])
+    .filter((l) => ['APPROVED', 'RETURNED', 'REVISION', 'REJECTED'].includes(l.action as string))
+    .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+  [0];
+  const keterangan = relevantLog
+    ? `${actionLabels[relevantLog.action as string] ?? relevantLog.action} oleh ${relevantLog.user?.role?.name ?? relevantLog.user?.name ?? '-'}`
+    : '-';
 
   return {
     id: doc.id,
@@ -54,6 +68,8 @@ export function mapDocumentToApprovalItem(doc: Document): ApprovalItem {
     hasProposal: !!doc.file_proposal,
     hasExecutiveSummary: !!doc.file_executive_summary,
     hasApprovalSheet: !!doc.file_approval_sheet,
+    tanggalMasuk: relevantLog ? formatDate(relevantLog.created_at) : formatDate(doc.updated_at || doc.created_at),
+    keterangan,
   };
 }
 

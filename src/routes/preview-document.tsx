@@ -5,21 +5,21 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
-} from '@/shared/components/ui/card';
-import { Button } from '@/shared/components/ui/button/button';
+} from '@/components/ui/card';
+import { Button } from '@/components/ui/button/button';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/shared/components/ui/select';
+} from '@/components/ui/select';
 import api from '@/lib/axios';
 import { AxiosError } from 'axios';
 import { documentService, type Document } from '@/services/document.service';
 
-import { ConfirmDialog } from '@/shared/components/common/ConfirmDialog';
-import { RevisionDialog } from '@/shared/components/common/RevisionDialog';
+import { ConfirmDialog } from '@/components/common/ConfirmDialog';
+import { RevisionDialog } from '@/components/common/RevisionDialog';
 
 export const Route = createFileRoute('/preview-document')({
   component: RouteComponent,

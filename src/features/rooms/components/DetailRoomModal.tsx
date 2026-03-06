@@ -1,5 +1,5 @@
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/shared/components/ui/dialog';
-import { Button } from '@/shared/components/ui/button/button';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button/button';
 import { Camera } from 'lucide-react';
 import type { Room } from '@/services/room.service';
 

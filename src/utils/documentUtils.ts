@@ -34,8 +34,8 @@ export const documentHelpers = {
   },
 
   getEventName: (doc: Document) => {
-    // Ambil dari purpose (field saat reservasi) atau event_name sebagai fallback
-    const eventName = doc.content?.purpose || doc.content?.event_name;
+    // Prioritaskan event_name (diisi di stepper proposal) atas purpose (dari reservasi awal)
+    const eventName = doc.content?.event_name || doc.content?.purpose;
     return eventName ? String(eventName) : 'Tidak ada nama';
   },
 
@@ -90,7 +90,7 @@ export const documentHelpers = {
     }
 
     const daysRemaining = documentHelpers.getDaysRemaining(doc);
-    
+
     if (daysRemaining < 0) return 'expired';
     if (daysRemaining <= 2) return 'critical';
     if (daysRemaining <= 5) return 'warning';
@@ -103,7 +103,7 @@ export const documentHelpers = {
   getDeadlineText: (doc: Document) => {
     const daysRemaining = documentHelpers.getDaysRemaining(doc);
     const deadline = documentHelpers.getDeadline(doc);
-    
+
     if (daysRemaining < 0) {
       return `Expired ${Math.abs(daysRemaining)} hari lalu`;
     }
@@ -113,13 +113,13 @@ export const documentHelpers = {
     if (daysRemaining === 1) {
       return '1 hari lagi';
     }
-    
+
     const deadlineStr = deadline.toLocaleDateString('id-ID', {
       day: 'numeric',
       month: 'short',
       year: 'numeric',
     });
-    
+
     return `${daysRemaining} hari lagi (${deadlineStr})`;
   },
 };

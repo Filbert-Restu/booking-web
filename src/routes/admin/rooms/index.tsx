@@ -1,6 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router';
-import { Button } from '@/shared/components/ui/button/button';
-import { Input } from '@/shared/components/ui/input';
+import { Button } from '@/components/ui/button/button';
+import { Input } from '@/components/ui/input';
 import {
   Plus,
   Pencil,
@@ -20,21 +20,21 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/shared/components/ui/table';
+} from '@/components/ui/table';
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from '@/shared/components/ui/dialog';
+} from '@/components/ui/dialog';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/shared/components/ui/select';
+} from '@/components/ui/select';
 
 export const Route = createFileRoute('/admin/rooms/')({
   component: RouteComponent,

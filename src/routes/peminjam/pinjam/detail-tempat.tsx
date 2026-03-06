@@ -2,7 +2,7 @@ import { createFileRoute, redirect, useNavigate } from '@tanstack/react-router';
 import { useQuery } from '@tanstack/react-query';
 import { useMemo } from 'react';
 import { AlertCircle } from 'lucide-react';
-import { Button } from '@/shared/components/ui/button/button';
+import { Button } from '@/components/ui/button/button';
 import { roomService } from '@/services/room.service';
 import { documentService } from '@/services/document.service';
 import { authService } from '@/services/auth.service';
@@ -105,7 +105,7 @@ function RouteComponent() {
             <h3 className='font-semibold mb-2'>Akses Ditolak</h3>
             <p className='text-sm'>{accessError}</p>
           </div>
-          <Button onClick={() => navigate({ to: '/peminjam/pinjam' })}>
+          <Button onClick={() => navigate({ to: '/peminjam/pinjam', search: { status: 'ALL' } })}>
             Kembali ke Daftar Peminjaman
           </Button>
         </div>

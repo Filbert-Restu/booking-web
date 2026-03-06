@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { useState, useRef, useMemo, useCallback } from 'react';
 import { Clock, DoorOpen, CheckCircle } from 'lucide-react';
 import { useQuery, keepPreviousData } from '@tanstack/react-query';
-import { StatCard } from '@/shared/components/common/StatCard';
+import { StatCard } from '@/components/common/StatCard';
 import { Approval } from '@/features/approvals';
 import type { ActorRole } from '@/features/approvals';
 import { dashboardService } from '@/services/dashboard.service';
@@ -10,9 +10,9 @@ import { documentService } from '@/services/document.service';
 import {
   mapDocumentsToApprovalItems,
 } from '@/features/approvals/approval-utils';
-import { ConfirmDialog } from '@/shared/components/common/ConfirmDialog';
-import { RevisionDialog } from '@/shared/components/common/RevisionDialog';
-import { Button } from '@/shared/components/ui/button/button';
+import { ConfirmDialog } from '@/components/common/ConfirmDialog';
+import { RevisionDialog } from '@/components/common/RevisionDialog';
+import { Button } from '@/components/ui/button/button';
 
 export const Route = createFileRoute('/sumber-daya/')({
   component: RouteComponent,
@@ -70,7 +70,7 @@ function RouteComponent() {
 
   const stats = useMemo(() => [
     {
-      title: 'Antrean Approval',
+      title: 'Antrean Persetujuan',
       value: String(approvalItems.filter((b) => b.status === 'waiting').length),
       icon: Clock,
       textColor: 'text-yellow-600',
@@ -86,7 +86,7 @@ function RouteComponent() {
       onClick: () => navigate({ to: '/sumber-daya/manajemen-ruang' }),
     },
     {
-      title: 'Total Diapprove',
+      title: 'Total Disetujui',
       value: String(approvedCount),
       icon: CheckCircle,
       textColor: 'text-green-600',
@@ -99,18 +99,15 @@ function RouteComponent() {
     setDialogState({ type: 'approve', id });
   }, []);
 
-  const onConfirmApprove = useCallback(async () => {
-    if (!dialogState.id) return;
-    setActionLoading(true);
-
-    try {
-      await documentService.approveDocument(dialogState.id, '', 'Approved by Sumber Daya');
-      await fetchDocuments();
-    } finally {
-      setActionLoading(false);
-      setDialogState({ type: null, id: null });
+  const onConfirmApprove = useCallback(() => {
+    if (dialogState.id) {
+      navigate({
+        to: '/sumber-daya/approve-document',
+        search: { documentId: dialogState.id },
+      });
     }
-  }, [dialogState.id, fetchDocuments]);
+    setDialogState({ type: null, id: null });
+  }, [dialogState.id, navigate]);
 
   const handleRevise = useCallback((id: number) => {
     setDialogState({ type: 'revise', id });
@@ -133,11 +130,8 @@ function RouteComponent() {
 
   const handleOpenDoc = useCallback((documentId: number) => {
     navigate({
-      to: '/preview-document',
-      search: {
-        documentId,
-        return: '/sumber-daya'
-      }
+      to: '/sumber-daya/approve-document',
+      search: { documentId },
     });
   }, [navigate]);
 
@@ -190,7 +184,7 @@ function RouteComponent() {
       </div>
 
       <div className='mt-6' ref={tableRef}>
-        <h2 className='text-lg font-semibold mb-4'>Persetujuan Peminjaman</h2>
+        <h2 className='text-lg font-semibold mb-4'>Antrean Persetujuan</h2>
         {approvalItems.length === 0 ? (
           <div className='bg-white rounded-lg border border-gray-200 p-8 text-center'>
             <p className='text-gray-500'>
@@ -222,10 +216,9 @@ function RouteComponent() {
         isOpen={dialogState.type === 'approve'}
         onClose={() => setDialogState({ type: null, id: null })}
         onConfirm={onConfirmApprove}
-        title='⚠️ Persetujuan Dokumen'
-        description='Apakah Anda yakin ingin menyetujui dokumen ini? Tindakan ini tidak dapat dibatalkan.'
-        confirmLabel='Setujui'
-        loading={actionLoading}
+        title='📋 Review Dokumen'
+        description='Anda akan diarahkan ke halaman review dokumen untuk melihat detail dan menyetujui dokumen.'
+        confirmLabel='Lanjutkan'
       />
 
       <RevisionDialog
