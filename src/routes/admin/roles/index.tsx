@@ -103,7 +103,7 @@ function RouteComponent() {
       const error = err as AxiosError<{ message: string }>;
       setError(
         error.response?.data?.message ||
-          'Gagal memuat data role. Silakan coba lagi.',
+        'Gagal memuat data role. Silakan coba lagi.',
       );
     } finally {
       setIsLoading(false);
@@ -163,7 +163,7 @@ function RouteComponent() {
       const error = err as AxiosError<{ message: string }>;
       setFormError(
         error.response?.data?.message ||
-          'Gagal membuat role. Silakan coba lagi.',
+        'Gagal membuat role. Silakan coba lagi.',
       );
     } finally {
       setIsSubmitting(false);
@@ -191,7 +191,7 @@ function RouteComponent() {
       const error = err as AxiosError<{ message: string }>;
       setFormError(
         error.response?.data?.message ||
-          'Gagal mengupdate role. Silakan coba lagi.',
+        'Gagal mengupdate role. Silakan coba lagi.',
       );
     } finally {
       setIsSubmitting(false);
@@ -211,7 +211,7 @@ function RouteComponent() {
       const error = err as AxiosError<{ message: string }>;
       alert(
         error.response?.data?.message ||
-          'Gagal menghapus role. Silakan coba lagi.',
+        'Gagal menghapus role. Silakan coba lagi.',
       );
     } finally {
       setIsSubmitting(false);
@@ -226,9 +226,9 @@ function RouteComponent() {
       slug:
         prev.slug === ''
           ? value
-              .toLowerCase()
-              .replace(/[^a-z0-9]+/g, '-')
-              .replace(/^-+|-+$/g, '')
+            .toLowerCase()
+            .replace(/[^a-z0-9]+/g, '-')
+            .replace(/^-+|-+$/g, '')
           : prev.slug,
     }));
   };
@@ -574,11 +574,10 @@ function RouteComponent() {
                       </div>
                       <div className='ml-4'>
                         <span
-                          className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                            user.status === 'ACTIVE'
+                          className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${user.status === 'ACTIVE'
                               ? 'bg-green-100 text-green-800'
                               : 'bg-gray-100 text-gray-800'
-                          }`}
+                            }`}
                         >
                           {user.status}
                         </span>

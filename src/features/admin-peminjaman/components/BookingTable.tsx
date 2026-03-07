@@ -35,16 +35,16 @@ export function BookingTable({
         <Table>
             <TableHeader>
                 <TableRow>
-                    <TableHead className='w-8 sm:w-12.5 text-center text-xs sm:text-sm'>
+                    <TableHead className='w-8 sm:w-12.5 text-center text-[10px] md:text-sm px-1 py-1.5 sm:px-4 sm:py-3'>
                         No
                     </TableHead>
-                    <TableHead className='text-xs sm:text-sm'>Kode Unit</TableHead>
-                    <TableHead className='text-xs sm:text-sm'>Nama Peminjam</TableHead>
-                    <TableHead className='hidden sm:table-cell text-xs sm:text-sm'>Ruangan</TableHead>
-                    <TableHead className='hidden md:table-cell text-xs sm:text-sm'>Tanggal</TableHead>
-                    <TableHead className='hidden lg:table-cell text-xs sm:text-sm'>Waktu</TableHead>
-                    <TableHead className='text-xs sm:text-sm'>Status</TableHead>
-                    <TableHead className='text-center text-xs sm:text-sm w-20 sm:w-auto'>
+                    <TableHead className='text-[10px] md:text-sm px-1 py-1.5 sm:px-4 sm:py-3'>Kode Unit</TableHead>
+                    <TableHead className='text-[10px] md:text-sm px-1 py-1.5 sm:px-4 sm:py-3'>Nama Peminjam</TableHead>
+                    <TableHead className='hidden sm:table-cell text-[10px] md:text-sm px-1 py-1.5 sm:px-4 sm:py-3'>Ruangan</TableHead>
+                    <TableHead className='hidden md:table-cell text-[10px] md:text-sm px-1 py-1.5 sm:px-4 sm:py-3'>Tanggal</TableHead>
+                    <TableHead className='hidden lg:table-cell text-[10px] md:text-sm px-1 py-1.5 sm:px-4 sm:py-3'>Waktu</TableHead>
+                    <TableHead className='text-[10px] md:text-sm px-1 py-1.5 sm:px-4 sm:py-3'>Status</TableHead>
+                    <TableHead className='text-center text-[10px] md:text-sm w-20 sm:w-auto px-1 py-1.5 sm:px-4 sm:py-3'>
                         Aksi
                     </TableHead>
                 </TableRow>
@@ -61,35 +61,35 @@ export function BookingTable({
                 ) : (
                     bookings.map((item, index) => (
                         <TableRow key={item.id}>
-                            <TableCell className='font-medium text-center text-xs sm:text-sm py-2 sm:py-3'>
+                            <TableCell className='font-medium text-center text-[10px] md:text-sm px-1 py-1.5 sm:px-4 sm:py-3'>
                                 {index + 1}
                             </TableCell>
-                            <TableCell className='text-xs sm:text-sm text-gray-500 py-2 sm:py-3'>
+                            <TableCell className='text-[10px] md:text-sm text-gray-500 px-1 py-1.5 sm:px-4 sm:py-3'>
                                 {item.booked_by_user?.unit_code || item.bookedBy?.unit?.code || '-'}
                             </TableCell>
-                            <TableCell className='text-xs sm:text-sm font-medium text-gray-900 py-2 sm:py-3'>
+                            <TableCell className='text-[10px] md:text-sm font-medium text-gray-900 px-1 py-1.5 sm:px-4 sm:py-3'>
                                 <div>{item.booked_by_user?.name || item.bookedBy?.name || '-'}</div>
-                                <div className='sm:hidden text-[10px] text-gray-500 mt-0.5'>
+                                <div className='sm:hidden text-[10px] text-gray-500 mt-0.5 line-clamp-1'>
                                     {item.room?.code || item.room?.name || '-'}
                                 </div>
                             </TableCell>
-                            <TableCell className='hidden sm:table-cell text-xs sm:text-sm text-gray-500 py-2 sm:py-3'>
+                            <TableCell className='hidden sm:table-cell text-[10px] md:text-sm text-gray-500 px-1 py-1.5 sm:px-4 sm:py-3'>
                                 {item.room?.code || item.room?.name || '-'}
                             </TableCell>
-                            <TableCell className='hidden md:table-cell text-xs sm:text-sm text-gray-500 py-2 sm:py-3'>
+                            <TableCell className='hidden md:table-cell text-[10px] md:text-sm text-gray-500 px-1 py-1.5 sm:px-4 sm:py-3'>
                                 {new Date(item.booking_date).toLocaleDateString('id-ID', {
                                     day: 'numeric',
                                     month: 'short',
                                     year: 'numeric',
                                 })}
                             </TableCell>
-                            <TableCell className='hidden lg:table-cell text-xs sm:text-sm text-gray-500 py-2 sm:py-3'>
+                            <TableCell className='hidden lg:table-cell text-[10px] md:text-sm text-gray-500 px-1 py-1.5 sm:px-4 sm:py-3'>
                                 {item.start_time} - {item.end_time}
                             </TableCell>
-                            <TableCell className='py-2 sm:py-3'>
+                            <TableCell className='px-1 py-1.5 sm:px-4 sm:py-3 text-[10px] md:text-sm'>
                                 {statusBadge(item.status)}
                             </TableCell>
-                            <TableCell className='py-2 sm:py-3'>
+                            <TableCell className='px-1 py-1.5 sm:px-4 sm:py-3'>
                                 <div className='flex items-center justify-center gap-1 sm:gap-2'>
                                     <Button
                                         variant='ghost'
@@ -98,7 +98,7 @@ export function BookingTable({
                                         className='h-6 w-6 sm:h-8 sm:w-8 p-0'
                                         title='Lihat Detail'
                                     >
-                                        <Eye className='h-3 w-3 sm:h-4 sm:w-4' />
+                                        <Eye className='h-3.5 w-3.5 md:h-4 md:w-4' />
                                     </Button>
                                     <Button
                                         variant='ghost'
@@ -108,7 +108,7 @@ export function BookingTable({
                                         className='h-6 w-6 sm:h-8 sm:w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50'
                                         title={item.status === 'APPROVED' ? 'Tidak bisa hapus yang sudah approved' : 'Hapus'}
                                     >
-                                        <Trash2 className={`h-3 w-3 sm:h-4 sm:w-4 ${item.status === 'APPROVED' ? 'text-gray-300' : ''}`} />
+                                        <Trash2 className={`h-3.5 w-3.5 md:h-4 md:w-4 ${item.status === 'APPROVED' ? 'text-gray-300' : ''}`} />
                                     </Button>
                                 </div>
                             </TableCell>

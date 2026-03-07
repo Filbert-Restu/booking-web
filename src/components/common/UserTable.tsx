@@ -28,8 +28,7 @@ interface UserTableProps {
 
 const RoleBadge = ({ role }: { role: string }) => (
   <span
-    className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-      role === 'Admin'
+    className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${role === 'Admin'
         ? 'bg-purple-100 text-purple-800'
         : role === 'Kemahasiswaan'
           ? 'bg-blue-100 text-blue-800'
@@ -38,7 +37,7 @@ const RoleBadge = ({ role }: { role: string }) => (
             : role === 'Peminjam'
               ? 'bg-green-100 text-green-800'
               : 'bg-gray-100 text-gray-800'
-    }`}
+      }`}
   >
     {role}
   </span>
@@ -102,43 +101,44 @@ export function UserTable({ users, onDelete, onViewDetail }: UserTableProps) {
         <Table className='min-w-full'>
           <TableHeader>
             <TableRow>
-              <TableHead className='w-[50px] text-center'>No</TableHead>
-              <TableHead>Nama</TableHead>
-              <TableHead>Email</TableHead>
-              <TableHead>Role</TableHead>
-              <TableHead>Terdaftar</TableHead>
-              <TableHead className='text-center'>Aksi</TableHead>
+              <TableHead className='w-[40px] md:w-[50px] text-center px-2 py-2 md:px-4 md:py-3 text-[10px] md:text-sm'>No</TableHead>
+              <TableHead className='px-2 py-2 md:px-4 md:py-3 text-[10px] md:text-sm'>Nama</TableHead>
+              <TableHead className='px-2 py-2 md:px-4 md:py-3 text-[10px] md:text-sm'>Email</TableHead>
+              <TableHead className='px-2 py-2 md:px-4 md:py-3 text-[10px] md:text-sm'>Role</TableHead>
+              <TableHead className='px-2 py-2 md:px-4 md:py-3 text-[10px] md:text-sm'>Terdaftar</TableHead>
+              <TableHead className='text-center px-2 py-2 md:px-4 md:py-3 text-[10px] md:text-sm'>Aksi</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {users.map((user, index) => (
               <TableRow key={user.id}>
-                <TableCell className='font-medium text-center'>
+                <TableCell className='font-medium text-center px-2 py-2 md:px-4 md:py-3 text-[10px] md:text-sm'>
                   {index + 1}
                 </TableCell>
-                <TableCell>{user.name}</TableCell>
-                <TableCell>{user.email}</TableCell>
-                <TableCell>
+                <TableCell className='px-2 py-2 md:px-4 md:py-3 text-[10px] md:text-sm'>{user.name}</TableCell>
+                <TableCell className='px-2 py-2 md:px-4 md:py-3 text-[10px] md:text-sm'>{user.email}</TableCell>
+                <TableCell className='px-2 py-2 md:px-4 md:py-3 text-[10px] md:text-sm'>
                   <RoleBadge role={user.role} />
                 </TableCell>
-                <TableCell>{user.createdAt}</TableCell>
-                <TableCell>
-                  <div className='flex gap-2 items-center justify-center'>
+                <TableCell className='px-2 py-2 md:px-4 md:py-3 text-[10px] md:text-sm whitespace-nowrap'>{user.createdAt}</TableCell>
+                <TableCell className='px-2 py-2 md:px-4 md:py-3 text-[10px] md:text-sm'>
+                  <div className='flex gap-1 md:gap-2 items-center justify-center'>
                     <Button
                       onClick={() => onViewDetail(user)}
                       variant='outline'
                       size='sm'
-                      className='flex items-center gap-1'
+                      className='flex items-center gap-1 h-7 md:h-9 px-2 md:px-3 text-[10px] md:text-sm'
                     >
-                      <Eye className='w-4 h-4' />
+                      <Eye className='w-3.5 h-3.5 md:w-4 md:h-4' />
                       <span className='hidden sm:inline'>Detail</span>
                     </Button>
                     <Button
                       onClick={() => onDelete(user.id)}
                       variant='destructive'
                       size='icon-sm'
+                      className='h-7 w-7 md:h-9 md:w-9 px-0'
                     >
-                      <Trash2 className='w-4 h-4' />
+                      <Trash2 className='w-3.5 h-3.5 md:w-4 md:h-4' />
                     </Button>
                   </div>
                 </TableCell>

@@ -136,8 +136,8 @@ export function TemplateTable({
                                         >
                                             <SelectTrigger
                                                 className={`h-8 w-[110px] ${template.is_active
-                                                        ? 'text-green-600 border-green-200 bg-green-50'
-                                                        : 'text-gray-600 border-gray-200 bg-gray-50'
+                                                    ? 'text-green-600 border-green-200 bg-green-50'
+                                                    : 'text-gray-600 border-gray-200 bg-gray-50'
                                                     }`}
                                             >
                                                 <SelectValue />

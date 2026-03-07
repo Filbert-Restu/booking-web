@@ -24,7 +24,7 @@ import {
 } from '@/components/ui/tooltip';
 import { useSidebar } from './sidebarContext';
 
-const SIDEBAR_WIDTH_MOBILE = '18rem';
+const SIDEBAR_WIDTH_MOBILE = '16rem';
 
 function Sidebar({
   side = 'left',

@@ -197,7 +197,7 @@ function RouteComponent() {
 			<h1 className='text-2xl font-bold'>Peminjaman Ruang</h1>
 
 			<div className='bg-white rounded-lg shadow-sm border border-gray-200 p-3'>
-				<div className='flex flex-col sm:flex-row gap-3 items-start sm:items-center w-fit'>
+				<div className='flex flex-col sm:flex-row gap-3 items-start sm:items-center w-full sm:w-fit'>
 					<Select value={selectedRoom} onValueChange={setSelectedRoom}>
 						<SelectTrigger className='w-full sm:w-64'>
 							<SelectValue placeholder='Pilih ruangan...' />

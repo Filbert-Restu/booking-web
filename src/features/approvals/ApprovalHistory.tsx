@@ -101,39 +101,39 @@ export function ApprovalHistory({
 
   return (
     <div className='w-full space-y-6'>
-      <div className='flex flex-wrap items-end gap-4'>
-        <div className='relative max-w-md flex-1'>
+      <div className='flex flex-col md:flex-row md:flex-wrap items-start md:items-end gap-4'>
+        <div className='relative w-full md:max-w-md md:flex-1'>
           <Search className='absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400' />
           <Input
             type='text'
             placeholder='Cari kegiatan, peminjam, atau ruang...'
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className='pl-10'
+            className='pl-10 w-full'
           />
         </div>
-        <div className='flex items-end gap-2'>
-          <div>
+        <div className='flex flex-wrap items-end gap-2 w-full md:w-auto'>
+          <div className='flex-1 min-w-[130px] sm:flex-none'>
             <label className='block text-xs font-medium text-gray-500 mb-1'>Dari Tanggal</label>
             <Input
               type='date'
               value={dateFrom}
               onChange={(e) => setDateFrom(e.target.value)}
-              className='w-40'
+              className='w-full sm:w-36'
             />
           </div>
-          <div>
+          <div className='flex-1 min-w-[130px] sm:flex-none'>
             <label className='block text-xs font-medium text-gray-500 mb-1'>Sampai Tanggal</label>
             <Input
               type='date'
               value={dateTo}
               onChange={(e) => setDateTo(e.target.value)}
-              className='w-40'
+              className='w-full sm:w-36'
             />
           </div>
-          <div>
+          <div className='w-full sm:w-auto'>
             <label className='block text-xs font-medium text-gray-500 mb-1'>Aksi</label>
-            <div className='flex rounded-lg border border-gray-200 overflow-hidden'>
+            <div className='flex rounded-lg border border-gray-200 overflow-x-auto max-w-full scrollbar-hide'>
               {[
                 { value: 'all', label: 'Semua' },
                 { value: 'disetujui', label: 'Disetujui/Diajukan' },
@@ -142,7 +142,7 @@ export function ApprovalHistory({
                 <button
                   key={tab.value}
                   onClick={() => setAksiFilter(tab.value)}
-                  className={`px-4 py-2 text-sm font-medium transition-colors ${aksiFilter === tab.value
+                  className={`px-3 py-2 text-xs sm:text-sm font-medium whitespace-nowrap transition-colors flex-1 sm:flex-none ${aksiFilter === tab.value
                     ? 'bg-gray-900 text-white'
                     : 'bg-white text-gray-600 hover:bg-gray-50'
                     }`}
@@ -161,7 +161,7 @@ export function ApprovalHistory({
                 setDateTo('');
                 setAksiFilter('all');
               }}
-              className='text-gray-500'
+              className='text-gray-500 w-full sm:w-auto mt-2 sm:mt-0'
             >
               Reset
             </Button>
@@ -169,16 +169,16 @@ export function ApprovalHistory({
         </div>
       </div>
 
-      <div className='rounded-lg border bg-white shadow-sm'>
-        <Table>
+      <div className='rounded-lg border bg-white shadow-sm overflow-x-auto'>
+        <Table className="min-w-[550px] w-full text-xs md:text-sm">
           <TableHeader>
             <TableRow>
-              <TableHead className='w-12'>No</TableHead>
-              <TableHead>Tanggal Diproses</TableHead>
-              <TableHead>Nama Kegiatan</TableHead>
-              {showOrganisasi && <TableHead>Organisasi</TableHead>}
-              <TableHead className='text-center'>Aksi</TableHead>
-              <TableHead className='text-center'>Detail</TableHead>
+              <TableHead className='w-10 text-center px-1 py-2 md:px-4'>No</TableHead>
+              <TableHead className="px-2 py-2 md:px-4 whitespace-nowrap">Tanggal Diproses</TableHead>
+              <TableHead className="px-2 py-2 md:px-4 min-w-[150px]">Nama Kegiatan</TableHead>
+              {showOrganisasi && <TableHead className="px-2 py-2 md:px-4">Organisasi</TableHead>}
+              <TableHead className='text-center px-1 py-2 md:px-4'>Aksi</TableHead>
+              <TableHead className='text-center px-1 py-2 md:px-4'>Detail</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -194,26 +194,35 @@ export function ApprovalHistory({
             ) : (
               filteredItems.map((item, index) => {
                 const badge = statusBadge(item.status);
+                // Menyesuaikan ukuran text badge di mobile
+                const mobileBadgeLabel = item.status === 'waiting' ? 'Tunggu' :
+                  item.status === 'approved' ? 'Setuju' :
+                    item.status === 'rejected' ? 'Tolak' :
+                      item.status === 'revisi' ? 'Revisi' : badge.label;
                 return (
                   <TableRow key={item.id}>
-                    <TableCell className='font-medium'>{index + 1}</TableCell>
-                    <TableCell>{item.tanggalMasuk || '-'}</TableCell>
-                    <TableCell>{item.kegiatan}</TableCell>
+                    <TableCell className='font-medium text-center px-1 py-2 md:px-4'>{index + 1}</TableCell>
+                    <TableCell className="px-2 py-2 md:px-4 whitespace-nowrap">{item.tanggalMasuk || '-'}</TableCell>
+                    <TableCell className="px-2 py-2 md:px-4">
+                      <div className="line-clamp-2 md:line-clamp-none" title={item.kegiatan}>{item.kegiatan}</div>
+                    </TableCell>
                     {showOrganisasi && (
-                      <TableCell>{item.organisasiMahasiswa || '-'}</TableCell>
+                      <TableCell className="px-2 py-2 md:px-4">{item.organisasiMahasiswa || '-'}</TableCell>
                     )}
-                    <TableCell className='text-center'>
-                      <span className={badge.className}>
-                        {badge.label}
+                    <TableCell className='text-center px-1 py-2 md:px-4'>
+                      <span className={`${badge.className} text-[10px] md:text-sm px-1.5 py-0.5 md:px-2 md:py-1`}>
+                        <span className="md:hidden">{mobileBadgeLabel}</span>
+                        <span className="hidden md:inline">{badge.label}</span>
                       </span>
                     </TableCell>
-                    <TableCell className='text-center'>
+                    <TableCell className='text-center px-1 py-2 md:px-4'>
                       <Button
                         variant="outline"
                         size="sm"
+                        className="h-7 text-[10px] md:h-9 md:text-sm px-2 md:px-3"
                         onClick={() => onOpenDoc?.(item.id)}
                       >
-                        Lihat Detail
+                        Detail
                       </Button>
                     </TableCell>
                   </TableRow>

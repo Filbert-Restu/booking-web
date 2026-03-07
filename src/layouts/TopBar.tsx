@@ -80,18 +80,18 @@ export function TopBar({
   }
 
   return (
-    <header className={`w-full flex items-center justify-between bg-primary border-b border-gray-100 px-6 py-6 h-20 transition-all`}>
+    <header className={`w-full flex items-center justify-between bg-primary border-b border-gray-100 px-4 sm:px-6 py-4 sm:py-6 h-16 sm:h-20 transition-all`}>
       <div className='flex items-center gap-3'>
         {/* Trigger sidebar untuk layout dengan sidebar (admin, role, dll) */}
         {hasSidebar && <SidebarTrigger className='md:hidden text-white' />}
         <div className='flex items-center gap-3'>
-          <img src='/logo-fsm.png' alt='FSM Logo' className='h-12 w-auto' />
+          <img src='/logo-fsm.png' alt='FSM Logo' className='h-8 sm:h-12 w-auto' />
         </div>
       </div>
       <div className='flex items-center gap-4'>
         {user ? (
           <>
-            <div className='text-white text-right sm:block'>
+            <div className='hidden sm:block text-white text-right'>
               <p className='text-sm font-semibold'>{user.name}</p>
               <p className='text-xs text-white/80'>
                 {user.role?.name || 'User'}{' '}
@@ -100,7 +100,7 @@ export function TopBar({
 
             <button
               onClick={handleLogout}
-              className='inline-flex items-center gap-2 bg-white text-primary hover:bg-gray-100 border border-white px-4 py-2 rounded-xl shadow-sm transition-all duration-200 text-sm font-bold active:scale-95'
+              className='inline-flex items-center gap-2 bg-white text-primary hover:bg-gray-100 border border-white px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl shadow-sm transition-all duration-200 text-xs sm:text-sm font-bold active:scale-95'
             >
               Logout
             </button>

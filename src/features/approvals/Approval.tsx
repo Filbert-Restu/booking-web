@@ -121,34 +121,34 @@ export function Approval({
 
   return (
     <div className='w-full space-y-6'>
-      <div className='flex flex-wrap items-end gap-4'>
-        <div className='relative max-w-md flex-1'>
+      <div className='flex flex-col md:flex-row md:flex-wrap items-start md:items-end gap-4'>
+        <div className='relative w-full md:max-w-md md:flex-1'>
           <Search className='absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400' />
           <Input
             type='text'
             placeholder='Cari kegiatan, peminjam, atau ruang...'
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className='pl-10'
+            className='pl-10 w-full'
           />
         </div>
-        <div className='flex items-end gap-2'>
-          <div>
+        <div className='flex flex-wrap items-end gap-2 w-full md:w-auto'>
+          <div className='flex-1 min-w-[130px] sm:flex-none'>
             <label className='block text-xs font-medium text-gray-500 mb-1'>Dari Tanggal</label>
             <Input
               type='date'
               value={dateFrom}
               onChange={(e) => setDateFrom(e.target.value)}
-              className='w-40'
+              className='w-full sm:w-36'
             />
           </div>
-          <div>
+          <div className='flex-1 min-w-[130px] sm:flex-none'>
             <label className='block text-xs font-medium text-gray-500 mb-1'>Sampai Tanggal</label>
             <Input
               type='date'
               value={dateTo}
               onChange={(e) => setDateTo(e.target.value)}
-              className='w-40'
+              className='w-full sm:w-36'
             />
           </div>
           {(dateFrom || dateTo) && (
@@ -156,7 +156,7 @@ export function Approval({
               variant='ghost'
               size='sm'
               onClick={() => { setDateFrom(''); setDateTo(''); }}
-              className='text-gray-500'
+              className='text-gray-500 w-full sm:w-auto mt-2 sm:mt-0'
             >
               Reset
             </Button>
@@ -164,15 +164,15 @@ export function Approval({
         </div>
       </div>
 
-      <div className='rounded-lg border bg-white shadow-sm'>
-        <Table>
+      <div className='rounded-lg border bg-white shadow-sm overflow-x-auto'>
+        <Table className="min-w-[500px] w-full text-xs md:text-sm">
           <TableHeader>
             <TableRow>
-              <TableHead className='w-12'>No</TableHead>
-              <TableHead>Tanggal Masuk</TableHead>
-              <TableHead>Nama Kegiatan</TableHead>
-              {showOrganisasi && <TableHead>Organisasi</TableHead>}
-              <TableHead className='text-center'>Detail</TableHead>
+              <TableHead className='w-10 text-center px-2 py-2 md:px-4'>No</TableHead>
+              <TableHead className="px-2 py-2 md:px-4 whitespace-nowrap">Tgl Masuk</TableHead>
+              <TableHead className="px-2 py-2 md:px-4 min-w-[150px]">Nama Kegiatan</TableHead>
+              {showOrganisasi && <TableHead className="px-2 py-2 md:px-4">Organisasi</TableHead>}
+              <TableHead className='text-center px-2 py-2 md:px-4'>Detail</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -188,19 +188,22 @@ export function Approval({
             ) : (
               filteredItems.map((item, index) => (
                 <TableRow key={item.id}>
-                  <TableCell className='font-medium'>{index + 1}</TableCell>
-                  <TableCell>{item.tanggalMasuk || '-'}</TableCell>
-                  <TableCell>{item.kegiatan}</TableCell>
+                  <TableCell className='font-medium text-center px-2 py-2 md:px-4'>{index + 1}</TableCell>
+                  <TableCell className="px-2 py-2 md:px-4 whitespace-nowrap">{item.tanggalMasuk || '-'}</TableCell>
+                  <TableCell className="px-2 py-2 md:px-4">
+                    <div className="line-clamp-3 md:line-clamp-none" title={item.kegiatan}>{item.kegiatan}</div>
+                  </TableCell>
                   {showOrganisasi && (
-                    <TableCell>{item.organisasiMahasiswa || '-'}</TableCell>
+                    <TableCell className="px-2 py-2 md:px-4">{item.organisasiMahasiswa || '-'}</TableCell>
                   )}
-                  <TableCell className='text-center'>
+                  <TableCell className='text-center px-2 py-2 md:px-4'>
                     <Button
                       variant="outline"
                       size="sm"
+                      className="h-7 text-[10px] md:h-9 md:text-sm px-2 md:px-3"
                       onClick={() => onOpenDoc?.(item.id)}
                     >
-                      Lihat Detail
+                      Detail
                     </Button>
                   </TableCell>
                 </TableRow>
