@@ -148,7 +148,7 @@ export const authService = {
       'Sumber Daya': '/sumber-daya/',
 
       // Dosen & Ketua Departemen (approval only, tapi kalau login redirect ke dashboard)
-      'Dosen Pendamping Himpunan': '/dosen-pendamping/',
+      'Dosen Pendamping Ormawa': '/dosen-pendamping/',
       'Ketua Departemen': '/ketua-departemen/',
 
       // Ketua Organisasi (BEM, HIMA, UKM ke ketua-ormawa)
