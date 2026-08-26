@@ -31,6 +31,7 @@ interface LoginResponse {
       name: string;
       category?: string;
     };
+    is_profile_completed: boolean;
   };
   unit_category?: string; // Untuk dynamic workflow selection
 }
@@ -102,6 +103,8 @@ export const authService = {
     } else if (data.user.unit?.category) {
       localStorage.setItem('userUnitCategory', data.user.unit.category);
     }
+
+    localStorage.setItem('isProfileCompleted', data.user.is_profile_completed ? 'true' : 'false');
   },
 
   /**
@@ -118,6 +121,7 @@ export const authService = {
     localStorage.removeItem('userUnit');
     localStorage.removeItem('unitId');
     localStorage.removeItem('userUnitCategory');
+    localStorage.removeItem('isProfileCompleted');
   },
 
   /**
@@ -168,7 +172,26 @@ export const authService = {
   /**
    * Redirect ke halaman sesuai role
    */
-  redirectByRole(role: string): void {
-    window.location.href = this.getRolePath(role);
+  redirectByRole(role: string, navigate?: (options: { to: string }) => void): void {
+    const path = this.getRolePath(role);
+    
+    if (navigate) {
+      // Use TanStack Router navigate (automatically handles basepath)
+      navigate({ to: path });
+    } else {
+      // Fallback to window.location (must prefix with BASE_URL for sub-path deployment)
+      const baseUrl = import.meta.env.BASE_URL || '/';
+      // Ensure we don't double slash
+      const fullPath = `${baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl}${path}`;
+      window.location.href = fullPath;
+    }
+  },
+
+  /**
+   * Update profile (NIM/NIP, Unit, Role)
+   */
+  async updateProfile(data: { name: string; nim_nip: string; role_id: number; unit_id: number }) {
+    const response = await api.patch('/user/profile', data);
+    return response.data;
   },
 };

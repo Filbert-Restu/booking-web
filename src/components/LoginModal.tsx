@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from '@tanstack/react-router';
 import axios from 'axios';
 import { Button } from '@/components/ui/button/button';
 import {
@@ -16,6 +17,7 @@ interface LoginModalProps {
 }
 
 export function LoginModal({ isOpen, onClose }: LoginModalProps) {
+    const navigate = useNavigate();
     const [formData, setFormData] = useState({
         email: '',
         password: '',
@@ -31,7 +33,7 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
         try {
             const response = await authService.login(formData);
             authService.saveAuthData(response);
-            authService.redirectByRole(response.user.role?.name || '');
+            authService.redirectByRole(response.user.role?.name || '', navigate);
         } catch (err: unknown) {
             console.error('Login failed:', err);
             let errorMessage = 'Login gagal. Silakan coba lagi.';
@@ -57,6 +59,25 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
         }));
     };
 
+    const handleSSOLogin = () => {
+        const clientId = import.meta.env.VITE_SSO_CLIENT_ID as string;
+        const redirectUri = import.meta.env.VITE_SSO_REDIRECT_URI as string;
+        const ssoLoginUrl = import.meta.env.VITE_SSO_LOGIN_URL as string || 'https://apps-fsm.undip.ac.id/sso/';
+
+        if (!clientId || !redirectUri) {
+            setError('Konfigurasi SSO belum lengkap. Hubungi administrator.');
+            return;
+        }
+
+        // Redirect browser to SSO login portal
+        // SSO will then call our backend /auth/sso and redirect back to this app
+        const params = new URLSearchParams({
+            client_id: clientId,
+            redirect_uri: redirectUri,
+        });
+        window.location.href = `${ssoLoginUrl}?${params.toString()}`;
+    };
+
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
             <DialogContent className="max-w-5xl w-[90vw] p-0 overflow-hidden border-none shadow-2xl rounded-xl sm:rounded-2xl">
@@ -72,7 +93,7 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
                             </p>
                         </div>
                         <img
-                            src="/illustration.png"
+                            src={`${import.meta.env.BASE_URL}illustration.png`}
                             alt="FSM Illustration"
                             className="w-full max-w-[260px] h-auto drop-shadow-2xl brightness-110 contrast-105"
                         />
@@ -167,7 +188,27 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
                                 </Button>
                             </form>
 
-                            <div className="pt-8 border-t border-gray-100 flex flex-col items-center gap-4">
+                            <div className="pt-4 flex flex-col gap-3">
+                                <div className="relative flex items-center py-1">
+                                    <div className="flex-grow border-t border-gray-100" />
+                                    <span className="px-3 text-[10px] font-bold text-muted-foreground/50 uppercase tracking-[0.15em]">atau</span>
+                                    <div className="flex-grow border-t border-gray-100" />
+                                </div>
+
+                                <button
+                                    type="button"
+                                    onClick={handleSSOLogin}
+                                    className="w-full h-11 flex items-center justify-center gap-2.5 border border-gray-200 rounded-xl text-sm font-bold text-gray-700 hover:bg-gray-50 hover:border-gray-300 transition-all duration-200 active:scale-[0.98]"
+                                >
+                                    {/* UNDIP Icon */}
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-primary" viewBox="0 0 24 24" fill="currentColor">
+                                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/>
+                                    </svg>
+                                    Login dengan SSO UNDIP
+                                </button>
+                            </div>
+
+                            <div className="pt-4 border-t border-gray-100 flex flex-col items-center gap-4">
                                 <p className="text-[10px] font-bold text-muted-foreground/50 uppercase tracking-[0.2em]">
                                     © 2026 PINJAM RUANG FSM • UNDIP
                                 </p>

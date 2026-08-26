@@ -12,6 +12,12 @@ const __dirname = path.dirname(__filename);
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [tanstackRouter(), react(), tailwindcss(), tsconfigPaths()],
+  base: '/peminjaman-ruang/',
+  server: {
+    port: 20081,
+    host: true,
+    allowedHosts: ['apps-fsm.undip.ac.id', 'localhost', '10.137.58.124'],
+  },
   optimizeDeps: {
     esbuildOptions: {
       supported: {

@@ -58,7 +58,7 @@ function RouteComponent() {
 
             <div className='relative z-0'>
               <img
-                src='/illustration.png'
+                src={`${import.meta.env.BASE_URL}illustration.png`}
                 alt='Minimalist Illustration'
                 className='w-full h-auto drop-shadow-2xl'
               />

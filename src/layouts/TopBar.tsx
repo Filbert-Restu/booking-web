@@ -85,7 +85,7 @@ export function TopBar({
         {/* Trigger sidebar untuk layout dengan sidebar (admin, role, dll) */}
         {hasSidebar && <SidebarTrigger className='md:hidden text-white' />}
         <div className='flex items-center gap-3'>
-          <img src='/logo-fsm.png' alt='FSM Logo' className='h-8 sm:h-12 w-auto' />
+          <img src={`${import.meta.env.BASE_URL}logo-fsm.png`} alt='FSM Logo' className='h-8 sm:h-12 w-auto' />
         </div>
       </div>
       <div className='flex items-center gap-4'>

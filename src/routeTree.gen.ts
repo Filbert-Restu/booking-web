@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as TandaTanganRouteImport } from './routes/tanda-tangan'
 import { Route as SignDocumentRouteImport } from './routes/sign-document'
+import { Route as RedirectRouteImport } from './routes/redirect'
 import { Route as PreviewDocumentRouteImport } from './routes/preview-document'
 import { Route as Wadek1RouteRouteImport } from './routes/wadek1/route'
 import { Route as SumberDayaRouteRouteImport } from './routes/sumber-daya/route'
@@ -40,6 +41,7 @@ import { Route as SumberDayaRiwayatPersetujuanRouteImport } from './routes/sumbe
 import { Route as SumberDayaPreviewDocumentRouteImport } from './routes/sumber-daya/preview-document'
 import { Route as SumberDayaManajemenRuangRouteImport } from './routes/sumber-daya/manajemen-ruang'
 import { Route as SumberDayaApproveDocumentRouteImport } from './routes/sumber-daya/approve-document'
+import { Route as SsoCallbackRouteImport } from './routes/sso/callback'
 import { Route as SenatSignDocumentRouteImport } from './routes/senat/sign-document'
 import { Route as SenatRiwayatPersetujuanRouteImport } from './routes/senat/riwayat-persetujuan'
 import { Route as SenatPreviewDocumentRouteImport } from './routes/senat/preview-document'
@@ -82,6 +84,11 @@ const TandaTanganRoute = TandaTanganRouteImport.update({
 const SignDocumentRoute = SignDocumentRouteImport.update({
   id: '/sign-document',
   path: '/sign-document',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RedirectRoute = RedirectRouteImport.update({
+  id: '/redirect',
+  path: '/redirect',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PreviewDocumentRoute = PreviewDocumentRouteImport.update({
@@ -235,6 +242,11 @@ const SumberDayaApproveDocumentRoute =
     path: '/approve-document',
     getParentRoute: () => SumberDayaRouteRoute,
   } as any)
+const SsoCallbackRoute = SsoCallbackRouteImport.update({
+  id: '/sso/callback',
+  path: '/sso/callback',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SenatSignDocumentRoute = SenatSignDocumentRouteImport.update({
   id: '/sign-document',
   path: '/sign-document',
@@ -430,6 +442,7 @@ export interface FileRoutesByFullPath {
   '/sumber-daya': typeof SumberDayaRouteRouteWithChildren
   '/wadek1': typeof Wadek1RouteRouteWithChildren
   '/preview-document': typeof PreviewDocumentRoute
+  '/redirect': typeof RedirectRoute
   '/sign-document': typeof SignDocumentRoute
   '/tanda-tangan': typeof TandaTanganRoute
   '/admin/peminjaman': typeof AdminPeminjamanRoute
@@ -451,6 +464,7 @@ export interface FileRoutesByFullPath {
   '/senat/preview-document': typeof SenatPreviewDocumentRoute
   '/senat/riwayat-persetujuan': typeof SenatRiwayatPersetujuanRoute
   '/senat/sign-document': typeof SenatSignDocumentRoute
+  '/sso/callback': typeof SsoCallbackRoute
   '/sumber-daya/approve-document': typeof SumberDayaApproveDocumentRoute
   '/sumber-daya/manajemen-ruang': typeof SumberDayaManajemenRuangRoute
   '/sumber-daya/preview-document': typeof SumberDayaPreviewDocumentRoute
@@ -487,6 +501,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/preview-document': typeof PreviewDocumentRoute
+  '/redirect': typeof RedirectRoute
   '/sign-document': typeof SignDocumentRoute
   '/tanda-tangan': typeof TandaTanganRoute
   '/admin/peminjaman': typeof AdminPeminjamanRoute
@@ -508,6 +523,7 @@ export interface FileRoutesByTo {
   '/senat/preview-document': typeof SenatPreviewDocumentRoute
   '/senat/riwayat-persetujuan': typeof SenatRiwayatPersetujuanRoute
   '/senat/sign-document': typeof SenatSignDocumentRoute
+  '/sso/callback': typeof SsoCallbackRoute
   '/sumber-daya/approve-document': typeof SumberDayaApproveDocumentRoute
   '/sumber-daya/manajemen-ruang': typeof SumberDayaManajemenRuangRoute
   '/sumber-daya/preview-document': typeof SumberDayaPreviewDocumentRoute
@@ -554,6 +570,7 @@ export interface FileRoutesById {
   '/sumber-daya': typeof SumberDayaRouteRouteWithChildren
   '/wadek1': typeof Wadek1RouteRouteWithChildren
   '/preview-document': typeof PreviewDocumentRoute
+  '/redirect': typeof RedirectRoute
   '/sign-document': typeof SignDocumentRoute
   '/tanda-tangan': typeof TandaTanganRoute
   '/admin/peminjaman': typeof AdminPeminjamanRoute
@@ -575,6 +592,7 @@ export interface FileRoutesById {
   '/senat/preview-document': typeof SenatPreviewDocumentRoute
   '/senat/riwayat-persetujuan': typeof SenatRiwayatPersetujuanRoute
   '/senat/sign-document': typeof SenatSignDocumentRoute
+  '/sso/callback': typeof SsoCallbackRoute
   '/sumber-daya/approve-document': typeof SumberDayaApproveDocumentRoute
   '/sumber-daya/manajemen-ruang': typeof SumberDayaManajemenRuangRoute
   '/sumber-daya/preview-document': typeof SumberDayaPreviewDocumentRoute
@@ -622,6 +640,7 @@ export interface FileRouteTypes {
     | '/sumber-daya'
     | '/wadek1'
     | '/preview-document'
+    | '/redirect'
     | '/sign-document'
     | '/tanda-tangan'
     | '/admin/peminjaman'
@@ -643,6 +662,7 @@ export interface FileRouteTypes {
     | '/senat/preview-document'
     | '/senat/riwayat-persetujuan'
     | '/senat/sign-document'
+    | '/sso/callback'
     | '/sumber-daya/approve-document'
     | '/sumber-daya/manajemen-ruang'
     | '/sumber-daya/preview-document'
@@ -679,6 +699,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/preview-document'
+    | '/redirect'
     | '/sign-document'
     | '/tanda-tangan'
     | '/admin/peminjaman'
@@ -700,6 +721,7 @@ export interface FileRouteTypes {
     | '/senat/preview-document'
     | '/senat/riwayat-persetujuan'
     | '/senat/sign-document'
+    | '/sso/callback'
     | '/sumber-daya/approve-document'
     | '/sumber-daya/manajemen-ruang'
     | '/sumber-daya/preview-document'
@@ -745,6 +767,7 @@ export interface FileRouteTypes {
     | '/sumber-daya'
     | '/wadek1'
     | '/preview-document'
+    | '/redirect'
     | '/sign-document'
     | '/tanda-tangan'
     | '/admin/peminjaman'
@@ -766,6 +789,7 @@ export interface FileRouteTypes {
     | '/senat/preview-document'
     | '/senat/riwayat-persetujuan'
     | '/senat/sign-document'
+    | '/sso/callback'
     | '/sumber-daya/approve-document'
     | '/sumber-daya/manajemen-ruang'
     | '/sumber-daya/preview-document'
@@ -812,8 +836,10 @@ export interface RootRouteChildren {
   SumberDayaRouteRoute: typeof SumberDayaRouteRouteWithChildren
   Wadek1RouteRoute: typeof Wadek1RouteRouteWithChildren
   PreviewDocumentRoute: typeof PreviewDocumentRoute
+  RedirectRoute: typeof RedirectRoute
   SignDocumentRoute: typeof SignDocumentRoute
   TandaTanganRoute: typeof TandaTanganRoute
+  SsoCallbackRoute: typeof SsoCallbackRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -830,6 +856,13 @@ declare module '@tanstack/react-router' {
       path: '/sign-document'
       fullPath: '/sign-document'
       preLoaderRoute: typeof SignDocumentRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/redirect': {
+      id: '/redirect'
+      path: '/redirect'
+      fullPath: '/redirect'
+      preLoaderRoute: typeof RedirectRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/preview-document': {
@@ -1034,6 +1067,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/sumber-daya/approve-document'
       preLoaderRoute: typeof SumberDayaApproveDocumentRouteImport
       parentRoute: typeof SumberDayaRouteRoute
+    }
+    '/sso/callback': {
+      id: '/sso/callback'
+      path: '/sso/callback'
+      fullPath: '/sso/callback'
+      preLoaderRoute: typeof SsoCallbackRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/senat/sign-document': {
       id: '/senat/sign-document'
@@ -1473,8 +1513,10 @@ const rootRouteChildren: RootRouteChildren = {
   SumberDayaRouteRoute: SumberDayaRouteRouteWithChildren,
   Wadek1RouteRoute: Wadek1RouteRouteWithChildren,
   PreviewDocumentRoute: PreviewDocumentRoute,
+  RedirectRoute: RedirectRoute,
   SignDocumentRoute: SignDocumentRoute,
   TandaTanganRoute: TandaTanganRoute,
+  SsoCallbackRoute: SsoCallbackRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

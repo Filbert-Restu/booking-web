@@ -21,6 +21,7 @@ export interface MyRouterContext {
 
 export const router = createRouter({
   routeTree,
+  basepath: '/peminjaman-ruang',
   context: {
     auth: undefined!,
   },
