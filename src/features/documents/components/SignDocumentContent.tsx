@@ -50,6 +50,7 @@ export function SignDocumentContent({
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [reviseDialogOpen, setReviseDialogOpen] = useState(false);
+  const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
   const [document, setDocument] = useState<Document | null>(null);
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
   const [confirmAction, setConfirmAction] = useState<{
@@ -551,6 +552,36 @@ export function SignDocumentContent({
     setReviseDialogOpen(true);
   };
 
+  const handleRejectDocument = () => {
+    setRejectDialogOpen(true);
+  };
+
+  const onConfirmReject = async (note: string) => {
+    if (!documentId) {
+      alert('Document ID tidak ditemukan');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      await documentService.rejectDocument(documentId, note);
+
+      setRejectDialogOpen(false);
+
+      if (returnPath) {
+        navigate({ to: returnPath });
+      } else {
+        navigate({ to: '/' });
+      }
+    } catch (err) {
+      console.error('Failed to reject document:', err);
+      const error = err as AxiosError<{ message?: string }>;
+      alert(error.response?.data?.message || 'Gagal menolak dokumen');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const onConfirmRevise = async (note: string) => {
     if (!documentId || !document) {
       alert('Document ID tidak ditemukan');
@@ -777,6 +808,14 @@ export function SignDocumentContent({
             <CardContent>
               <div className='flex gap-4 flex-wrap'>
                 <Button
+                  onClick={handleRejectDocument}
+                  disabled={loading || pdfLoading}
+                  variant='outline'
+                  className='flex-1 h-12 text-base border-destructive text-destructive hover:bg-destructive/10'
+                >
+                  {loading ? 'Memproses...' : 'Tolak Dokumen'}
+                </Button>
+                <Button
                   onClick={handleReviseDocument}
                   disabled={loading || pdfLoading}
                   variant='destructive'
@@ -857,6 +896,19 @@ export function SignDocumentContent({
         isOpen={reviseDialogOpen}
         onClose={() => setReviseDialogOpen(false)}
         onConfirm={onConfirmRevise}
+        variant='destructive'
+      />
+
+      {/* Dialog untuk Alasan Penolakan */}
+      <RevisionDialog
+        isOpen={rejectDialogOpen}
+        onClose={() => setRejectDialogOpen(false)}
+        onConfirm={onConfirmReject}
+        loading={loading}
+        title='Tolak Dokumen'
+        description='Dokumen yang ditolak akan dihentikan secara final dan tidak dapat dilanjutkan lagi. Booking ruangan terkait (jika ada) juga akan ikut ditolak.'
+        placeholder='Jelaskan alasan penolakan (minimal 10 karakter)...'
+        confirmLabel='Ya, Tolak Dokumen'
         variant='destructive'
       />
     </div>
